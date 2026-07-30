@@ -36,6 +36,7 @@ class AcademicTask {
     required this.priority,
     required this.status,
     required this.createdAt,
+    this.completedAt,
   });
 
   final String id;
@@ -48,8 +49,12 @@ class AcademicTask {
   final TaskPriority priority;
   final TaskStatus status;
   final DateTime createdAt;
+  final DateTime? completedAt;
 
   bool get isDone => status == TaskStatus.done;
+
+  /// Selesai tepat waktu: statusnya done dan diselesaikan sebelum/sama dengan deadline.
+  bool get isOnTime => isDone && completedAt != null && !completedAt!.isAfter(deadline);
 
   factory AcademicTask.fromMap(Map<String, dynamic> map) => AcademicTask(
         id: map['id'] as String,
@@ -62,5 +67,7 @@ class AcademicTask {
         priority: TaskPriority.fromDb(map['priority'] as String),
         status: TaskStatus.fromDb(map['status'] as String),
         createdAt: DateTime.parse(map['created_at'] as String),
+        completedAt:
+            map['completed_at'] == null ? null : DateTime.parse(map['completed_at'] as String),
       );
 }

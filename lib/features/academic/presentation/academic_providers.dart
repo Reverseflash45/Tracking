@@ -5,6 +5,7 @@ import '../data/academic_repository.dart';
 import '../data/models/class_schedule.dart';
 import '../data/models/course.dart';
 import '../data/models/task.dart';
+import '../domain/deadline_streak.dart';
 
 final coursesProvider = FutureProvider.autoDispose<List<Course>>((ref) async {
   final userId = ref.watch(currentUserProvider)?.id;
@@ -45,4 +46,9 @@ final upcomingDeadlinesProvider = Provider.autoDispose<AsyncValue<List<AcademicT
   return tasks.whenData(
     (list) => list.where((task) => !task.isDone).take(5).toList(),
   );
+});
+
+final deadlineStreakProvider = Provider.autoDispose<AsyncValue<DeadlineStreak>>((ref) {
+  final tasks = ref.watch(tasksProvider);
+  return tasks.whenData(calculateDeadlineStreak);
 });

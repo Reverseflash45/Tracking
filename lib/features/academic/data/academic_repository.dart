@@ -95,7 +95,10 @@ class AcademicRepository {
   }
 
   Future<void> updateTaskStatus(String id, TaskStatus status) {
-    return _client.from('tasks').update({'status': status.dbValue}).eq('id', id);
+    return _client.from('tasks').update({
+      'status': status.dbValue,
+      'completed_at': status == TaskStatus.done ? DateTime.now().toIso8601String() : null,
+    }).eq('id', id);
   }
 
   Future<void> deleteTask(String id) {

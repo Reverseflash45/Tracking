@@ -17,14 +17,18 @@ class AuthRepository {
     required String password,
     String? fullName,
   }) async {
-    final response = await _client.auth.signUp(email: email, password: password);
-    final user = response.user;
-    if (user != null && fullName != null && fullName.trim().isNotEmpty) {
-      await _client.from('profiles').upsert({
-        'id': user.id,
-        'full_name': fullName.trim(),
-      });
-    }
+    // `full_name` dikirim sebagai user metadata, lalu dibaca oleh trigger
+    // `handle_new_user` (lihat supabase/migrations/0002_auto_create_profile.sql)
+    // untuk mengisi tabel profiles. Insert langsung dari client tidak dipakai
+    // karena saat signUp belum tentu ada sesi aktif (mis. email confirmation
+    // masih diwajibkan), sehingga akan ditolak RLS.
+    await _client.auth.signUp(
+      email: email,
+      password: password,
+      data: fullName != null && fullName.trim().isNotEmpty
+          ? {'full_name': fullName.trim()}
+          : null,
+    );
   }
 
   Future<void> signOut() => _client.auth.signOut();

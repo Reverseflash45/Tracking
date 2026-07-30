@@ -3,11 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../data/models/workout_session.dart';
 import '../data/workout_repository.dart';
+import '../domain/workout_streak.dart';
 
 final workoutSessionsProvider = FutureProvider.autoDispose<List<WorkoutSession>>((ref) async {
   final userId = ref.watch(currentUserProvider)?.id;
   if (userId == null) return const [];
   return ref.watch(workoutRepositoryProvider).fetchSessions(userId);
+});
+
+final workoutStreakProvider = Provider.autoDispose<AsyncValue<WorkoutStreak>>((ref) {
+  final sessions = ref.watch(workoutSessionsProvider);
+  return sessions.whenData(calculateWorkoutStreak);
 });
 
 final todayWorkoutSessionProvider = Provider.autoDispose<AsyncValue<WorkoutSession?>>((ref) {
