@@ -11,9 +11,12 @@ import '../../../core/widgets/save_bar.dart';
 import '../../../core/widgets/section_header.dart';
 import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
+import '../data/models/workout_template.dart';
 import '../data/workout_repository.dart';
 import '../domain/progressive_overload.dart';
 import 'overload_suggestion_view.dart';
+import 'rest_timer.dart';
+import 'template_sheets.dart';
 import 'workout_providers.dart';
 
 const _workoutColor = AppColors.workout;
@@ -29,7 +32,8 @@ class _ExerciseRowControllers {
         holdController = TextEditingController(),
         notesController = TextEditingController();
 
-  /// Isi controller dari data yang sudah tersimpan (dipakai saat mode edit).
+  /// Isi controller dari data yang sudah tersimpan. Dipakai saat mode edit
+  /// maupun saat mengulang sesi lama.
   factory _ExerciseRowControllers.fromEntry(ExerciseEntry entry) {
     final row = _ExerciseRowControllers();
     row.nameController.text = entry.exerciseName;
@@ -44,6 +48,21 @@ class _ExerciseRowControllers {
     return row;
   }
 
+  factory _ExerciseRowControllers.fromTemplate(TemplateExercise exercise) {
+    final row = _ExerciseRowControllers();
+    row.nameController.text = exercise.exerciseName;
+    row.weightController.text = exercise.weightKg?.toString() ?? '';
+    row.setsController.text = exercise.sets?.toString() ?? '';
+    row.repsController.text = exercise.reps?.toString() ?? '';
+    row.durationController.text = exercise.durationMinutes?.toString() ?? '';
+    row.holdController.text = exercise.durationSeconds?.toString() ?? '';
+    row.notesController.text = exercise.notes ?? '';
+    row.type = exercise.type;
+    row.progressionLevel = exercise.progressionLevel;
+    row.restSeconds = exercise.restSeconds;
+    return row;
+  }
+
   final TextEditingController nameController;
   final TextEditingController weightController;
   final TextEditingController setsController;
@@ -53,6 +72,10 @@ class _ExerciseRowControllers {
   final TextEditingController notesController;
   ExerciseType type = ExerciseType.beban;
   int progressionLevel = 0;
+
+  /// Lama istirahat pilihan user untuk latihan ini. Null berarti belum diatur,
+  /// jadi rest timer memakai durasi terakhir yang dipakai.
+  int? restSeconds;
 
   void dispose() {
     nameController.dispose();
@@ -105,13 +128,33 @@ class _ExerciseRowControllers {
         progressionLevel: progressionLevel,
         notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
       );
+
+  TemplateExercise toTemplateExercise() {
+    final entry = toEntry();
+    return TemplateExercise(
+      exerciseName: entry.exerciseName,
+      type: entry.type,
+      weightKg: entry.weightKg,
+      sets: entry.sets,
+      reps: entry.reps,
+      durationMinutes: entry.durationMinutes,
+      durationSeconds: entry.durationSeconds,
+      progressionLevel: entry.progressionLevel,
+      restSeconds: restSeconds,
+      notes: entry.notes,
+    );
+  }
 }
 
 class WorkoutFormPage extends ConsumerStatefulWidget {
-  const WorkoutFormPage({super.key, this.sessionId});
+  const WorkoutFormPage({super.key, this.sessionId, this.repeatSessionId});
 
   /// Kalau diisi, form berjalan dalam mode edit.
   final String? sessionId;
+
+  /// Kalau diisi, form dibuka sebagai sesi baru yang isinya disalin dari sesi
+  /// ini. Tanggalnya tetap hari ini dan catatan sesinya tidak ikut disalin.
+  final String? repeatSessionId;
 
   @override
   ConsumerState<WorkoutFormPage> createState() => _WorkoutFormPageState();
@@ -119,25 +162,41 @@ class WorkoutFormPage extends ConsumerStatefulWidget {
 
 class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
   final _notesController = TextEditingController();
+  final _restTimer = RestTimerController();
   DateTime _sessionDate = DateTime.now();
   final List<_ExerciseRowControllers> _rows = [_ExerciseRowControllers()];
   bool _saving = false;
   bool _prefilled = false;
 
+  /// Durasi istirahat bawaan, diambil dari pemakaian terakhir.
+  int _defaultRest = kDefaultRestSeconds;
+
   bool get _isEdit => widget.sessionId != null;
+  bool get _isRepeat => widget.repeatSessionId != null;
+
+  /// Sesi yang isinya dipakai untuk mengisi form, entah untuk diedit atau
+  /// disalin.
+  String? get _sourceSessionId => widget.sessionId ?? widget.repeatSessionId;
 
   @override
   void initState() {
     super.initState();
-    if (_isEdit) {
+    if (_sourceSessionId != null) {
       final session = _findSession(ref.read(workoutSessionsProvider).value);
       if (session != null) _prefill(session);
     }
+    _loadDefaultRest();
+  }
+
+  Future<void> _loadDefaultRest() async {
+    final seconds = await RestTimerController.loadLastDuration();
+    if (mounted) setState(() => _defaultRest = seconds);
   }
 
   @override
   void dispose() {
     _notesController.dispose();
+    _restTimer.dispose();
     for (final row in _rows) {
       row.dispose();
     }
@@ -147,14 +206,18 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
   WorkoutSession? _findSession(List<WorkoutSession>? sessions) {
     if (sessions == null) return null;
     for (final session in sessions) {
-      if (session.id == widget.sessionId) return session;
+      if (session.id == _sourceSessionId) return session;
     }
     return null;
   }
 
   void _prefill(WorkoutSession session) {
-    _sessionDate = session.sessionDate;
-    _notesController.text = session.notes ?? '';
+    // Saat mengulang, sesinya sesi baru: tanggalnya hari ini dan catatan lama
+    // tidak dibawa — "badan enak, tidur cukup" minggu lalu belum tentu berlaku.
+    if (!_isRepeat) {
+      _sessionDate = session.sessionDate;
+      _notesController.text = session.notes ?? '';
+    }
     for (final row in _rows) {
       row.dispose();
     }
@@ -163,6 +226,129 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
       ..addAll(session.exercises.map(_ExerciseRowControllers.fromEntry));
     if (_rows.isEmpty) _rows.add(_ExerciseRowControllers());
     _prefilled = true;
+  }
+
+  void _applyTemplate(WorkoutTemplate template) {
+    setState(() {
+      for (final row in _rows) {
+        row.dispose();
+      }
+      _rows
+        ..clear()
+        ..addAll(template.exercises.map(_ExerciseRowControllers.fromTemplate));
+      if (_rows.isEmpty) _rows.add(_ExerciseRowControllers());
+    });
+  }
+
+  Future<void> _pickTemplate() async {
+    final template = await showTemplatePicker(context);
+    if (template == null || !mounted) return;
+
+    if (template.exercises.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Template "${template.name}" tidak berisi latihan')),
+      );
+      return;
+    }
+
+    final filled = _rows.where((row) => row.nameController.text.trim().isNotEmpty).length;
+    if (filled > 0) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Ganti isi form?'),
+          content: Text(
+            'Form ini sudah berisi $filled latihan. Memakai template '
+            '"${template.name}" akan menggantinya.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Ganti'),
+            ),
+          ],
+        ),
+      );
+      if (replace != true) return;
+    }
+
+    _applyTemplate(template);
+  }
+
+  Future<void> _saveAsTemplate() async {
+    final exercises = _rows
+        .where((row) => row.nameController.text.trim().isNotEmpty)
+        .map((row) => row.toTemplateExercise())
+        .toList();
+
+    if (exercises.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Isi minimal satu latihan sebelum menyimpan template')),
+      );
+      return;
+    }
+
+    final name = await showTemplateNameDialog(context);
+    if (name == null || !mounted) return;
+
+    final userId = ref.read(currentUserProvider)?.id;
+    if (userId == null) return;
+
+    try {
+      await ref
+          .read(workoutRepositoryProvider)
+          .addTemplate(userId: userId, name: name, exercises: exercises);
+      ref.invalidate(workoutTemplatesProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Template "$name" tersimpan')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal menyimpan template: $e')));
+      }
+    }
+  }
+
+  Future<void> _startRest(_ExerciseRowControllers row) async {
+    final seconds = await showRestPicker(
+      context,
+      initialSeconds: row.restSeconds ?? _defaultRest,
+      exerciseName: row.nameController.text.trim(),
+    );
+    if (seconds == null || !mounted) return;
+
+    setState(() {
+      row.restSeconds = seconds;
+      _defaultRest = seconds;
+    });
+    final name = row.nameController.text.trim();
+    _restTimer.start(seconds, label: name.isEmpty ? null : name);
+  }
+
+  /// Terapkan semua saran overload yang tersedia sekaligus. Dipakai setelah
+  /// "Ulangi", supaya progresi satu sesi penuh cukup satu ketukan.
+  void _applyAllSuggestions(Map<String, OverloadSuggestion> suggestions) {
+    var applied = 0;
+    setState(() {
+      for (final row in _rows) {
+        if (row.type == ExerciseType.cardio) continue;
+        final suggestion = suggestions[row.nameController.text.trim().toLowerCase()];
+        if (suggestion == null) continue;
+        row.applySuggestion(suggestion);
+        applied++;
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$applied saran diterapkan')),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -229,7 +415,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isEdit) {
+    if (_sourceSessionId != null) {
       ref.listen(workoutSessionsProvider, (previous, next) {
         if (_prefilled) return;
         final session = _findSession(next.value);
@@ -242,13 +428,23 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
     final filledCount =
         _rows.where((row) => row.nameController.text.trim().isNotEmpty).length;
 
+    final pendingSuggestions = _rows
+        .where((row) =>
+            row.type != ExerciseType.cardio &&
+            suggestions.containsKey(row.nameController.text.trim().toLowerCase()))
+        .length;
+
     return Scaffold(
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
           HeroHeader(
-            title: _isEdit ? 'Edit Sesi Workout' : 'Catat Sesi Workout',
-            subtitle: 'Catat latihanmu, saran beban muncul otomatis',
+            title: _isEdit
+                ? 'Edit Sesi Workout'
+                : (_isRepeat ? 'Ulangi Sesi' : 'Catat Sesi Workout'),
+            subtitle: _isRepeat
+                ? 'Latihan disalin dari sesi sebelumnya, tinggal sesuaikan'
+                : 'Catat latihanmu, saran beban muncul otomatis',
             color: _workoutColor,
             leading: HeroIconButton(
               icon: Icons.arrow_back,
@@ -303,6 +499,54 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                   icon: Icons.fitness_center,
                   color: _workoutColor,
                 ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _pickTemplate,
+                        icon: const Icon(Icons.bookmark_outline, size: 18),
+                        label: const Text('Pakai Template', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _workoutColor,
+                          side: BorderSide(color: _workoutColor.withValues(alpha: 0.4)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _saveAsTemplate,
+                        icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+                        label: const Text('Simpan Template', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _workoutColor,
+                          side: BorderSide(color: _workoutColor.withValues(alpha: 0.4)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                // Muncul saat beberapa latihan sekaligus punya saran progresi —
+                // paling sering setelah menekan "Ulangi" di riwayat.
+                if (pendingSuggestions > 1) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  FilledButton.tonalIcon(
+                    onPressed: () => _applyAllSuggestions(suggestions),
+                    icon: const Icon(Icons.auto_awesome, size: 18),
+                    label: Text(
+                      'Terapkan $pendingSuggestions saran progresi',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _workoutColor.withValues(alpha: 0.14),
+                      foregroundColor: _workoutColor,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.sm),
                 for (var i = 0; i < _rows.length; i++) _buildExerciseCard(i, suggestions),
                 OutlinedButton.icon(
                   onPressed: () => setState(() => _rows.add(_ExerciseRowControllers())),
@@ -334,11 +578,17 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
           ),
         ],
       ),
-      bottomNavigationBar: SaveBar(
-        color: _workoutColor,
-        saving: _saving,
-        onPressed: _submit,
-        label: 'Simpan Sesi',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RestTimerBar(controller: _restTimer),
+          SaveBar(
+            color: _workoutColor,
+            saving: _saving,
+            onPressed: _submit,
+            label: 'Simpan Sesi',
+          ),
+        ],
       ),
     );
   }
@@ -483,6 +733,23 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
               controller: row.notesController,
               decoration: const InputDecoration(labelText: 'Catatan (opsional)'),
             ),
+            // Cardio tidak punya jeda antar set, jadi timernya tidak relevan.
+            if (row.type != ExerciseType.cardio)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => _startRest(row),
+                  style: TextButton.styleFrom(
+                    foregroundColor: _workoutColor,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  icon: const Icon(Icons.timer_outlined, size: 18),
+                  label: Text(
+                    'Istirahat ${formatRest(row.restSeconds ?? _defaultRest)}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

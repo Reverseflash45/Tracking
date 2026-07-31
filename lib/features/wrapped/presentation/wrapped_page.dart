@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../academic/data/models/class_schedule.dart' show weekDayName;
 import '../../academic/presentation/academic_providers.dart';
+import '../../nutrition/data/nutrition_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../domain/wrapped_stats.dart';
 
@@ -53,7 +54,9 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
   Widget build(BuildContext context) {
     final tasks = ref.watch(tasksProvider).value;
     final sessions = ref.watch(workoutSessionsProvider).value;
-    final loading = tasks == null || sessions == null;
+    final foods = ref.watch(foodLogsProvider).value;
+    final waters = ref.watch(waterLogsProvider).value;
+    final loading = tasks == null || sessions == null || foods == null || waters == null;
 
     final stats = loading
         ? null
@@ -62,6 +65,8 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
             now: DateTime.now(),
             tasks: tasks,
             sessions: sessions,
+            foods: foods,
+            waters: waters,
           );
 
     final cards = stats == null ? const <_StoryCardData>[] : _buildCards(stats);
@@ -173,6 +178,30 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
             ? 'Total volume ${_numberFormat.format(stats.totalVolume.round())} kg'
             : 'Belum ada sesi angkat beban $phrase',
       ),
+      // Kartu nutrisi hanya muncul kalau memang ada catatannya — kartu berisi
+      // "0 kkal" tidak memberi tahu apa pun selain bahwa fiturnya belum dipakai.
+      if (!stats.nutrisi.kosong)
+        _StoryCardData(
+          icon: Icons.restaurant_menu,
+          eyebrow: 'Rata-rata kalori',
+          value: stats.nutrisi.hariTercatat == 0
+              ? '${stats.nutrisi.totalGelas}'
+              : _numberFormat.format(stats.nutrisi.rataKalori.round()),
+          valueIsText: false,
+          caption: [
+            if (stats.nutrisi.hariTercatat > 0)
+              'Dari ${stats.nutrisi.hariTercatat} hari yang kamu catat'
+            else
+              'Gelas air diminum $phrase',
+            if (stats.nutrisi.hariTercatat > 0)
+              'Rata-rata protein ${stats.nutrisi.rataProtein.round()} g per hari',
+            if (stats.nutrisi.makananFavorit != null)
+              'Paling sering: ${stats.nutrisi.makananFavorit!.label} '
+                  '(${stats.nutrisi.makananFavorit!.count}x)',
+            if (stats.nutrisi.hariTercatat > 0 && stats.nutrisi.totalGelas > 0)
+              '${stats.nutrisi.totalGelas} gelas air diminum',
+          ].join('\n'),
+        ),
       _StoryCardData(
         icon: Icons.local_fire_department,
         eyebrow: 'Hari aktif',
@@ -318,8 +347,8 @@ class _EmptyWrapped extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Belum ada tugas selesai atau sesi workout ${period.phrase}. '
-              'Coba pilih periode yang lebih panjang.',
+              'Belum ada tugas selesai, sesi workout, atau catatan makan '
+              '${period.phrase}. Coba pilih periode yang lebih panjang.',
               textAlign: TextAlign.center,
               style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
             ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
+import '../data/models/workout_template.dart';
 import '../data/workout_repository.dart';
 import '../domain/exercise_progress.dart';
 import '../domain/progressive_overload.dart';
@@ -12,6 +13,13 @@ final workoutSessionsProvider = FutureProvider.autoDispose<List<WorkoutSession>>
   final userId = ref.watch(currentUserProvider)?.id;
   if (userId == null) return const [];
   return ref.watch(workoutRepositoryProvider).fetchSessions(userId);
+});
+
+final workoutTemplatesProvider =
+    FutureProvider.autoDispose<List<WorkoutTemplate>>((ref) async {
+  final userId = ref.watch(currentUserProvider)?.id;
+  if (userId == null) return const [];
+  return ref.watch(workoutRepositoryProvider).fetchTemplates(userId);
 });
 
 final workoutStreakProvider = Provider.autoDispose<AsyncValue<WorkoutStreak>>((ref) {

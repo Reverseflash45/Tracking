@@ -10,19 +10,22 @@ import '../domain/food_log.dart';
 
 const _color = AppColors.deadline;
 
-Future<void> showFoodFormSheet(BuildContext context, {Meal? meal}) {
+/// Sheet catat makanan. Kalau [existing] diisi, sheet berjalan dalam mode edit
+/// dan menimpa catatan itu alih-alih membuat yang baru.
+Future<void> showFoodFormSheet(BuildContext context, {Meal? meal, FoodLog? existing}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (context) => _FoodFormSheet(meal: meal),
+    builder: (context) => _FoodFormSheet(meal: meal, existing: existing),
   );
 }
 
 class _FoodFormSheet extends ConsumerStatefulWidget {
-  const _FoodFormSheet({this.meal});
+  const _FoodFormSheet({this.meal, this.existing});
 
   final Meal? meal;
+  final FoodLog? existing;
 
   @override
   ConsumerState<_FoodFormSheet> createState() => _FoodFormSheetState();
@@ -40,9 +43,35 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
   final _sugarController = TextEditingController();
   final _sodiumController = TextEditingController();
 
-  late Meal _meal = widget.meal ?? Meal.guessFor(DateTime.now());
+  late Meal _meal = widget.existing?.meal ?? widget.meal ?? Meal.guessFor(DateTime.now());
   bool _showDetail = false;
   bool _saving = false;
+
+  bool get _isEdit => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.existing;
+    if (existing == null) return;
+
+    _nameController.text = existing.name;
+    _caloriesController.text = _trim(existing.calories);
+    _proteinController.text = _trim(existing.proteinG);
+    _carbsController.text = _trim(existing.carbsG);
+    _fatController.text = _trim(existing.fatG);
+    _servingController.text = existing.servingGrams == null ? '' : _trim(existing.servingGrams!);
+    _fiberController.text = existing.fiberG == null ? '' : _trim(existing.fiberG!);
+    _sugarController.text = existing.sugarG == null ? '' : _trim(existing.sugarG!);
+    _sodiumController.text = existing.sodiumMg == null ? '' : _trim(existing.sodiumMg!);
+
+    // Detail dibuka sejak awal kalau memang ada isinya, supaya angka yang
+    // tersembunyi tidak diam-diam ikut tersimpan tanpa sempat dilihat.
+    _showDetail = existing.servingGrams != null ||
+        existing.fiberG != null ||
+        existing.sugarG != null ||
+        existing.sodiumMg != null;
+  }
 
   @override
   void dispose() {
@@ -87,24 +116,29 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
 
     setState(() => _saving = true);
     try {
-      await ref.read(nutritionRepositoryProvider).addFood(
-            userId: userId,
-            food: FoodLog(
-              id: '',
-              loggedOn: DateTime.now(),
-              loggedAt: DateTime.now(),
-              name: _nameController.text.trim(),
-              meal: _meal,
-              calories: _parse(_caloriesController.text) ?? 0,
-              proteinG: _parse(_proteinController.text) ?? 0,
-              carbsG: _parse(_carbsController.text) ?? 0,
-              fatG: _parse(_fatController.text) ?? 0,
-              servingGrams: _parse(_servingController.text),
-              fiberG: _parse(_fiberController.text),
-              sugarG: _parse(_sugarController.text),
-              sodiumMg: _parse(_sodiumController.text),
-            ),
-          );
+      final repository = ref.read(nutritionRepositoryProvider);
+      final now = DateTime.now();
+      final food = FoodLog(
+        id: widget.existing?.id ?? '',
+        loggedOn: widget.existing?.loggedOn ?? now,
+        loggedAt: widget.existing?.loggedAt ?? now,
+        name: _nameController.text.trim(),
+        meal: _meal,
+        calories: _parse(_caloriesController.text) ?? 0,
+        proteinG: _parse(_proteinController.text) ?? 0,
+        carbsG: _parse(_carbsController.text) ?? 0,
+        fatG: _parse(_fatController.text) ?? 0,
+        servingGrams: _parse(_servingController.text),
+        fiberG: _parse(_fiberController.text),
+        sugarG: _parse(_sugarController.text),
+        sodiumMg: _parse(_sodiumController.text),
+      );
+
+      if (_isEdit) {
+        await repository.updateFood(id: widget.existing!.id, food: food);
+      } else {
+        await repository.addFood(userId: userId, food: food);
+      }
 
       ref.invalidate(foodLogsProvider);
       if (mounted) Navigator.of(context).pop();
@@ -143,11 +177,15 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                       color: _color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.restaurant, size: 18, color: _color),
+                    child: Icon(
+                      _isEdit ? Icons.edit_outlined : Icons.restaurant,
+                      size: 18,
+                      color: _color,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'Catat Makanan',
+                    _isEdit ? 'Edit Makanan' : 'Catat Makanan',
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -155,7 +193,9 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                   ),
                 ],
               ),
-              if (frequent.isNotEmpty) ...[
+              // Pintasan "sering dicatat" menimpa seluruh isi form, jadi hanya
+              // masuk akal saat mencatat baru — bukan saat mengoreksi satu entri.
+              if (!_isEdit && frequent.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.md),
                 Align(
                   alignment: Alignment.centerLeft,
@@ -291,7 +331,9 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.check),
-                label: Text(_saving ? 'Menyimpan...' : 'Simpan'),
+                label: Text(
+                  _saving ? 'Menyimpan...' : (_isEdit ? 'Simpan Perubahan' : 'Simpan'),
+                ),
               ),
             ],
           ),

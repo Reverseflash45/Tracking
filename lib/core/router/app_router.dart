@@ -100,7 +100,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               routes: [
                 GoRoute(
                   path: 'new',
-                  builder: (context, state) => const WorkoutFormPage(),
+                  // ?from=<id> membuka form berisi salinan sesi tersebut.
+                  builder: (context, state) => WorkoutFormPage(
+                    repeatSessionId: state.uri.queryParameters['from'],
+                  ),
                 ),
                 GoRoute(
                   path: 'progress',

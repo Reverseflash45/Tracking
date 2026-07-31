@@ -95,6 +95,24 @@ class FoodLog {
         'sodium_mg': sodiumMg,
         'confidence_percent': confidencePercent,
       };
+
+  /// Field yang boleh diubah saat mengedit catatan. `logged_on` sengaja tidak
+  /// ikut: mengoreksi angka kalori tidak boleh memindahkan makanannya ke hari
+  /// lain dan mengacaukan rekap harian yang sudah terlanjur dilihat.
+  Map<String, dynamic> toUpdateMap() => {
+        'name': name,
+        'meal': meal.dbValue,
+        'calories': calories,
+        'protein_g': proteinG,
+        'carbs_g': carbsG,
+        'fat_g': fatG,
+        'serving_grams': servingGrams,
+        'fiber_g': fiberG,
+        'sugar_g': sugarG,
+        'sodium_mg': sodiumMg,
+        // Angka yang sudah dikoreksi manual bukan lagi hasil scan.
+        'confidence_percent': null,
+      };
 }
 
 class WaterLog {
