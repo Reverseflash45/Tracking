@@ -46,10 +46,13 @@ class _ToolShortcuts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Grid 2x2, bukan satu baris berisi empat: di layar HP sempit label seperti
-    // "Muscle Builder" akan terpotong kalau dibagi empat kolom.
+    // Progres dibuat selebar layar karena isinya ringkasan lintas fitur —
+    // sisanya grid 2x2, karena empat kolom bikin label seperti "Muscle
+    // Builder" terpotong di layar HP sempit.
     return Column(
       children: [
+        const _ProgressCard(),
+        const SizedBox(height: AppSpacing.sm),
         for (var i = 0; i < _tools.length; i += 2) ...[
           if (i > 0) const SizedBox(height: AppSpacing.sm),
           Row(
@@ -64,6 +67,58 @@ class _ToolShortcuts extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/workout/stats'),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.dashboard.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.insights, size: 20, color: AppColors.dashboard),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Progres',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Grafik berat badan, nutrisi, dan latihan',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, size: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
