@@ -1,10 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Wajib untuk memanggil Supabase. Flutter hanya menaruh permission ini di
+         manifest debug & profile, jadi tanpa baris ini build rilis gagal DNS
+         lookup ("Failed host lookup", errno 7) meski HP jelas online. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <!-- Pengingat deadline lewat flutter_local_notifications. RECEIVE_BOOT_COMPLETED
          dibutuhkan supaya jadwal yang sudah dipasang tidak hilang setelah HP restart. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application
         android:label="tracking"
         android:name="${applicationName}"

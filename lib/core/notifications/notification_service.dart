@@ -74,11 +74,10 @@ class NotificationService {
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
-      final granted = await android.requestNotificationsPermission() ?? false;
-      // Izin alarm presisi opsional: kalau ditolak, penjadwalan tetap jalan
-      // dengan mode inexact (lihat _scheduleMode).
-      await android.requestExactAlarmsPermission();
-      return granted;
+      // Sengaja tidak meminta izin alarm presisi: penjadwalan memakai mode
+      // inexact, dan requestExactAlarmsPermission() akan melempar user ke
+      // layar setelan sistem untuk izin yang tidak kita pakai.
+      return await android.requestNotificationsPermission() ?? false;
     }
 
     final darwin = _plugin.resolvePlatformSpecificImplementation<
