@@ -517,44 +517,54 @@ class _MealSection extends ConsumerWidget {
                       child: Icon(Icons.delete_outline, color: colorScheme.onErrorContainer),
                     ),
                     onDismissed: (_) => _delete(ref, food),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  food.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
+                    child: InkWell(
+                      onTap: () => showFoodFormSheet(context, existing: food),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    food.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  '${_timeFormat.format(food.loggedAt)}'
-                                  '${food.servingGrams != null ? " · ${food.servingGrams!.round()} g" : ""}'
-                                  ' · P${food.proteinG.round()} K${food.carbsG.round()} L${food.fatG.round()}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: colorScheme.onSurfaceVariant,
+                                  Text(
+                                    '${_timeFormat.format(food.loggedAt)}'
+                                    '${food.servingGrams != null ? " · ${food.servingGrams!.round()} g" : ""}'
+                                    ' · P${food.proteinG.round()} K${food.carbsG.round()} L${food.fatG.round()}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            '${_numberFormat.format(food.calories.round())} kkal',
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-                          ),
-                        ],
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(
+                              '${_numberFormat.format(food.calories.round())} kkal',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 14,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

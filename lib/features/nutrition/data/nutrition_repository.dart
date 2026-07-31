@@ -6,9 +6,13 @@ import '../domain/daily_nutrition.dart';
 import '../domain/food_log.dart';
 
 /// Riwayat dibatasi supaya query tidak membesar tanpa batas seiring waktu.
-/// Harus lebih panjang dari periode terpanjang di halaman Progres (90 hari),
-/// kalau tidak grafiknya akan terpotong diam-diam.
-const int _historyDays = 120;
+///
+/// Harus lebih panjang dari periode terpanjang yang membaca data ini. Sejak
+/// nutrisi masuk ke Wrapped, periode terpanjangnya adalah rekap tahunan (365
+/// hari), bukan lagi 90 hari di halaman Progres. Kalau jendelanya lebih pendek,
+/// rekap tahunan akan terpotong diam-diam dan angkanya terlihat wajar padahal
+/// salah.
+const int _historyDays = 400;
 
 class NutritionRepository {
   NutritionRepository(this._client);
@@ -52,6 +56,10 @@ class NutritionRepository {
     return _client.from('food_logs').insert(
           food.toInsertMap(userId: userId, date: date ?? DateTime.now()),
         );
+  }
+
+  Future<void> updateFood({required String id, required FoodLog food}) {
+    return _client.from('food_logs').update(food.toUpdateMap()).eq('id', id);
   }
 
   Future<void> deleteFood(String id) {

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import 'models/exercise_entry.dart';
 import 'models/workout_session.dart';
+import 'models/workout_template.dart';
 
 class WorkoutRepository {
   WorkoutRepository(this._client);
@@ -70,6 +71,43 @@ class WorkoutRepository {
 
   Future<void> deleteSession(String id) {
     return _client.from('workout_sessions').delete().eq('id', id);
+  }
+
+  // --- Template ---
+
+  Future<List<WorkoutTemplate>> fetchTemplates(String userId) async {
+    final rows = await _client
+        .from('workout_templates')
+        .select('*, workout_template_exercises(*)')
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+    return (rows as List)
+        .map((row) => WorkoutTemplate.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> addTemplate({
+    required String userId,
+    required String name,
+    required List<TemplateExercise> exercises,
+  }) async {
+    final row = await _client
+        .from('workout_templates')
+        .insert({'user_id': userId, 'name': name})
+        .select()
+        .single();
+
+    final templateId = row['id'] as String;
+    if (exercises.isEmpty) return;
+
+    await _client.from('workout_template_exercises').insert([
+      for (var i = 0; i < exercises.length; i++)
+        exercises[i].toInsertMap(templateId: templateId, userId: userId, position: i),
+    ]);
+  }
+
+  Future<void> deleteTemplate(String id) {
+    return _client.from('workout_templates').delete().eq('id', id);
   }
 }
 

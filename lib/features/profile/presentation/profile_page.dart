@@ -12,7 +12,9 @@ import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../auth/presentation/auth_controller.dart';
+import '../data/export_repository.dart';
 import '../data/profile_repository.dart';
+import '../domain/export_file.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -23,6 +25,35 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _uploadingAvatar = false;
+  bool _exporting = false;
+
+  Future<void> _exportData() async {
+    setState(() => _exporting = true);
+    try {
+      final email = ref.read(currentUserProvider)?.email;
+      final result = await ref.read(exportRepositoryProvider).buildExport(email: email);
+      final fileName = exportFileName(DateTime.now());
+
+      await shareExport(
+        json: result.json,
+        fileName: fileName,
+        subject: 'Cadangan data Tracking',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${result.totalRows} baris data disiapkan')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal menyiapkan cadangan: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
 
   Future<void> _changeAvatar() async {
     final userId = ref.read(currentUserProvider)?.id;
@@ -213,6 +244,46 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                     subtitle: const Text('Rekap mingguan, bulanan, dan tahunanmu'),
                     trailing: const Icon(Icons.chevron_right),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const SectionHeader(
+                  title: 'Data',
+                  icon: Icons.backup_outlined,
+                  color: AppColors.profile,
+                ),
+                Card(
+                  child: ListTile(
+                    onTap: _exporting ? null : _exportData,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.profile.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: _exporting
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.profile,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.download_outlined,
+                              size: 18,
+                              color: AppColors.profile,
+                            ),
+                    ),
+                    title: Text(
+                      _exporting ? 'Menyiapkan...' : 'Export Data',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: const Text(
+                      'Simpan seluruh datamu sebagai satu berkas JSON',
+                    ),
+                    trailing: _exporting ? null : const Icon(Icons.chevron_right),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),

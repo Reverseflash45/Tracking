@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/features/academic/data/models/task.dart';
+import 'package:tracking/features/nutrition/domain/food_log.dart';
 import 'package:tracking/features/workout/data/models/exercise_entry.dart';
 import 'package:tracking/features/workout/data/models/workout_session.dart';
 import 'package:tracking/features/wrapped/domain/wrapped_stats.dart';
@@ -49,6 +50,34 @@ ExerciseEntry _entry(
     weightKg: weight,
     sets: sets,
     reps: reps,
+  );
+}
+
+FoodLog _food(
+  DateTime date, {
+  String name = 'Nasi Goreng',
+  double calories = 500,
+  double protein = 20,
+}) {
+  return FoodLog(
+    id: '$name-${date.toIso8601String()}-$calories',
+    loggedOn: date,
+    loggedAt: date,
+    name: name,
+    meal: Meal.makanSiang,
+    calories: calories,
+    proteinG: protein,
+    carbsG: 60,
+    fatG: 15,
+  );
+}
+
+WaterLog _water(DateTime date, {int ml = 250}) {
+  return WaterLog(
+    id: '${date.toIso8601String()}-$ml',
+    loggedOn: date,
+    loggedAt: date,
+    ml: ml,
   );
 }
 
@@ -237,6 +266,133 @@ void main() {
         sessions: banyakGym,
       );
       expect(gymRat.persona, 'Gym Rat');
+    });
+  });
+
+  group('nutrisi', () {
+    test('hanya menghitung catatan di dalam rentang', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        foods: [
+          _food(DateTime(2026, 7, 28)),
+          // Minggu lalu, di luar rentang mingguan.
+          _food(DateTime(2026, 7, 20)),
+        ],
+      );
+
+      expect(stats.nutrisi.hariTercatat, 1);
+      expect(stats.nutrisi.totalKalori, 500);
+    });
+
+    test('rata-rata dibagi hari tercatat, bukan jumlah entri', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        foods: [
+          _food(DateTime(2026, 7, 28), calories: 400, protein: 10),
+          _food(DateTime(2026, 7, 28), calories: 600, protein: 30),
+          _food(DateTime(2026, 7, 29), calories: 500, protein: 20),
+        ],
+      );
+
+      expect(stats.nutrisi.hariTercatat, 2);
+      // Hari pertama 1000, hari kedua 500 -> rata-rata 750.
+      expect(stats.nutrisi.rataKalori, 750);
+      expect(stats.nutrisi.rataProtein, 30);
+    });
+
+    test('makanan favorit tidak peduli huruf besar/kecil', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        foods: [
+          _food(DateTime(2026, 7, 28), name: 'Nasi Goreng'),
+          _food(DateTime(2026, 7, 29), name: 'nasi goreng'),
+          _food(DateTime(2026, 7, 30), name: 'Ayam Bakar'),
+        ],
+      );
+
+      expect(stats.nutrisi.makananFavorit!.count, 2);
+      // Ejaan yang ditampilkan mengikuti catatan terbaru.
+      expect(stats.nutrisi.makananFavorit!.label, 'nasi goreng');
+    });
+
+    test('gelas air dihitung dari mililiter', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        waters: [
+          _water(DateTime(2026, 7, 28)),
+          _water(DateTime(2026, 7, 28), ml: 600),
+          _water(DateTime(2026, 7, 20)),
+        ],
+      );
+
+      // 250 ml = 1 gelas, 600 ml dibulatkan jadi 2 gelas; yang di luar rentang
+      // tidak ikut.
+      expect(stats.nutrisi.totalGelas, 3);
+    });
+
+    test('catatan makan saja sudah membuat wrapped tidak kosong', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        foods: [_food(DateTime(2026, 7, 28))],
+      );
+
+      expect(stats.kosong, isFalse);
+    });
+
+    test('tanpa data nutrisi tidak membagi dengan nol', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+      );
+
+      expect(stats.nutrisi.kosong, isTrue);
+      expect(stats.nutrisi.rataKalori, 0);
+      expect(stats.nutrisi.makananFavorit, isNull);
+    });
+
+    test('mencatat makan beberapa hari memberi persona sendiri', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        foods: [
+          _food(DateTime(2026, 7, 28)),
+          _food(DateTime(2026, 7, 29)),
+          _food(DateTime(2026, 7, 30)),
+        ],
+      );
+
+      expect(stats.persona, 'Pencatat Setia');
+    });
+
+    test('hari aktif tidak ikut naik hanya karena mencatat makan', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        foods: [_food(DateTime(2026, 7, 28)), _food(DateTime(2026, 7, 29))],
+      );
+
+      expect(stats.hariAktif, 0);
     });
   });
 }

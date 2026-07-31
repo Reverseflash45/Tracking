@@ -445,13 +445,23 @@ class _SessionCard extends ConsumerWidget {
                 ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.sm, 0),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => context.push('/workout/${session.id}/edit'),
-                    icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.workout),
-                    label: const Text('Edit', style: TextStyle(color: AppColors.workout)),
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () async {
+                        await context.push('/workout/new?from=${session.id}');
+                        ref.invalidate(workoutSessionsProvider);
+                      },
+                      icon: const Icon(Icons.replay, size: 18, color: AppColors.workout),
+                      label: const Text('Ulangi', style: TextStyle(color: AppColors.workout)),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.push('/workout/${session.id}/edit'),
+                      icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.workout),
+                      label: const Text('Edit', style: TextStyle(color: AppColors.workout)),
+                    ),
+                  ],
                 ),
               ),
             ],
