@@ -23,6 +23,11 @@ class _ToolShortcuts extends StatelessWidget {
 
   static const _tools = [
     _ToolCard(
+      icon: Icons.videocam_outlined,
+      label: 'Latihan Terpandu',
+      route: '/workout/live',
+    ),
+    _ToolCard(
       icon: Icons.restaurant_menu,
       label: 'Nutrisi',
       route: '/workout/nutrition',
