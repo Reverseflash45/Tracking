@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -85,9 +86,12 @@ class _ExercisePicker extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Sandarkan HP 2-3 meter darimu sampai seluruh badan masuk '
-                    'frame. Lima gerakan ini dipilih karena sudutnya terbaca '
-                    'andal dari satu kamera — gerakan seperti bench press dan '
-                    'pull up tidak masuk karena tubuhnya saling menutupi.',
+                    'frame. Kamera depan atau belakang sama saja — ganti lewat '
+                    'ikon di atas layar. Kalau kerangkanya tampak terbalik, '
+                    'tekan ikon balik di sebelahnya.\n\n'
+                    'Lima gerakan ini dipilih karena sudutnya terbaca andal '
+                    'dari satu kamera; bench press dan pull up tidak masuk '
+                    'karena tubuhnya saling menutupi di tengah gerakan.',
                     style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
@@ -150,11 +154,30 @@ class _LiveSessionPage extends StatefulWidget {
   State<_LiveSessionPage> createState() => _LiveSessionPageState();
 }
 
+/// Preferensi kamera disimpan supaya kamu tidak perlu mengatur ulang tiap sesi
+/// — cara menyandarkan HP biasanya sama terus.
+const _prefsLens = 'live_camera_lens';
+const _prefsMirror = 'live_camera_mirror';
+
 class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingObserver {
   CameraController? _controller;
   CameraDescription? _camera;
   PoseDetector? _detector;
   late final RepCounter _counter = widget.exercise.newCounter();
+
+  List<CameraDescription> _cameras = const [];
+
+  /// Arah lensa yang diminta. Dibaca dari preferensi, jatuh ke belakang kalau
+  /// belum pernah diatur.
+  CameraLensDirection _lens = CameraLensDirection.back;
+
+  /// Apakah koordinat titik perlu dibalik horizontal supaya kerangkanya
+  /// menempel di badan.
+  ///
+  /// Sengaja tombol, bukan ditebak dari arah lensa: `CameraPreview` tidak
+  /// mencerminkan apa pun di sisi Dart, jadi tercermin atau tidaknya preview
+  /// kamera depan ditentukan lapisan native dan berbeda antar perangkat.
+  bool _mirror = false;
 
   /// Frame diproses satu per satu. Tanpa ini, antrean frame menumpuk lebih
   /// cepat daripada bisa dihabiskan dan aplikasinya kehabisan memori.
@@ -174,7 +197,24 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _start();
+    _restorePreferences().then((_) => _start());
+  }
+
+  Future<void> _restorePreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lens = prefs.getString(_prefsLens);
+    if (!mounted) return;
+    _lens = lens == 'front' ? CameraLensDirection.front : CameraLensDirection.back;
+    _mirror = prefs.getBool(_prefsMirror) ?? false;
+  }
+
+  Future<void> _savePreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _prefsLens,
+      _lens == CameraLensDirection.front ? 'front' : 'back',
+    );
+    await prefs.setBool(_prefsMirror, _mirror);
   }
 
   @override
@@ -207,12 +247,15 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
         return;
       }
 
-      // Kamera belakang lebih tajam dan tidak dicerminkan, jadi jadi pilihan
-      // utama. Kamera depan dipakai kalau memang cuma itu yang ada.
+      _cameras = cameras;
+
+      // Pakai lensa yang kamu pilih terakhir kali; kalau perangkatnya tidak
+      // punya, ambil apa pun yang ada daripada gagal total.
       final camera = cameras.firstWhere(
-        (c) => c.lensDirection == CameraLensDirection.back,
+        (c) => c.lensDirection == _lens,
         orElse: () => cameras.first,
       );
+      _lens = camera.lensDirection;
 
       final controller = CameraController(
         camera,
@@ -381,6 +424,38 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
     });
   }
 
+  /// True kalau perangkat punya lebih dari satu arah lensa untuk dipilih.
+  bool get _canSwitchCamera =>
+      _cameras.map((c) => c.lensDirection).toSet().length > 1;
+
+  Future<void> _switchCamera() async {
+    if (!_canSwitchCamera) return;
+
+    _lens = _lens == CameraLensDirection.back
+        ? CameraLensDirection.front
+        : CameraLensDirection.back;
+
+    // Hitungan repetisi sengaja dipertahankan — kamu cuma memindahkan kamera,
+    // bukan memulai set baru. Tapi fasenya diputus supaya jeda saat kamera
+    // mati tidak tersambung jadi satu repetisi palsu.
+    _counter.interrupt();
+    setState(() {
+      _pose = null;
+      _visible = false;
+      _warnings = const [];
+      _starting = true;
+    });
+
+    await _stop();
+    unawaited(_savePreferences());
+    await _start();
+  }
+
+  void _toggleMirror() {
+    setState(() => _mirror = !_mirror);
+    unawaited(_savePreferences());
+  }
+
   void _reset() {
     setState(() {
       _counter.reset();
@@ -405,7 +480,6 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
   @override
   Widget build(BuildContext context) {
     final controller = _controller;
-    final mirror = _camera?.lensDirection == CameraLensDirection.front;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -414,6 +488,20 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
         foregroundColor: Colors.white,
         title: Text(widget.exercise.name),
         actions: [
+          if (_canSwitchCamera)
+            IconButton(
+              icon: const Icon(Icons.cameraswitch_outlined),
+              tooltip: _lens == CameraLensDirection.back
+                  ? 'Pakai kamera depan'
+                  : 'Pakai kamera belakang',
+              onPressed: _starting ? null : _switchCamera,
+            ),
+          IconButton(
+            icon: Icon(_mirror ? Icons.flip : Icons.flip_outlined),
+            tooltip: 'Balik arah kerangka',
+            color: _mirror ? _color : null,
+            onPressed: _toggleMirror,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Ulang hitungan',
@@ -450,7 +538,7 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
                       painter: PosePainter(
                         pose: _pose,
                         imageSize: _imageSize,
-                        mirror: mirror,
+                        mirror: _mirror,
                         warning: _warnings.isNotEmpty,
                       ),
                     ),
