@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/domain/achievements.dart';
@@ -13,6 +14,9 @@ import '../../academic/data/models/class_schedule.dart';
 import '../../academic/data/models/task.dart';
 import '../../academic/presentation/academic_providers.dart';
 import '../../academic/presentation/quick_capture_sheet.dart';
+import '../../body/data/body_repository.dart';
+import '../../body/domain/calorie_calculator.dart';
+import '../../nutrition/data/nutrition_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 
@@ -42,6 +46,8 @@ class DashboardPage extends ConsumerWidget {
           ref.invalidate(tasksProvider);
           ref.invalidate(workoutSessionsProvider);
           ref.invalidate(profileProvider);
+          ref.invalidate(foodLogsProvider);
+          ref.invalidate(waterLogsProvider);
         },
         child: ListView(
           padding: EdgeInsets.zero,
@@ -79,6 +85,13 @@ class DashboardPage extends ConsumerWidget {
                     color: _workoutColor,
                   ),
                   const _TodayWorkoutCard(),
+                  const SizedBox(height: AppSpacing.md),
+                  const SectionHeader(
+                    title: 'Nutrisi Hari Ini',
+                    icon: Icons.restaurant_menu,
+                    color: _deadlineColor,
+                  ),
+                  const _TodayNutritionCard(),
                 ],
               ),
             ),
@@ -337,6 +350,93 @@ class _UpcomingDeadlinesCard extends ConsumerWidget {
                     ),
                 ],
               ),
+        loading: () => const LinearProgressIndicator(),
+        error: (error, stackTrace) => Text('Gagal memuat: $error'),
+      ),
+    );
+  }
+}
+
+class _TodayNutritionCard extends ConsumerWidget {
+  const _TodayNutritionCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todayAsync = ref.watch(todayNutritionProvider);
+    final profile = ref.watch(bodyProfileProvider).value;
+    final weight = ref.watch(currentWeightProvider).value;
+
+    final targets = (profile == null || weight == null)
+        ? null
+        : calculateCalories(profile: profile, weightKg: weight, now: DateTime.now());
+
+    return _DashboardCard(
+      child: todayAsync.when(
+        data: (today) => InkWell(
+          onTap: () => context.push('/workout/nutrition'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${today.calories.round()}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                      color: _deadlineColor,
+                      height: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    targets == null ? 'kkal' : '/ ${targets.goalKcal} kkal',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${(today.waterMl / 1000).toStringAsFixed(1)} L air',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              if (targets != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: LinearProgressIndicator(
+                    value: (today.calories / targets.goalKcal).clamp(0.0, 1.0),
+                    minHeight: 7,
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation(
+                      today.calories > targets.goalKcal
+                          ? AppColors.priorityHigh
+                          : _deadlineColor,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                today.kosong
+                    ? 'Belum ada catatan makan hari ini'
+                    : 'Protein ${today.proteinG.round()} g  ·  '
+                        'Karbo ${today.carbsG.round()} g  ·  Lemak ${today.fatG.round()} g',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
         loading: () => const LinearProgressIndicator(),
         error: (error, stackTrace) => Text('Gagal memuat: $error'),
       ),

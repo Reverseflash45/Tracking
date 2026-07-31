@@ -13,6 +13,7 @@ import '../../features/body/presentation/calorie_page.dart';
 import '../../features/calendar/presentation/calendar_page.dart';
 import '../../features/muscle/presentation/muscle_builder_page.dart';
 import '../../features/muscle/presentation/muscle_detail_page.dart';
+import '../../features/nutrition/presentation/nutrition_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
 import '../../features/workout/presentation/workout_form_page.dart';
@@ -111,6 +112,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'calories',
                   builder: (context, state) => const CaloriePage(),
+                ),
+                GoRoute(
+                  path: 'nutrition',
+                  builder: (context, state) => const NutritionPage(),
                 ),
                 GoRoute(
                   path: 'muscle',

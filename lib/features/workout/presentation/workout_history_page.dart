@@ -21,33 +21,48 @@ final _volumeFormat = NumberFormat.decimalPattern('id_ID');
 class _ToolShortcuts extends StatelessWidget {
   const _ToolShortcuts();
 
+  static const _tools = [
+    _ToolCard(
+      icon: Icons.restaurant_menu,
+      label: 'Nutrisi',
+      route: '/workout/nutrition',
+    ),
+    _ToolCard(
+      icon: Icons.local_fire_department,
+      label: 'Kalkulator Kalori',
+      route: '/workout/calories',
+    ),
+    _ToolCard(
+      icon: Icons.accessibility_new,
+      label: 'Profil Tubuh',
+      route: '/workout/body',
+    ),
+    _ToolCard(
+      icon: Icons.sports_gymnastics,
+      label: 'Muscle Builder',
+      route: '/workout/muscle',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: const [
-        Expanded(
-          child: _ToolCard(
-            icon: Icons.accessibility_new,
-            label: 'Profil Tubuh',
-            route: '/workout/body',
+    // Grid 2x2, bukan satu baris berisi empat: di layar HP sempit label seperti
+    // "Muscle Builder" akan terpotong kalau dibagi empat kolom.
+    return Column(
+      children: [
+        for (var i = 0; i < _tools.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(child: _tools[i]),
+              const SizedBox(width: AppSpacing.sm),
+              if (i + 1 < _tools.length)
+                Expanded(child: _tools[i + 1])
+              else
+                const Spacer(),
+            ],
           ),
-        ),
-        SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _ToolCard(
-            icon: Icons.local_fire_department,
-            label: 'Kalkulator',
-            route: '/workout/calories',
-          ),
-        ),
-        SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _ToolCard(
-            icon: Icons.sports_gymnastics,
-            label: 'Muscle Builder',
-            route: '/workout/muscle',
-          ),
-        ),
+        ],
       ],
     );
   }
@@ -68,9 +83,8 @@ class _ToolCard extends StatelessWidget {
       child: InkWell(
         onTap: () => context.push(route),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
@@ -80,13 +94,14 @@ class _ToolCard extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 18, color: AppColors.workout),
               ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, height: 1.2),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, height: 1.2),
+                ),
               ),
             ],
           ),
