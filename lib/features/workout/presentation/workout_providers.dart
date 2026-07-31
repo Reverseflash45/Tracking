@@ -4,6 +4,7 @@ import '../../../core/supabase/supabase_client_provider.dart';
 import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
 import '../data/workout_repository.dart';
+import '../domain/exercise_progress.dart';
 import '../domain/progressive_overload.dart';
 import '../domain/workout_streak.dart';
 
@@ -44,6 +45,14 @@ final exerciseNamesProvider = Provider.autoDispose<AsyncValue<List<String>>>((re
     }
     return names.toList()..sort();
   });
+});
+
+/// Riwayat progres tiap nama latihan, mencakup semua tipe (termasuk cardio).
+/// Dipakai halaman Progress Latihan untuk tampilan "Semua" maupun detail.
+final exerciseProgressProvider =
+    Provider.autoDispose<AsyncValue<List<ExerciseProgress>>>((ref) {
+  final sessions = ref.watch(workoutSessionsProvider);
+  return sessions.whenData(buildExerciseProgress);
 });
 
 /// Saran progressive overload per nama latihan. Key-nya di-lowercase supaya

@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/section_header.dart';
+import '../domain/exercise_progress.dart';
 import '../domain/progressive_overload.dart';
 import 'overload_suggestion_view.dart';
 import 'workout_providers.dart';
@@ -16,6 +17,10 @@ import 'workout_providers.dart';
 const _workoutColor = AppColors.workout;
 final _numberFormat = NumberFormat.decimalPattern('id_ID');
 final _pointDateFormat = DateFormat('d MMM y', 'id_ID');
+final _shortDateFormat = DateFormat('d MMM', 'id_ID');
+
+String _trimNumber(double value) =>
+    value == value.roundToDouble() ? value.round().toString() : value.toStringAsFixed(1);
 
 class WorkoutProgressPage extends ConsumerStatefulWidget {
   const WorkoutProgressPage({super.key});
@@ -25,81 +30,35 @@ class WorkoutProgressPage extends ConsumerStatefulWidget {
 }
 
 class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
-  String? _selectedExercise;
+  /// null = mode "Semua".
+  String? _selectedKey;
 
   @override
   Widget build(BuildContext context) {
-    final names = ref.watch(exerciseNamesProvider).value ?? const <String>[];
-    final sessions = ref.watch(workoutSessionsProvider).value;
+    final all = ref.watch(exerciseProgressProvider).value ?? const <ExerciseProgress>[];
 
-    if (names.isNotEmpty && !names.contains(_selectedExercise)) {
-      _selectedExercise = names.first;
-    }
-
-    final points = <_ProgressPoint>[];
-    if (sessions != null && _selectedExercise != null) {
-      for (final session in sessions) {
-        for (final exercise in session.exercises) {
-          if (exercise.exerciseName == _selectedExercise && exercise.type.pakaiVolume) {
-            points.add(_ProgressPoint(
-              date: session.sessionDate,
-              weight: exercise.weightKg ?? 0,
-              volume: exercise.volume,
-            ));
-          }
+    ExerciseProgress? selected;
+    if (_selectedKey != null) {
+      for (final progress in all) {
+        if (progress.name.toLowerCase() == _selectedKey) {
+          selected = progress;
+          break;
         }
       }
-      points.sort((a, b) => a.date.compareTo(b.date));
+      // Latihan yang dipilih bisa hilang setelah sesinya dihapus.
+      if (selected == null) _selectedKey = null;
     }
-
-    final maxWeight = points.isEmpty
-        ? 0.0
-        : points.map((p) => p.weight).reduce((a, b) => a > b ? a : b);
-    final maxVolume = points.isEmpty
-        ? 0.0
-        : points.map((p) => p.volume).reduce((a, b) => a > b ? a : b);
-    final delta = points.length < 2 ? 0.0 : points.last.weight - points.first.weight;
-
-    final OverloadSuggestion? suggestion = _selectedExercise == null
-        ? null
-        : ref.watch(overloadSuggestionsProvider).value?[_selectedExercise!.trim().toLowerCase()];
 
     return Scaffold(
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
-            title: 'Progress Latihan',
-            subtitle: _selectedExercise ?? 'Perkembangan beban dan volume',
-            color: _workoutColor,
-            leading: HeroIconButton(
-              icon: Icons.arrow_back,
-              tooltip: 'Kembali',
-              onPressed: () => context.pop(),
-            ),
-            stats: [
-              HeroStatData(
-                icon: Icons.monitor_weight_outlined,
-                value: '${_numberFormat.format(maxWeight)} kg',
-                label: 'Beban Terberat',
-              ),
-              HeroStatData(
-                icon: Icons.bar_chart,
-                value: _numberFormat.format(maxVolume.round()),
-                label: 'Volume Terbaik',
-              ),
-              HeroStatData(
-                icon: Icons.history,
-                value: '${points.length}',
-                label: 'Sesi Tercatat',
-              ),
-            ],
-          ),
-          if (names.isEmpty)
+          _buildHero(all, selected),
+          if (all.isEmpty)
             const EmptyState(
               icon: Icons.show_chart,
-              title: 'Belum ada data latihan beban',
-              subtitle: 'Catat sesi workout dengan berat, set, dan rep untuk melihat grafik',
+              title: 'Belum ada data latihan',
+              subtitle: 'Catat sesi workout dulu untuk melihat perkembanganmu',
               color: _workoutColor,
             )
           else
@@ -113,25 +72,53 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SectionHeader(
+                  SectionHeader(
                     title: 'Pilih Latihan',
                     icon: Icons.fitness_center,
                     color: _workoutColor,
+                    trailing: Text(
+                      '${all.length} latihan',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        for (final name in names) ...[
-                          if (name != names.first) const SizedBox(width: AppSpacing.sm),
+                        ChoiceChip(
+                          label: const Text('Semua'),
+                          avatar: Icon(
+                            Icons.grid_view,
+                            size: 15,
+                            color: _selectedKey == null
+                                ? _workoutColor
+                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          selected: _selectedKey == null,
+                          onSelected: (_) => setState(() => _selectedKey = null),
+                          selectedColor: _workoutColor.withValues(alpha: 0.18),
+                          labelStyle: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: _selectedKey == null
+                                ? _workoutColor
+                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        for (final progress in all) ...[
+                          const SizedBox(width: AppSpacing.sm),
                           ChoiceChip(
-                            label: Text(name),
-                            selected: _selectedExercise == name,
-                            onSelected: (_) => setState(() => _selectedExercise = name),
+                            label: Text(progress.name),
+                            selected: _selectedKey == progress.name.toLowerCase(),
+                            onSelected: (_) => setState(
+                              () => _selectedKey = progress.name.toLowerCase(),
+                            ),
                             selectedColor: _workoutColor.withValues(alpha: 0.18),
                             labelStyle: TextStyle(
                               fontWeight: FontWeight.w600,
-                              color: _selectedExercise == name
+                              color: _selectedKey == progress.name.toLowerCase()
                                   ? _workoutColor
                                   : Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
@@ -141,37 +128,15 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  if (points.isEmpty)
-                    const EmptyState(
-                      icon: Icons.query_stats,
-                      title: 'Belum ada data untuk latihan ini',
-                      color: _workoutColor,
-                    )
-                  else ...[
-                    if (points.length >= 2) _DeltaBanner(delta: delta),
-                    if (suggestion != null) ...[
-                      const SectionHeader(
-                        title: 'Target Sesi Berikutnya',
-                        icon: Icons.flag_outlined,
-                        color: _workoutColor,
+                  if (selected == null)
+                    _AllExercisesView(
+                      items: all,
+                      onTap: (progress) => setState(
+                        () => _selectedKey = progress.name.toLowerCase(),
                       ),
-                      OverloadCard(suggestion: suggestion),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                    const SectionHeader(
-                      title: 'Beban (kg)',
-                      icon: Icons.monitor_weight_outlined,
-                      color: _workoutColor,
-                    ),
-                    _ChartCard(points: points, useVolume: false),
-                    const SizedBox(height: AppSpacing.lg),
-                    const SectionHeader(
-                      title: 'Volume Latihan',
-                      icon: Icons.bar_chart,
-                      color: _workoutColor,
-                    ),
-                    _ChartCard(points: points, useVolume: true),
-                  ],
+                    )
+                  else
+                    _DetailView(progress: selected),
                 ],
               ),
             ),
@@ -179,21 +144,373 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
       ),
     );
   }
+
+  Widget _buildHero(List<ExerciseProgress> all, ExerciseProgress? selected) {
+    final leading = HeroIconButton(
+      icon: Icons.arrow_back,
+      tooltip: 'Kembali',
+      onPressed: () {
+        // Dari detail, tombol kembali pulang dulu ke daftar "Semua".
+        if (_selectedKey != null) {
+          setState(() => _selectedKey = null);
+        } else {
+          context.pop();
+        }
+      },
+    );
+
+    if (selected != null) {
+      return HeroHeader(
+        title: selected.name,
+        subtitle: '${selected.type.label} - progres ${selected.metric.label.toLowerCase()}',
+        color: _workoutColor,
+        leading: leading,
+        stats: [
+          HeroStatData(
+            icon: Icons.emoji_events_outlined,
+            value: '${_trimNumber(selected.best)} ${selected.metric.unit}',
+            label: 'Terbaik',
+          ),
+          HeroStatData(
+            icon: Icons.timeline,
+            value: '${_trimNumber(selected.latest)} ${selected.metric.unit}',
+            label: 'Terakhir',
+          ),
+          HeroStatData(
+            icon: Icons.history,
+            value: '${selected.sessionCount}',
+            label: 'Sesi Tercatat',
+          ),
+        ],
+      );
+    }
+
+    final totalSesi = all.fold<int>(0, (sum, p) => sum + p.sessionCount);
+    final naik = all.where((p) => p.delta > 0).length;
+
+    return HeroHeader(
+      title: 'Progress Latihan',
+      subtitle: 'Perkembangan semua latihanmu',
+      color: _workoutColor,
+      leading: leading,
+      stats: [
+        HeroStatData(
+          icon: Icons.fitness_center,
+          value: '${all.length}',
+          label: 'Jenis Latihan',
+        ),
+        HeroStatData(icon: Icons.history, value: '$totalSesi', label: 'Total Catatan'),
+        HeroStatData(icon: Icons.trending_up, value: '$naik', label: 'Sedang Naik'),
+      ],
+    );
+  }
 }
 
-class _ProgressPoint {
-  _ProgressPoint({required this.date, required this.weight, required this.volume});
+/// Daftar ringkas semua latihan: satu baris per latihan dengan sparkline dan
+/// selisih dari catatan pertama.
+class _AllExercisesView extends StatelessWidget {
+  const _AllExercisesView({required this.items, required this.onTap});
 
-  final DateTime date;
-  final double weight;
-  final double volume;
+  final List<ExerciseProgress> items;
+  final ValueChanged<ExerciseProgress> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(
+          title: 'Semua Latihan',
+          icon: Icons.list_alt,
+          color: _workoutColor,
+        ),
+        for (final progress in items)
+          _SummaryCard(progress: progress, onTap: () => onTap(progress)),
+      ],
+    );
+  }
 }
 
-/// Ringkasan naik/turun beban dari sesi pertama ke sesi terakhir.
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.progress, required this.onTap});
+
+  final ExerciseProgress progress;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final delta = progress.delta;
+    final warna = delta > 0
+        ? AppColors.statusDone
+        : (delta < 0 ? AppColors.priorityHigh : colorScheme.onSurfaceVariant);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            progress.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _workoutColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            progress.type.label,
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: _workoutColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_trimNumber(progress.latest)} ${progress.metric.unit}'
+                      '  ·  ${progress.sessionCount} sesi'
+                      '  ·  ${_shortDateFormat.format(progress.lastDate)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          delta > 0
+                              ? Icons.trending_up
+                              : (delta < 0 ? Icons.trending_down : Icons.trending_flat),
+                          size: 14,
+                          color: warna,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          progress.sessionCount < 2
+                              ? 'Baru 1 sesi'
+                              : '${delta > 0 ? "+" : ""}${_trimNumber(delta)} '
+                                  '${progress.metric.unit} sejak awal',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: warna,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              SizedBox(
+                width: 64,
+                height: 34,
+                child: _Sparkline(
+                  values: [for (final p in progress.points) p.value],
+                  color: warna,
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 20, color: colorScheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Grafik mini tanpa sumbu, cukup untuk melihat arah tren sekilas.
+class _Sparkline extends StatelessWidget {
+  const _Sparkline({required this.values, required this.color});
+
+  final List<double> values;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    if (values.length < 2) {
+      return Center(
+        child: Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+      );
+    }
+    return CustomPaint(painter: _SparklinePainter(values: values, color: color));
+  }
+}
+
+class _SparklinePainter extends CustomPainter {
+  _SparklinePainter({required this.values, required this.color});
+
+  final List<double> values;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final min = values.reduce((a, b) => a < b ? a : b);
+    final max = values.reduce((a, b) => a > b ? a : b);
+    // Garis datar digambar di tengah, bukan menempel di tepi bawah.
+    final range = (max - min).abs() < 0.0001 ? 1.0 : max - min;
+
+    final path = Path();
+    for (var i = 0; i < values.length; i++) {
+      final x = size.width * (i / (values.length - 1));
+      final y = size.height - ((values[i] - min) / range) * size.height;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SparklinePainter oldDelegate) =>
+      oldDelegate.values != values || oldDelegate.color != color;
+}
+
+class _DetailView extends ConsumerWidget {
+  const _DetailView({required this.progress});
+
+  final ExerciseProgress progress;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final OverloadSuggestion? suggestion =
+        ref.watch(overloadSuggestionsProvider).value?[progress.name.toLowerCase()];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (progress.sessionCount >= 2)
+          _DeltaBanner(delta: progress.delta, metric: progress.metric),
+        if (suggestion != null) ...[
+          const SectionHeader(
+            title: 'Target Sesi Berikutnya',
+            icon: Icons.flag_outlined,
+            color: _workoutColor,
+          ),
+          OverloadCard(suggestion: suggestion),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+        SectionHeader(
+          title: '${progress.metric.label} (${progress.metric.unit})',
+          icon: _metricIcon(progress.metric),
+          color: _workoutColor,
+        ),
+        if (progress.sessionCount < 2)
+          _SingleSessionNote(progress: progress)
+        else
+          _ChartCard(points: progress.points, useVolume: false, metric: progress.metric),
+        if (progress.hasVolume && progress.sessionCount >= 2) ...[
+          const SizedBox(height: AppSpacing.lg),
+          const SectionHeader(
+            title: 'Volume Latihan',
+            icon: Icons.bar_chart,
+            color: _workoutColor,
+          ),
+          _ChartCard(points: progress.points, useVolume: true, metric: progress.metric),
+        ],
+      ],
+    );
+  }
+
+  static IconData _metricIcon(ProgressMetric metric) => switch (metric) {
+        ProgressMetric.beban => Icons.monitor_weight_outlined,
+        ProgressMetric.rep => Icons.repeat,
+        ProgressMetric.tahanan => Icons.timer_outlined,
+        ProgressMetric.durasi => Icons.timelapse,
+      };
+}
+
+/// Satu titik tidak membentuk garis, jadi tampilkan angkanya saja.
+class _SingleSessionNote extends StatelessWidget {
+  const _SingleSessionNote({required this.progress});
+
+  final ExerciseProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _workoutColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.timeline, size: 20, color: _workoutColor),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${_trimNumber(progress.latest)} ${progress.metric.unit}',
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Baru satu sesi (${_pointDateFormat.format(progress.lastDate)}). '
+                    'Catat sekali lagi untuk melihat grafiknya.',
+                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Ringkasan naik/turun dari sesi pertama ke sesi terakhir.
 class _DeltaBanner extends StatelessWidget {
-  const _DeltaBanner({required this.delta});
+  const _DeltaBanner({required this.delta, required this.metric});
 
   final double delta;
+  final ProgressMetric metric;
 
   @override
   Widget build(BuildContext context) {
@@ -206,13 +523,13 @@ class _DeltaBanner extends StatelessWidget {
         ? Icons.trending_up
         : (turun ? Icons.trending_down : Icons.trending_flat);
     final label = naik
-        ? 'Naik ${_numberFormat.format(delta)} kg sejak sesi pertama'
+        ? 'Naik ${_trimNumber(delta)} ${metric.unit} sejak sesi pertama'
         : (turun
-            ? 'Turun ${_numberFormat.format(-delta)} kg sejak sesi pertama'
-            : 'Beban stabil sejak sesi pertama');
+            ? 'Turun ${_trimNumber(-delta)} ${metric.unit} sejak sesi pertama'
+            : '${metric.label} stabil sejak sesi pertama');
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
@@ -235,19 +552,29 @@ class _DeltaBanner extends StatelessWidget {
 }
 
 class _ChartCard extends StatelessWidget {
-  const _ChartCard({required this.points, required this.useVolume});
+  const _ChartCard({
+    required this.points,
+    required this.useVolume,
+    required this.metric,
+  });
 
-  final List<_ProgressPoint> points;
+  final List<ProgressPoint> points;
   final bool useVolume;
+  final ProgressMetric metric;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.sm,
+        ),
         child: SizedBox(
           height: 190,
-          child: _LineChart(points: points, useVolume: useVolume),
+          child: _LineChart(points: points, useVolume: useVolume, metric: metric),
         ),
       ),
     );
@@ -255,12 +582,17 @@ class _ChartCard extends StatelessWidget {
 }
 
 class _LineChart extends StatelessWidget {
-  const _LineChart({required this.points, required this.useVolume});
+  const _LineChart({
+    required this.points,
+    required this.useVolume,
+    required this.metric,
+  });
 
-  final List<_ProgressPoint> points;
+  final List<ProgressPoint> points;
   final bool useVolume;
+  final ProgressMetric metric;
 
-  double _valueOf(_ProgressPoint point) => useVolume ? point.volume : point.weight;
+  double _valueOf(ProgressPoint point) => useVolume ? point.volume : point.value;
 
   @override
   Widget build(BuildContext context) {
@@ -277,6 +609,7 @@ class _LineChart extends StatelessWidget {
 
     // Label sumbu X dibatasi supaya tidak tumpang tindih saat titiknya banyak.
     final labelInterval = (points.length / 4).ceil().toDouble().clamp(1.0, double.infinity);
+    final satuan = useVolume ? '' : ' ${metric.unit}';
 
     return LineChart(
       LineChartData(
@@ -330,7 +663,7 @@ class _LineChart extends StatelessWidget {
             getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
               final point = points[spot.x.toInt()];
               return LineTooltipItem(
-                '${_numberFormat.format(_valueOf(point))}${useVolume ? '' : ' kg'}\n',
+                '${_numberFormat.format(_valueOf(point))}$satuan\n',
                 const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
                 children: [
                   TextSpan(
