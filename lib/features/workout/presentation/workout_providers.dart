@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../data/models/workout_session.dart';
 import '../data/workout_repository.dart';
+import '../domain/progressive_overload.dart';
 import '../domain/workout_streak.dart';
 
 final workoutSessionsProvider = FutureProvider.autoDispose<List<WorkoutSession>>((ref) async {
@@ -41,5 +42,21 @@ final exerciseNamesProvider = Provider.autoDispose<AsyncValue<List<String>>>((re
       }
     }
     return names.toList()..sort();
+  });
+});
+
+/// Saran progressive overload per nama latihan. Key-nya di-lowercase supaya
+/// pencocokan dengan teks yang diketik user tidak peduli huruf besar/kecil.
+final overloadSuggestionsProvider =
+    Provider.autoDispose<AsyncValue<Map<String, OverloadSuggestion>>>((ref) {
+  final sessions = ref.watch(workoutSessionsProvider);
+  final names = ref.watch(exerciseNamesProvider).value ?? const <String>[];
+  return sessions.whenData((list) {
+    final suggestions = <String, OverloadSuggestion>{};
+    for (final name in names) {
+      final suggestion = suggestOverload(name, list);
+      if (suggestion != null) suggestions[name.trim().toLowerCase()] = suggestion;
+    }
+    return suggestions;
   });
 });
