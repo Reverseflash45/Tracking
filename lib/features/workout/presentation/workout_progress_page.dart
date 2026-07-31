@@ -40,7 +40,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
     if (sessions != null && _selectedExercise != null) {
       for (final session in sessions) {
         for (final exercise in session.exercises) {
-          if (exercise.exerciseName == _selectedExercise && !exercise.isCardio) {
+          if (exercise.exerciseName == _selectedExercise && exercise.type.pakaiVolume) {
             points.add(_ProgressPoint(
               date: session.sessionDate,
               weight: exercise.weightKg ?? 0,

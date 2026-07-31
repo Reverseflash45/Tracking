@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/supabase/supabase_client_provider.dart';
+import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
 import '../data/workout_repository.dart';
 import '../domain/progressive_overload.dart';
@@ -38,7 +39,7 @@ final exerciseNamesProvider = Provider.autoDispose<AsyncValue<List<String>>>((re
     final names = <String>{};
     for (final session in list) {
       for (final exercise in session.exercises) {
-        if (!exercise.isCardio) names.add(exercise.exerciseName);
+        if (exercise.type != ExerciseType.cardio) names.add(exercise.exerciseName);
       }
     }
     return names.toList()..sort();
