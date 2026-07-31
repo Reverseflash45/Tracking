@@ -8,13 +8,17 @@ const _workoutColor = AppColors.workout;
 
 IconData adviceIcon(OverloadAdvice advice) => switch (advice) {
       OverloadAdvice.naikBeban => Icons.trending_up,
+      OverloadAdvice.naikVariasi => Icons.stairs_outlined,
       OverloadAdvice.naikRep => Icons.add_circle_outline,
+      OverloadAdvice.naikDurasi => Icons.timer_outlined,
       OverloadAdvice.pertahankan => Icons.shield_outlined,
     };
 
 String adviceLabel(OverloadAdvice advice) => switch (advice) {
       OverloadAdvice.naikBeban => 'Naik beban',
+      OverloadAdvice.naikVariasi => 'Naik variasi',
       OverloadAdvice.naikRep => 'Tambah rep',
+      OverloadAdvice.naikDurasi => 'Tambah durasi',
       OverloadAdvice.pertahankan => 'Mantapkan dulu',
     };
 

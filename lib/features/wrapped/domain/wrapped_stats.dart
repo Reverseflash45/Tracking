@@ -131,7 +131,7 @@ WrappedStats computeWrappedStats({
   PersonalRecord? pr;
   for (final session in sesiPeriode) {
     for (final exercise in session.exercises) {
-      if (exercise.isCardio) continue;
+      if (!exercise.type.pakaiVolume) continue;
       totalVolume += exercise.volume;
       perLatihan[exercise.exerciseName] = (perLatihan[exercise.exerciseName] ?? 0) + 1;
 

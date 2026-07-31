@@ -26,6 +26,7 @@ class _ExerciseRowControllers {
         setsController = TextEditingController(),
         repsController = TextEditingController(),
         durationController = TextEditingController(),
+        holdController = TextEditingController(),
         notesController = TextEditingController();
 
   /// Isi controller dari data yang sudah tersimpan (dipakai saat mode edit).
@@ -36,8 +37,10 @@ class _ExerciseRowControllers {
     row.setsController.text = entry.sets?.toString() ?? '';
     row.repsController.text = entry.reps?.toString() ?? '';
     row.durationController.text = entry.durationMinutes?.toString() ?? '';
+    row.holdController.text = entry.durationSeconds?.toString() ?? '';
     row.notesController.text = entry.notes ?? '';
-    row.isCardio = entry.isCardio;
+    row.type = entry.type;
+    row.progressionLevel = entry.progressionLevel;
     return row;
   }
 
@@ -46,8 +49,10 @@ class _ExerciseRowControllers {
   final TextEditingController setsController;
   final TextEditingController repsController;
   final TextEditingController durationController;
+  final TextEditingController holdController;
   final TextEditingController notesController;
-  bool isCardio = false;
+  ExerciseType type = ExerciseType.beban;
+  int progressionLevel = 0;
 
   void dispose() {
     nameController.dispose();
@@ -55,16 +60,31 @@ class _ExerciseRowControllers {
     setsController.dispose();
     repsController.dispose();
     durationController.dispose();
+    holdController.dispose();
     notesController.dispose();
   }
 
-  /// Isi berat/set/rep dari saran progressive overload.
+  /// Terapkan saran progressive overload ke field yang relevan. Untuk saran
+  /// naik variasi, nama latihannya ikut diganti ke langkah berikutnya.
   void applySuggestion(OverloadSuggestion suggestion) {
-    weightController.text = suggestion.targetWeight == suggestion.targetWeight.roundToDouble()
-        ? suggestion.targetWeight.round().toString()
-        : suggestion.targetWeight.toString();
-    setsController.text = suggestion.targetSets.toString();
-    repsController.text = suggestion.targetReps.toString();
+    if (suggestion.targetExerciseName != null) {
+      nameController.text = suggestion.targetExerciseName!;
+    }
+    if (suggestion.targetWeight != null) {
+      weightController.text = formatWeight(suggestion.targetWeight!);
+    }
+    if (suggestion.targetSets != null) {
+      setsController.text = suggestion.targetSets.toString();
+    }
+    if (suggestion.targetReps != null) {
+      repsController.text = suggestion.targetReps.toString();
+    }
+    if (suggestion.targetSeconds != null) {
+      holdController.text = suggestion.targetSeconds.toString();
+    }
+    if (suggestion.targetLevel != null) {
+      progressionLevel = suggestion.targetLevel!;
+    }
   }
 
   ExerciseEntry toEntry() => ExerciseEntry(
@@ -72,11 +92,17 @@ class _ExerciseRowControllers {
         sessionId: '',
         userId: '',
         exerciseName: nameController.text.trim(),
-        weightKg: double.tryParse(weightController.text.trim()),
-        sets: int.tryParse(setsController.text.trim()),
-        reps: int.tryParse(repsController.text.trim()),
-        durationMinutes: int.tryParse(durationController.text.trim()),
-        isCardio: isCardio,
+        type: type,
+        weightKg: type.pakaiBeban ? double.tryParse(weightController.text.trim()) : null,
+        sets: type == ExerciseType.cardio ? null : int.tryParse(setsController.text.trim()),
+        reps: type.pakaiRep ? int.tryParse(repsController.text.trim()) : null,
+        durationMinutes: type == ExerciseType.cardio
+            ? int.tryParse(durationController.text.trim())
+            : null,
+        durationSeconds: type == ExerciseType.isometrik
+            ? int.tryParse(holdController.text.trim())
+            : null,
+        progressionLevel: progressionLevel,
         notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
       );
 }
@@ -320,7 +346,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
   Widget _buildExerciseCard(int index, Map<String, OverloadSuggestion> suggestions) {
     final row = _rows[index];
     final key = row.nameController.text.trim().toLowerCase();
-    final suggestion = row.isCardio ? null : suggestions[key];
+    final suggestion = row.type == ExerciseType.cardio ? null : suggestions[key];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -366,22 +392,45 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                 suggestion: suggestion,
                 onApply: () => setState(() => row.applySuggestion(suggestion)),
               ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              title: const Text('Cardio'),
-              activeThumbColor: _workoutColor,
-              value: row.isCardio,
-              onChanged: (value) => setState(() => row.isCardio = value),
+            const SizedBox(height: AppSpacing.sm),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final type in ExerciseType.values) ...[
+                    if (type != ExerciseType.values.first) const SizedBox(width: 6),
+                    ChoiceChip(
+                      label: Text(type.label),
+                      selected: row.type == type,
+                      onSelected: (_) => setState(() => row.type = type),
+                      selectedColor: _workoutColor.withValues(alpha: 0.18),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: row.type == type
+                            ? _workoutColor
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-            if (!row.isCardio)
+            const SizedBox(height: AppSpacing.sm),
+            // Field yang tampil menyesuaikan tipe: beban/bodyweight pakai
+            // set x rep, isometrik pakai detik tahanan, cardio pakai menit.
+            if (row.type.pakaiRep)
               Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: row.weightController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Berat (kg)'),
+                      decoration: InputDecoration(
+                        labelText: row.type == ExerciseType.bodyweight
+                            ? 'Beban tambahan'
+                            : 'Berat (kg)',
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -398,6 +447,27 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                       controller: row.repsController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(labelText: 'Rep'),
+                    ),
+                  ),
+                ],
+              )
+            else if (row.type == ExerciseType.isometrik)
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: row.setsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Set'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: row.holdController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Tahan (detik)'),
                     ),
                   ),
                 ],

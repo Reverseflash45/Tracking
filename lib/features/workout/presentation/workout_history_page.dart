@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
+import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
 import '../data/workout_repository.dart';
 import 'workout_providers.dart';
@@ -14,6 +15,101 @@ import 'workout_providers.dart';
 final _weekDayFormat = DateFormat('EEEE', 'id_ID');
 final _monthFormat = DateFormat('MMM', 'id_ID');
 final _volumeFormat = NumberFormat.decimalPattern('id_ID');
+
+/// Pintasan ke alat bantu kebugaran. Ditaruh di sini, bukan di bottom nav,
+/// supaya jumlah tab tetap 5 sesuai panduan Material 3.
+class _ToolShortcuts extends StatelessWidget {
+  const _ToolShortcuts();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: const [
+        Expanded(
+          child: _ToolCard(
+            icon: Icons.accessibility_new,
+            label: 'Profil Tubuh',
+            route: '/workout/body',
+          ),
+        ),
+        SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _ToolCard(
+            icon: Icons.local_fire_department,
+            label: 'Kalkulator',
+            route: '/workout/calories',
+          ),
+        ),
+        SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _ToolCard(
+            icon: Icons.sports_gymnastics,
+            label: 'Muscle Builder',
+            route: '/workout/muscle',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ToolCard extends StatelessWidget {
+  const _ToolCard({required this.icon, required this.label, required this.route});
+
+  final IconData icon;
+  final String label;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(route),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.workout.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: AppColors.workout),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, height: 1.2),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ringkasan satu latihan menyesuaikan tipenya: beban punya kg, bodyweight
+/// hanya set x rep, isometrik dalam detik, cardio dalam menit.
+String _exerciseSummary(ExerciseEntry exercise) {
+  final setsReps = '${exercise.sets ?? 0}x${exercise.reps ?? 0}';
+  return switch (exercise.type) {
+    ExerciseType.cardio => '${exercise.durationMinutes ?? 0} menit',
+    ExerciseType.isometrik => '${exercise.sets ?? 0}x${exercise.durationSeconds ?? 0} detik',
+    ExerciseType.bodyweight =>
+      exercise.weightKg != null && exercise.weightKg! > 0
+          ? '+${exercise.weightKg} kg  ·  $setsReps'
+          : setsReps,
+    ExerciseType.beban => '${exercise.weightKg ?? 0} kg  ·  $setsReps',
+  };
+}
 
 class WorkoutHistoryPage extends ConsumerWidget {
   const WorkoutHistoryPage({super.key});
@@ -73,39 +169,41 @@ class WorkoutHistoryPage extends ConsumerWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.lg,
-                AppSpacing.md,
-                96,
-              ),
-              child: sessionsAsync.when(
-                data: (items) => items.isEmpty
-                    ? const EmptyState(
-                        icon: Icons.fitness_center,
-                        title: 'Belum ada sesi workout',
-                        subtitle: 'Tekan tombol + untuk mencatat latihan',
-                        color: AppColors.workout,
-                      )
-                    : Column(
-                        children: [
-                          for (final session in items)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                              child: _SessionCard(session: session),
-                            ),
-                        ],
-                      ),
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 48),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (error, stackTrace) => EmptyState(
-                  icon: Icons.error_outline,
-                  title: 'Gagal memuat sesi',
-                  subtitle: '$error',
-                  color: AppColors.workout,
-                ),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _ToolShortcuts(),
+                  const SizedBox(height: AppSpacing.lg),
+                  sessionsAsync.when(
+                    data: (items) => items.isEmpty
+                        ? const EmptyState(
+                            icon: Icons.fitness_center,
+                            title: 'Belum ada sesi workout',
+                            subtitle: 'Tekan tombol + untuk mencatat latihan',
+                            color: AppColors.workout,
+                          )
+                        : Column(
+                            children: [
+                              for (final session in items)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                                  child: _SessionCard(session: session),
+                                ),
+                            ],
+                          ),
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 48),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stackTrace) => EmptyState(
+                      icon: Icons.error_outline,
+                      title: 'Gagal memuat sesi',
+                      subtitle: '$error',
+                      color: AppColors.workout,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -126,7 +224,7 @@ class _SessionCard extends ConsumerWidget {
 
     final volume = session.exercises.fold<double>(0, (sum, e) => sum + e.volume);
     final cardioMinutes = session.exercises
-        .where((e) => e.isCardio)
+        .where((e) => e.type == ExerciseType.cardio)
         .fold<int>(0, (sum, e) => sum + (e.durationMinutes ?? 0));
 
     return Dismissible(
@@ -147,14 +245,8 @@ class _SessionCard extends ConsumerWidget {
           title: const Text('Hapus sesi?'),
           content: const Text('Sesi workout ini beserta semua latihannya akan dihapus.'),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Batal'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Hapus'),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
           ],
         ),
       ),
@@ -220,20 +312,14 @@ class _SessionCard extends ConsumerWidget {
                       label: '${_volumeFormat.format(volume.round())} kg',
                     ),
                   if (cardioMinutes > 0)
-                    _StatPill(
-                      icon: Icons.directions_run,
-                      label: '$cardioMinutes menit',
-                    ),
+                    _StatPill(icon: Icons.directions_run, label: '$cardioMinutes menit'),
                 ],
               ),
             ),
             children: [
               for (final exercise in session.exercises)
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: 6,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
                   child: Row(
                     children: [
                       Container(
@@ -252,9 +338,7 @@ class _SessionCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        exercise.isCardio
-                            ? '${exercise.durationMinutes ?? 0} menit'
-                            : '${exercise.weightKg ?? 0} kg  ·  ${exercise.sets ?? 0}x${exercise.reps ?? 0}',
+                        _exerciseSummary(exercise),
                         style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                       ),
                     ],
@@ -270,8 +354,11 @@ class _SessionCard extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.sticky_note_2_outlined,
-                          size: 14, color: colorScheme.onSurfaceVariant),
+                      Icon(
+                        Icons.sticky_note_2_outlined,
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(

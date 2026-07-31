@@ -33,16 +33,22 @@ WorkoutSession _session(DateTime date, List<ExerciseEntry> exercises) {
   );
 }
 
-ExerciseEntry _entry(String name, {double? weight, int? sets, int? reps, bool isCardio = false}) {
+ExerciseEntry _entry(
+  String name, {
+  double? weight,
+  int? sets,
+  int? reps,
+  ExerciseType type = ExerciseType.beban,
+}) {
   return ExerciseEntry(
     id: 'e',
     sessionId: 's',
     userId: 'u',
     exerciseName: name,
+    type: type,
     weightKg: weight,
     sets: sets,
     reps: reps,
-    isCardio: isCardio,
   );
 }
 
@@ -102,7 +108,7 @@ void main() {
       final sessions = [
         _session(DateTime(2026, 7, 28), [
           _entry('Bench Press', weight: 40, sets: 3, reps: 10), // 1200
-          _entry('Lari', isCardio: true),
+          _entry('Lari', type: ExerciseType.cardio),
         ]),
         _session(DateTime(2026, 7, 30), [
           _entry('Squat', weight: 60, sets: 3, reps: 8), // 1440

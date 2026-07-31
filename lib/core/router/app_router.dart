@@ -8,7 +8,11 @@ import '../../features/academic/presentation/task_form_page.dart';
 import '../../features/academic/presentation/tasks_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/register_page.dart';
+import '../../features/body/presentation/body_profile_form_page.dart';
+import '../../features/body/presentation/calorie_page.dart';
 import '../../features/calendar/presentation/calendar_page.dart';
+import '../../features/muscle/presentation/muscle_builder_page.dart';
+import '../../features/muscle/presentation/muscle_detail_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
 import '../../features/workout/presentation/workout_form_page.dart';
@@ -99,6 +103,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'progress',
                   builder: (context, state) => const WorkoutProgressPage(),
+                ),
+                GoRoute(
+                  path: 'body',
+                  builder: (context, state) => const BodyProfileFormPage(),
+                ),
+                GoRoute(
+                  path: 'calories',
+                  builder: (context, state) => const CaloriePage(),
+                ),
+                GoRoute(
+                  path: 'muscle',
+                  builder: (context, state) => const MuscleBuilderPage(),
+                  routes: [
+                    GoRoute(
+                      path: ':slug',
+                      builder: (context, state) =>
+                          MuscleDetailPage(slug: state.pathParameters['slug']!),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: ':id/edit',
