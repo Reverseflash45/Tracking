@@ -9,6 +9,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/section_header.dart';
+import '../domain/progressive_overload.dart';
+import 'overload_suggestion_view.dart';
 import 'workout_providers.dart';
 
 const _workoutColor = AppColors.workout;
@@ -57,6 +59,10 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
         ? 0.0
         : points.map((p) => p.volume).reduce((a, b) => a > b ? a : b);
     final delta = points.length < 2 ? 0.0 : points.last.weight - points.first.weight;
+
+    final OverloadSuggestion? suggestion = _selectedExercise == null
+        ? null
+        : ref.watch(overloadSuggestionsProvider).value?[_selectedExercise!.trim().toLowerCase()];
 
     return Scaffold(
       body: ListView(
@@ -143,6 +149,15 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                     )
                   else ...[
                     if (points.length >= 2) _DeltaBanner(delta: delta),
+                    if (suggestion != null) ...[
+                      const SectionHeader(
+                        title: 'Target Sesi Berikutnya',
+                        icon: Icons.flag_outlined,
+                        color: _workoutColor,
+                      ),
+                      OverloadCard(suggestion: suggestion),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
                     const SectionHeader(
                       title: 'Beban (kg)',
                       icon: Icons.monitor_weight_outlined,

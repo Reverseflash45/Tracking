@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/hero_header.dart';
+import '../../../core/widgets/save_bar.dart';
 import '../../../core/widgets/section_header.dart';
 import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
 import '../data/workout_repository.dart';
+import '../domain/progressive_overload.dart';
+import 'overload_suggestion_view.dart';
 import 'workout_providers.dart';
 
 const _workoutColor = AppColors.workout;
+final _dateFormat = DateFormat('EEEE, d MMMM y', 'id_ID');
 
 class _ExerciseRowControllers {
   _ExerciseRowControllers()
@@ -49,6 +56,15 @@ class _ExerciseRowControllers {
     repsController.dispose();
     durationController.dispose();
     notesController.dispose();
+  }
+
+  /// Isi berat/set/rep dari saran progressive overload.
+  void applySuggestion(OverloadSuggestion suggestion) {
+    weightController.text = suggestion.targetWeight == suggestion.targetWeight.roundToDouble()
+        ? suggestion.targetWeight.round().toString()
+        : suggestion.targetWeight.toString();
+    setsController.text = suggestion.targetSets.toString();
+    repsController.text = suggestion.targetReps.toString();
   }
 
   ExerciseEntry toEntry() => ExerciseEntry(
@@ -195,57 +211,117 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
       });
     }
 
+    final suggestions =
+        ref.watch(overloadSuggestionsProvider).value ?? const <String, OverloadSuggestion>{};
+    final filledCount =
+        _rows.where((row) => row.nameController.text.trim().isNotEmpty).length;
+
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Edit Sesi Workout' : 'Catat Sesi Workout')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SectionHeader(title: 'Sesi', icon: Icons.today_outlined, color: _workoutColor),
-            Card(
-              child: ListTile(
-                title: const Text('Tanggal'),
-                subtitle: Text(_sessionDate.toString().split(' ').first),
-                trailing: const Icon(Icons.calendar_today, color: _workoutColor),
-                onTap: _pickDate,
+      body: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          HeroHeader(
+            title: _isEdit ? 'Edit Sesi Workout' : 'Catat Sesi Workout',
+            subtitle: 'Catat latihanmu, saran beban muncul otomatis',
+            color: _workoutColor,
+            leading: HeroIconButton(
+              icon: Icons.arrow_back,
+              tooltip: 'Kembali',
+              onPressed: () => context.pop(),
+            ),
+            stats: [
+              HeroStatData(
+                icon: Icons.event,
+                value: DateFormat('d MMM', 'id_ID').format(_sessionDate),
+                label: 'Tanggal Sesi',
               ),
+              HeroStatData(
+                icon: Icons.fitness_center,
+                value: '$filledCount',
+                label: 'Latihan Diisi',
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SectionHeader(
+                  title: 'Sesi',
+                  icon: Icons.today_outlined,
+                  color: _workoutColor,
+                ),
+                Card(
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _workoutColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.calendar_today, size: 18, color: _workoutColor),
+                    ),
+                    title: Text(
+                      _dateFormat.format(_sessionDate),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: const Text('Ketuk untuk ganti tanggal'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _pickDate,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const SectionHeader(
+                  title: 'Latihan',
+                  icon: Icons.fitness_center,
+                  color: _workoutColor,
+                ),
+                for (var i = 0; i < _rows.length; i++) _buildExerciseCard(i, suggestions),
+                OutlinedButton.icon(
+                  onPressed: () => setState(() => _rows.add(_ExerciseRowControllers())),
+                  icon: const Icon(Icons.add, color: _workoutColor),
+                  label: const Text('Tambah Latihan', style: TextStyle(color: _workoutColor)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: _workoutColor),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const SectionHeader(
+                  title: 'Catatan',
+                  icon: Icons.sticky_note_2_outlined,
+                  color: _workoutColor,
+                ),
+                TextField(
+                  controller: _notesController,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Catatan sesi (opsional)',
+                    hintText: 'Misal: badan enak, tidur cukup',
+                    alignLabelWithHint: true,
+                  ),
+                  maxLines: 3,
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            const SectionHeader(
-              title: 'Latihan',
-              icon: Icons.fitness_center,
-              color: _workoutColor,
-            ),
-            for (var i = 0; i < _rows.length; i++) _buildExerciseCard(i),
-            OutlinedButton.icon(
-              onPressed: () => setState(() => _rows.add(_ExerciseRowControllers())),
-              icon: const Icon(Icons.add, color: _workoutColor),
-              label: const Text('Tambah Latihan', style: TextStyle(color: _workoutColor)),
-              style: OutlinedButton.styleFrom(side: const BorderSide(color: _workoutColor)),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _notesController,
-              decoration: const InputDecoration(labelText: 'Catatan Sesi (opsional)'),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _submit,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Simpan Sesi'),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: SaveBar(
+        color: _workoutColor,
+        saving: _saving,
+        onPressed: _submit,
+        label: 'Simpan Sesi',
       ),
     );
   }
 
-  Widget _buildExerciseCard(int index) {
+  Widget _buildExerciseCard(int index, Map<String, OverloadSuggestion> suggestions) {
     final row = _rows[index];
+    final key = row.nameController.text.trim().toLowerCase();
+    final suggestion = row.isCardio ? null : suggestions[key];
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -259,18 +335,25 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                   radius: 16,
                   backgroundColor: _workoutColor.withValues(alpha: 0.14),
                   foregroundColor: _workoutColor,
-                  child: const Icon(Icons.fitness_center, size: 16),
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: TextField(
                     controller: row.nameController,
+                    textCapitalization: TextCapitalization.words,
+                    // Rebuild supaya strip saran ikut berubah saat namanya diketik.
+                    onChanged: (_) => setState(() {}),
                     decoration: const InputDecoration(labelText: 'Nama Latihan'),
                   ),
                 ),
                 if (_rows.length > 1)
                   IconButton(
                     icon: const Icon(Icons.close),
+                    tooltip: 'Hapus latihan',
                     onPressed: () => setState(() {
                       row.dispose();
                       _rows.removeAt(index);
@@ -278,9 +361,16 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                   ),
               ],
             ),
+            if (suggestion != null)
+              OverloadStrip(
+                suggestion: suggestion,
+                onApply: () => setState(() => row.applySuggestion(suggestion)),
+              ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
+              dense: true,
               title: const Text('Cardio'),
+              activeThumbColor: _workoutColor,
               value: row.isCardio,
               onChanged: (value) => setState(() => row.isCardio = value),
             ),
@@ -318,6 +408,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Durasi (menit)'),
               ),
+            const SizedBox(height: 8),
             TextField(
               controller: row.notesController,
               decoration: const InputDecoration(labelText: 'Catatan (opsional)'),

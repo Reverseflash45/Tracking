@@ -11,6 +11,7 @@ import '../../../core/widgets/save_bar.dart';
 import '../../../core/widgets/section_header.dart';
 import '../data/academic_repository.dart';
 import '../data/models/task.dart';
+import '../domain/date_presets.dart';
 import 'academic_providers.dart';
 import 'tasks_page.dart' show priorityColor;
 
@@ -35,14 +36,11 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
 
   String? _courseId;
   TaskPriority _priority = TaskPriority.medium;
-  DateTime _deadline = _endOfDay(DateTime.now().add(const Duration(days: 7)));
+  DateTime _deadline = DeadlinePreset.satuMinggu.resolve();
   bool _saving = false;
   bool _prefilled = false;
 
   bool get _isEdit => widget.taskId != null;
-
-  static DateTime _endOfDay(DateTime date) =>
-      DateTime(date.year, date.month, date.day, 23, 59);
 
   @override
   void initState() {
@@ -250,20 +248,11 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
                   Wrap(
                     spacing: AppSpacing.sm,
                     children: [
-                      _DeadlinePreset(
-                        label: 'Hari ini',
-                        onTap: () => setState(() => _deadline = _endOfDay(DateTime.now())),
-                      ),
-                      _DeadlinePreset(
-                        label: 'Besok',
-                        onTap: () => setState(() => _deadline =
-                            _endOfDay(DateTime.now().add(const Duration(days: 1)))),
-                      ),
-                      _DeadlinePreset(
-                        label: '1 minggu',
-                        onTap: () => setState(() => _deadline =
-                            _endOfDay(DateTime.now().add(const Duration(days: 7)))),
-                      ),
+                      for (final preset in DeadlinePreset.values)
+                        _DeadlinePresetChip(
+                          label: preset.label,
+                          onTap: () => setState(() => _deadline = preset.resolve()),
+                        ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -354,8 +343,8 @@ class _PriorityOption extends StatelessWidget {
   }
 }
 
-class _DeadlinePreset extends StatelessWidget {
-  const _DeadlinePreset({required this.label, required this.onTap});
+class _DeadlinePresetChip extends StatelessWidget {
+  const _DeadlinePresetChip({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;

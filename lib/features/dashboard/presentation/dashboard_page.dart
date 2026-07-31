@@ -12,6 +12,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../academic/data/models/class_schedule.dart';
 import '../../academic/data/models/task.dart';
 import '../../academic/presentation/academic_providers.dart';
+import '../../academic/presentation/quick_capture_sheet.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 
@@ -28,6 +29,13 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showQuickCaptureSheet(context),
+        backgroundColor: AppColors.dashboard,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.bolt),
+        label: const Text('Catat Cepat'),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(classSchedulesProvider);
@@ -40,11 +48,12 @@ class DashboardPage extends ConsumerWidget {
           children: [
             const _HeroHeader(),
             Padding(
+              // Bawahnya dilebihkan supaya kartu terakhir tidak tertutup FAB.
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.lg,
                 AppSpacing.md,
-                AppSpacing.lg,
+                96,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
