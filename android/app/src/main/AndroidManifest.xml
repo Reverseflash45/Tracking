@@ -17,6 +17,23 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+
+    <!-- Perekaman lari.
+
+         FOREGROUND_SERVICE_LOCATION wajib sejak Android 14; tanpa itu layanan
+         gagal start dan perekaman berhenti begitu layar mati — justru kondisi
+         normal saat lari.
+
+         ACCESS_BACKGROUND_LOCATION sengaja TIDAK diminta: dengan foreground
+         service beserta notifikasinya, lokasi tetap terbaca saat layar mati.
+         Izin latar belakang penuh hanya perlu kalau app melacak tanpa
+         sepengetahuan user, dan itu bukan yang dilakukan di sini. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
     <application
         android:label="tracking"
         android:name="${applicationName}"
