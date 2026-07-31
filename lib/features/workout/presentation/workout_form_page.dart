@@ -147,7 +147,14 @@ class _ExerciseRowControllers {
 }
 
 class WorkoutFormPage extends ConsumerStatefulWidget {
-  const WorkoutFormPage({super.key, this.sessionId, this.repeatSessionId});
+  const WorkoutFormPage({
+    super.key,
+    this.sessionId,
+    this.repeatSessionId,
+    this.prefillExerciseName,
+    this.prefillType,
+    this.prefillReps,
+  });
 
   /// Kalau diisi, form berjalan dalam mode edit.
   final String? sessionId;
@@ -155,6 +162,12 @@ class WorkoutFormPage extends ConsumerStatefulWidget {
   /// Kalau diisi, form dibuka sebagai sesi baru yang isinya disalin dari sesi
   /// ini. Tanggalnya tetap hari ini dan catatan sesinya tidak ikut disalin.
   final String? repeatSessionId;
+
+  /// Hasil dari Latihan Terpandu: nama, tipe, dan jumlah rep yang dihitung
+  /// kamera. Set sengaja dikosongkan supaya kamu sendiri yang menentukannya.
+  final String? prefillExerciseName;
+  final String? prefillType;
+  final int? prefillReps;
 
   @override
   ConsumerState<WorkoutFormPage> createState() => _WorkoutFormPageState();
@@ -185,7 +198,25 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
       final session = _findSession(ref.read(workoutSessionsProvider).value);
       if (session != null) _prefill(session);
     }
+    _prefillFromGuided();
     _loadDefaultRest();
+  }
+
+  /// Isi baris pertama dari hasil Latihan Terpandu.
+  void _prefillFromGuided() {
+    final name = widget.prefillExerciseName?.trim();
+    if (name == null || name.isEmpty) return;
+
+    final row = _rows.first;
+    row.nameController.text = name;
+    row.type = ExerciseType.fromDb(widget.prefillType);
+
+    final reps = widget.prefillReps;
+    if (reps != null && reps > 0 && row.type.pakaiRep) {
+      row.repsController.text = '$reps';
+      // Kamera menghitung repetisi, bukan set. Set dibiarkan kosong supaya
+      // kamu isi sendiri, bukan ditebak jadi 1 dan diam-diam salah.
+    }
   }
 
   Future<void> _loadDefaultRest() async {

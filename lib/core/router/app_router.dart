@@ -11,6 +11,7 @@ import '../../features/auth/presentation/register_page.dart';
 import '../../features/body/presentation/body_profile_form_page.dart';
 import '../../features/body/presentation/calorie_page.dart';
 import '../../features/calendar/presentation/calendar_page.dart';
+import '../../features/live/presentation/live_workout_page.dart';
 import '../../features/muscle/presentation/muscle_builder_page.dart';
 import '../../features/muscle/presentation/muscle_detail_page.dart';
 import '../../features/nutrition/presentation/nutrition_page.dart';
@@ -101,9 +102,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'new',
                   // ?from=<id> membuka form berisi salinan sesi tersebut.
-                  builder: (context, state) => WorkoutFormPage(
-                    repeatSessionId: state.uri.queryParameters['from'],
-                  ),
+                  // ?exercise/&type/&reps diisi Latihan Terpandu setelah selesai.
+                  builder: (context, state) {
+                    final query = state.uri.queryParameters;
+                    return WorkoutFormPage(
+                      repeatSessionId: query['from'],
+                      prefillExerciseName: query['exercise'],
+                      prefillType: query['type'],
+                      prefillReps: int.tryParse(query['reps'] ?? ''),
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'live',
+                  builder: (context, state) => const LiveWorkoutPage(),
                 ),
                 GoRoute(
                   path: 'progress',

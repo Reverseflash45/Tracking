@@ -9,6 +9,14 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <!-- Latihan Terpandu: kamera menganalisis pose secara on-device. Tidak ada
+         gambar yang dikirim ke mana pun, dan tidak ada yang direkam ke disk.
+         `required=false` supaya app tetap bisa dipasang di perangkat tanpa
+         kamera — fitur lainnya tidak membutuhkannya. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
     <application
         android:label="tracking"
         android:name="${applicationName}"
