@@ -11,6 +11,7 @@ class AsyncValueView<T> extends StatelessWidget {
     this.emptyIcon = Icons.inbox_outlined,
     this.emptyTitle = 'Belum ada data',
     this.emptySubtitle,
+    this.emptyColor,
     this.isEmpty,
   });
 
@@ -19,6 +20,7 @@ class AsyncValueView<T> extends StatelessWidget {
   final IconData emptyIcon;
   final String emptyTitle;
   final String? emptySubtitle;
+  final Color? emptyColor;
   final bool Function(List<T> items)? isEmpty;
 
   @override
@@ -28,7 +30,12 @@ class AsyncValueView<T> extends StatelessWidget {
         final empty = isEmpty?.call(items) ?? items.isEmpty;
         if (empty) {
           return Center(
-            child: EmptyState(icon: emptyIcon, title: emptyTitle, subtitle: emptySubtitle),
+            child: EmptyState(
+              icon: emptyIcon,
+              title: emptyTitle,
+              subtitle: emptySubtitle,
+              color: emptyColor,
+            ),
           );
         }
         return data(items);

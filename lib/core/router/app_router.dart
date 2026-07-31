@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/academic/presentation/schedule_form_page.dart';
 import '../../features/academic/presentation/schedule_page.dart';
+import '../../features/academic/presentation/task_detail_page.dart';
 import '../../features/academic/presentation/task_form_page.dart';
 import '../../features/academic/presentation/tasks_page.dart';
 import '../../features/auth/presentation/login_page.dart';
@@ -45,9 +46,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               path: '/academic/schedule',
               builder: (context, state) => const SchedulePage(),
               routes: [
+                // Rute literal harus dideklarasikan sebelum rute berparameter
+                // supaya 'new' tidak ikut tertangkap sebagai ':id'.
                 GoRoute(
                   path: 'new',
                   builder: (context, state) => const ScheduleFormPage(),
+                ),
+                GoRoute(
+                  path: ':id/edit',
+                  builder: (context, state) =>
+                      ScheduleFormPage(scheduleId: state.pathParameters['id']),
                 ),
               ],
             ),
@@ -60,6 +68,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'new',
                   builder: (context, state) => const TaskFormPage(),
+                ),
+                GoRoute(
+                  path: ':id/edit',
+                  builder: (context, state) => TaskFormPage(taskId: state.pathParameters['id']),
+                ),
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) =>
+                      TaskDetailPage(taskId: state.pathParameters['id']!),
                 ),
               ],
             ),
@@ -76,6 +93,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'progress',
                   builder: (context, state) => const WorkoutProgressPage(),
+                ),
+                GoRoute(
+                  path: ':id/edit',
+                  builder: (context, state) =>
+                      WorkoutFormPage(sessionId: state.pathParameters['id']),
                 ),
               ],
             ),
