@@ -6,8 +6,9 @@ import '../domain/daily_nutrition.dart';
 import '../domain/food_log.dart';
 
 /// Riwayat dibatasi supaya query tidak membesar tanpa batas seiring waktu.
-/// Cukup panjang untuk daftar "sering dipakai" dan rekap beberapa minggu.
-const int _historyDays = 60;
+/// Harus lebih panjang dari periode terpanjang di halaman Progres (90 hari),
+/// kalau tidak grafiknya akan terpotong diam-diam.
+const int _historyDays = 120;
 
 class NutritionRepository {
   NutritionRepository(this._client);
