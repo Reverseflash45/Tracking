@@ -12,6 +12,8 @@ import '../../features/body/presentation/body_profile_form_page.dart';
 import '../../features/body/presentation/calorie_page.dart';
 import '../../features/calendar/presentation/calendar_page.dart';
 import '../../features/live/presentation/live_workout_page.dart';
+import '../../features/run/presentation/run_history_page.dart';
+import '../../features/run/presentation/run_tracker_page.dart';
 import '../../features/muscle/presentation/muscle_builder_page.dart';
 import '../../features/muscle/presentation/muscle_detail_page.dart';
 import '../../features/nutrition/presentation/nutrition_page.dart';
@@ -116,6 +118,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'live',
                   builder: (context, state) => const LiveWorkoutPage(),
+                ),
+                GoRoute(
+                  path: 'run',
+                  builder: (context, state) => const RunHistoryPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'track',
+                      builder: (context, state) => const RunTrackerPage(),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: 'progress',
