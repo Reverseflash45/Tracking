@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/async_value_view.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/hero_header.dart';
 import '../data/models/workout_session.dart';
 import '../data/workout_repository.dart';
 import 'workout_providers.dart';
+
+final _weekDayFormat = DateFormat('EEEE', 'id_ID');
+final _monthFormat = DateFormat('MMM', 'id_ID');
+final _volumeFormat = NumberFormat.decimalPattern('id_ID');
 
 class WorkoutHistoryPage extends ConsumerWidget {
   const WorkoutHistoryPage({super.key});
@@ -14,105 +21,306 @@ class WorkoutHistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionsAsync = ref.watch(workoutSessionsProvider);
-    final colorScheme = Theme.of(context).colorScheme;
+    final sessions = sessionsAsync.value ?? const <WorkoutSession>[];
+    final streak = ref.watch(workoutStreakProvider).value;
+
+    final now = DateTime.now();
+    final thisMonth = sessions
+        .where((s) => s.sessionDate.year == now.year && s.sessionDate.month == now.month)
+        .length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Workout Tracker'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.show_chart),
-            tooltip: 'Progress',
-            onPressed: () => context.push('/workout/progress'),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await context.push('/workout/new');
           ref.invalidate(workoutSessionsProvider);
         },
-        child: const Icon(Icons.add),
+        backgroundColor: AppColors.workout,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Workout'),
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(workoutSessionsProvider),
-        child: AsyncValueView<WorkoutSession>(
-          value: sessionsAsync,
-          emptyIcon: Icons.fitness_center,
-          emptyTitle: 'Belum ada sesi workout',
-          emptySubtitle: 'Tekan tombol + untuk mencatat latihan',
-          data: (sessions) => ListView.separated(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            itemCount: sessions.length,
-            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              final session = sessions[index];
-              return Dismissible(
-                key: ValueKey(session.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(AppTheme.radius),
-                  ),
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Icon(Icons.delete_outline, color: colorScheme.onErrorContainer),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            HeroHeader(
+              title: 'Workout',
+              subtitle: 'Riwayat latihan dan perkembanganmu',
+              color: AppColors.workout,
+              trailing: HeroIconButton(
+                icon: Icons.show_chart,
+                tooltip: 'Lihat progress',
+                onPressed: () => context.push('/workout/progress'),
+              ),
+              stats: [
+                HeroStatData(
+                  icon: Icons.local_fire_department,
+                  value: '${streak?.current ?? 0}',
+                  label: 'Streak Aktif',
                 ),
-                confirmDismiss: (_) => showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Hapus sesi?'),
-                    content: const Text('Sesi workout ini beserta semua latihannya akan dihapus.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Batal'),
+                HeroStatData(
+                  icon: Icons.emoji_events_outlined,
+                  value: '${streak?.best ?? 0}',
+                  label: 'Streak Terbaik',
+                ),
+                HeroStatData(
+                  icon: Icons.calendar_month_outlined,
+                  value: '$thisMonth',
+                  label: 'Bulan Ini',
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.md,
+                96,
+              ),
+              child: sessionsAsync.when(
+                data: (items) => items.isEmpty
+                    ? const EmptyState(
+                        icon: Icons.fitness_center,
+                        title: 'Belum ada sesi workout',
+                        subtitle: 'Tekan tombol + untuk mencatat latihan',
+                        color: AppColors.workout,
+                      )
+                    : Column(
+                        children: [
+                          for (final session in items)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                              child: _SessionCard(session: session),
+                            ),
+                        ],
                       ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Hapus'),
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 48),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, stackTrace) => EmptyState(
+                  icon: Icons.error_outline,
+                  title: 'Gagal memuat sesi',
+                  subtitle: '$error',
+                  color: AppColors.workout,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionCard extends ConsumerWidget {
+  const _SessionCard({required this.session});
+
+  final WorkoutSession session;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final volume = session.exercises.fold<double>(0, (sum, e) => sum + e.volume);
+    final cardioMinutes = session.exercises
+        .where((e) => e.isCardio)
+        .fold<int>(0, (sum, e) => sum + (e.durationMinutes ?? 0));
+
+    return Dismissible(
+      key: ValueKey(session.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.errorContainer,
+          borderRadius: BorderRadius.circular(AppTheme.radius),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Icon(Icons.delete_outline, color: colorScheme.onErrorContainer),
+      ),
+      confirmDismiss: (_) => showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Hapus sesi?'),
+          content: const Text('Sesi workout ini beserta semua latihannya akan dihapus.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Hapus'),
+            ),
+          ],
+        ),
+      ),
+      onDismissed: (_) async {
+        await ref.read(workoutRepositoryProvider).deleteSession(session.id);
+        ref.invalidate(workoutSessionsProvider);
+      },
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+            childrenPadding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            leading: Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: AppColors.workout.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${session.sessionDate.day}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17,
+                      color: AppColors.workout,
+                      height: 1.1,
+                    ),
+                  ),
+                  Text(
+                    _monthFormat.format(session.sessionDate),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.workout,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            title: Text(
+              _weekDayFormat.format(session.sessionDate),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  _StatPill(
+                    icon: Icons.fitness_center,
+                    label: '${session.exercises.length} latihan',
+                  ),
+                  if (volume > 0)
+                    _StatPill(
+                      icon: Icons.scale_outlined,
+                      label: '${_volumeFormat.format(volume.round())} kg',
+                    ),
+                  if (cardioMinutes > 0)
+                    _StatPill(
+                      icon: Icons.directions_run,
+                      label: '$cardioMinutes menit',
+                    ),
+                ],
+              ),
+            ),
+            children: [
+              for (final exercise in session.exercises)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.workout,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          exercise.exerciseName,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ),
+                      Text(
+                        exercise.isCardio
+                            ? '${exercise.durationMinutes ?? 0} menit'
+                            : '${exercise.weightKg ?? 0} kg  ·  ${exercise.sets ?? 0}x${exercise.reps ?? 0}',
+                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
                 ),
-                onDismissed: (_) async {
-                  await ref.read(workoutRepositoryProvider).deleteSession(session.id);
-                  ref.invalidate(workoutSessionsProvider);
-                },
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: ExpansionTile(
-                    leading: CircleAvatar(
-                      backgroundColor: colorScheme.primaryContainer,
-                      foregroundColor: colorScheme.onPrimaryContainer,
-                      child: const Icon(Icons.fitness_center),
-                    ),
-                    title: Text(
-                      session.sessionDate.toString().split(' ').first,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: Text('${session.exercises.length} latihan'
-                        '${session.notes != null ? " - ${session.notes}" : ""}'),
+              if (session.notes != null && session.notes!.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                    AppSpacing.md,
+                    0,
+                  ),
+                  child: Row(
                     children: [
-                      for (final exercise in session.exercises)
-                        ListTile(
-                          title: Text(exercise.exerciseName),
-                          subtitle: Text(
-                            exercise.isCardio
-                                ? 'Cardio - ${exercise.durationMinutes ?? 0} menit'
-                                : '${exercise.weightKg ?? 0} kg x ${exercise.sets ?? 0} set x ${exercise.reps ?? 0} rep',
+                      Icon(Icons.sticky_note_2_outlined,
+                          size: 14, color: colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          session.notes!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
-                      const SizedBox(height: 8),
+                      ),
                     ],
                   ),
                 ),
-              );
-            },
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.sm, 0),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => context.push('/workout/${session.id}/edit'),
+                    icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.workout),
+                    label: const Text('Edit', style: TextStyle(color: AppColors.workout)),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  const _StatPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 3),
+        Text(label, style: TextStyle(fontSize: 12, color: color)),
+      ],
     );
   }
 }

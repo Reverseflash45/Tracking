@@ -45,6 +45,29 @@ class WorkoutRepository {
         );
   }
 
+  /// Latihan di dalam sesi diganti total (hapus lalu insert ulang) — jumlah
+  /// barisnya sedikit, dan ini menghindari perlu melacak baris mana yang
+  /// ditambah/diubah/dihapus di form.
+  Future<void> updateSession({
+    required String sessionId,
+    required String userId,
+    required DateTime sessionDate,
+    String? notes,
+    required List<ExerciseEntry> exercises,
+  }) async {
+    await _client.from('workout_sessions').update({
+      'session_date': sessionDate.toIso8601String().substring(0, 10),
+      'notes': notes,
+    }).eq('id', sessionId);
+
+    await _client.from('workout_exercises').delete().eq('session_id', sessionId);
+
+    if (exercises.isEmpty) return;
+    await _client.from('workout_exercises').insert(
+          exercises.map((e) => e.toInsertMap(sessionId: sessionId, userId: userId)).toList(),
+        );
+  }
+
   Future<void> deleteSession(String id) {
     return _client.from('workout_sessions').delete().eq('id', id);
   }

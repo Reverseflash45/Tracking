@@ -16,6 +16,7 @@ class ClassSchedule {
     required this.userId,
     required this.courseId,
     required this.courseName,
+    this.lecturer,
     required this.dayOfWeek,
     required this.startTime,
     required this.endTime,
@@ -28,6 +29,7 @@ class ClassSchedule {
   final String userId;
   final String courseId;
   final String courseName;
+  final String? lecturer;
 
   /// 1 = Senin ... 7 = Minggu (mengikuti DateTime.weekday)
   final int dayOfWeek;
@@ -46,6 +48,7 @@ class ClassSchedule {
         userId: map['user_id'] as String,
         courseId: map['course_id'] as String,
         courseName: (map['courses'] as Map<String, dynamic>?)?['name'] as String? ?? '-',
+        lecturer: (map['courses'] as Map<String, dynamic>?)?['lecturer'] as String?,
         dayOfWeek: map['day_of_week'] as int,
         startTime: map['start_time'] as String,
         endTime: map['end_time'] as String,

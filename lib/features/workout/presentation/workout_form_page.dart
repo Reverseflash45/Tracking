@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/supabase/supabase_client_provider.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/section_header.dart';
 import '../data/models/exercise_entry.dart';
+import '../data/models/workout_session.dart';
 import '../data/workout_repository.dart';
 import 'workout_providers.dart';
+
+const _workoutColor = AppColors.workout;
 
 class _ExerciseRowControllers {
   _ExerciseRowControllers()
@@ -14,6 +20,19 @@ class _ExerciseRowControllers {
         repsController = TextEditingController(),
         durationController = TextEditingController(),
         notesController = TextEditingController();
+
+  /// Isi controller dari data yang sudah tersimpan (dipakai saat mode edit).
+  factory _ExerciseRowControllers.fromEntry(ExerciseEntry entry) {
+    final row = _ExerciseRowControllers();
+    row.nameController.text = entry.exerciseName;
+    row.weightController.text = entry.weightKg?.toString() ?? '';
+    row.setsController.text = entry.sets?.toString() ?? '';
+    row.repsController.text = entry.reps?.toString() ?? '';
+    row.durationController.text = entry.durationMinutes?.toString() ?? '';
+    row.notesController.text = entry.notes ?? '';
+    row.isCardio = entry.isCardio;
+    return row;
+  }
 
   final TextEditingController nameController;
   final TextEditingController weightController;
@@ -47,7 +66,10 @@ class _ExerciseRowControllers {
 }
 
 class WorkoutFormPage extends ConsumerStatefulWidget {
-  const WorkoutFormPage({super.key});
+  const WorkoutFormPage({super.key, this.sessionId});
+
+  /// Kalau diisi, form berjalan dalam mode edit.
+  final String? sessionId;
 
   @override
   ConsumerState<WorkoutFormPage> createState() => _WorkoutFormPageState();
@@ -58,6 +80,18 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
   DateTime _sessionDate = DateTime.now();
   final List<_ExerciseRowControllers> _rows = [_ExerciseRowControllers()];
   bool _saving = false;
+  bool _prefilled = false;
+
+  bool get _isEdit => widget.sessionId != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEdit) {
+      final session = _findSession(ref.read(workoutSessionsProvider).value);
+      if (session != null) _prefill(session);
+    }
+  }
 
   @override
   void dispose() {
@@ -68,12 +102,35 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
     super.dispose();
   }
 
+  WorkoutSession? _findSession(List<WorkoutSession>? sessions) {
+    if (sessions == null) return null;
+    for (final session in sessions) {
+      if (session.id == widget.sessionId) return session;
+    }
+    return null;
+  }
+
+  void _prefill(WorkoutSession session) {
+    _sessionDate = session.sessionDate;
+    _notesController.text = session.notes ?? '';
+    for (final row in _rows) {
+      row.dispose();
+    }
+    _rows
+      ..clear()
+      ..addAll(session.exercises.map(_ExerciseRowControllers.fromEntry));
+    if (_rows.isEmpty) _rows.add(_ExerciseRowControllers());
+    _prefilled = true;
+  }
+
   Future<void> _pickDate() async {
+    final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: _sessionDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now(),
+      // Dilebarkan supaya sesi lama tetap bisa dibuka saat mode edit.
+      firstDate: DateTime(2020),
+      lastDate: DateTime(now.year, now.month, now.day),
     );
     if (picked != null) setState(() => _sessionDate = picked);
   }
@@ -96,14 +153,33 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
 
     setState(() => _saving = true);
     try {
-      await ref.read(workoutRepositoryProvider).addSession(
-            userId: userId,
-            sessionDate: _sessionDate,
-            notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-            exercises: exercises,
-          );
+      final repository = ref.read(workoutRepositoryProvider);
+      final notes =
+          _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
+
+      if (_isEdit) {
+        await repository.updateSession(
+          sessionId: widget.sessionId!,
+          userId: userId,
+          sessionDate: _sessionDate,
+          notes: notes,
+          exercises: exercises,
+        );
+      } else {
+        await repository.addSession(
+          userId: userId,
+          sessionDate: _sessionDate,
+          notes: notes,
+          exercises: exercises,
+        );
+      }
       ref.invalidate(workoutSessionsProvider);
       if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -111,25 +187,42 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isEdit) {
+      ref.listen(workoutSessionsProvider, (previous, next) {
+        if (_prefilled) return;
+        final session = _findSession(next.value);
+        if (session != null) setState(() => _prefill(session));
+      });
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Catat Sesi Workout')),
+      appBar: AppBar(title: Text(_isEdit ? 'Edit Sesi Workout' : 'Catat Sesi Workout')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ListTile(
-              title: const Text('Tanggal'),
-              subtitle: Text(_sessionDate.toString().split(' ').first),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: _pickDate,
+            const SectionHeader(title: 'Sesi', icon: Icons.today_outlined, color: _workoutColor),
+            Card(
+              child: ListTile(
+                title: const Text('Tanggal'),
+                subtitle: Text(_sessionDate.toString().split(' ').first),
+                trailing: const Icon(Icons.calendar_today, color: _workoutColor),
+                onTap: _pickDate,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.lg),
+            const SectionHeader(
+              title: 'Latihan',
+              icon: Icons.fitness_center,
+              color: _workoutColor,
+            ),
             for (var i = 0; i < _rows.length; i++) _buildExerciseCard(i),
             OutlinedButton.icon(
               onPressed: () => setState(() => _rows.add(_ExerciseRowControllers())),
-              icon: const Icon(Icons.add),
-              label: const Text('Tambah Latihan'),
+              icon: const Icon(Icons.add, color: _workoutColor),
+              label: const Text('Tambah Latihan', style: TextStyle(color: _workoutColor)),
+              style: OutlinedButton.styleFrom(side: const BorderSide(color: _workoutColor)),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -162,6 +255,13 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
           children: [
             Row(
               children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: _workoutColor.withValues(alpha: 0.14),
+                  foregroundColor: _workoutColor,
+                  child: const Icon(Icons.fitness_center, size: 16),
+                ),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: TextField(
                     controller: row.nameController,

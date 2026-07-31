@@ -41,6 +41,7 @@ dependencies:
   flutter_dotenv: ^6.0.1
   shared_preferences: ^2.5.5
   intl: ^0.20.3
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +53,27 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+# Icon aplikasi. Sumbernya Icon/icon.png; aset turunan (icon_1024 & foreground
+# transparan untuk adaptive icon) dibuat ulang lewat scripts/make_icons.py.
+# Regenerate dengan: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "Icon/icon_1024.png"
+  android: true
+  min_sdk_android: 21
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "Icon/icon_foreground.png"
+  adaptive_icon_monochrome: "Icon/icon_foreground.png"
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    background_color: "#000000"
+    theme_color: "#000000"
+  windows:
+    generate: true
+    icon_size: 256
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

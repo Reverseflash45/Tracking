@@ -4,10 +4,11 @@ import 'package:intl/intl.dart';
 
 import '../../../core/domain/achievements.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/stat_tile.dart';
 import '../../academic/data/models/class_schedule.dart';
 import '../../academic/data/models/task.dart';
 import '../../academic/presentation/academic_providers.dart';
@@ -17,7 +18,9 @@ import '../../workout/presentation/workout_providers.dart';
 final _deadlineFormat = DateFormat('d MMM, HH:mm', 'id_ID');
 final _dayFormat = DateFormat('EEEE, d MMMM y', 'id_ID');
 
-const double _statOverlap = 44;
+const _academicColor = AppColors.academic;
+const _deadlineColor = AppColors.deadline;
+const _workoutColor = AppColors.workout;
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -30,39 +33,43 @@ class DashboardPage extends ConsumerWidget {
           ref.invalidate(classSchedulesProvider);
           ref.invalidate(tasksProvider);
           ref.invalidate(workoutSessionsProvider);
-          ref.invalidate(profileFullNameProvider);
+          ref.invalidate(profileProvider);
         },
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const _HeroHeader(),
-                Positioned(
-                  left: AppSpacing.md,
-                  right: AppSpacing.md,
-                  bottom: -_statOverlap,
-                  child: const _StreakAndStatsRow(),
-                ),
-              ],
-            ),
-            const SizedBox(height: _statOverlap + AppSpacing.lg),
+            const _HeroHeader(),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const _AchievementsRow(),
-                  const SectionHeader(title: 'Jadwal Hari Ini'),
+                  const SectionHeader(
+                    title: 'Jadwal Hari Ini',
+                    icon: Icons.school_outlined,
+                    color: _academicColor,
+                  ),
                   const _TodayScheduleCard(),
                   const SizedBox(height: AppSpacing.md),
-                  const SectionHeader(title: 'Deadline Terdekat'),
+                  const SectionHeader(
+                    title: 'Deadline Terdekat',
+                    icon: Icons.alarm,
+                    color: _deadlineColor,
+                  ),
                   const _UpcomingDeadlinesCard(),
                   const SizedBox(height: AppSpacing.md),
-                  const SectionHeader(title: 'Workout Hari Ini'),
+                  const SectionHeader(
+                    title: 'Workout Hari Ini',
+                    icon: Icons.fitness_center,
+                    color: _workoutColor,
+                  ),
                   const _TodayWorkoutCard(),
-                  const SizedBox(height: AppSpacing.lg),
                 ],
               ),
             ),
@@ -79,83 +86,17 @@ class _HeroHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final fullName = ref.watch(profileFullNameProvider).value;
+    final profile = ref.watch(profileProvider).value;
+    final fullName = profile?.fullName;
     final displayName = (fullName != null && fullName.trim().isNotEmpty)
         ? fullName.trim().split(' ').first
         : (user?.email?.split('@').first ?? 'Mahasiswa');
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
-    final colorScheme = Theme.of(context).colorScheme;
+    final avatarUrl = profile?.avatarUrl;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        MediaQuery.of(context).padding.top + AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.lg + _statOverlap,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colorScheme.primary, colorScheme.tertiary],
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: Colors.white.withValues(alpha: 0.25),
-            child: Text(
-              initial,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Halo, $displayName!',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 22,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _dayFormat.format(DateTime.now()),
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StreakAndStatsRow extends ConsumerWidget {
-  const _StreakAndStatsRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final workoutStreak = ref.watch(workoutStreakProvider);
-    final deadlineStreak = ref.watch(deadlineStreakProvider);
-    final tasksAsync = ref.watch(tasksProvider);
-
-    final doneToday = tasksAsync.value?.where((t) {
+    final workoutStreak = ref.watch(workoutStreakProvider).value?.current ?? 0;
+    final deadlineStreak = ref.watch(deadlineStreakProvider).value?.current ?? 0;
+    final doneToday = ref.watch(tasksProvider).value?.where((t) {
           final completed = t.completedAt;
           final now = DateTime.now();
           return completed != null &&
@@ -165,38 +106,103 @@ class _StreakAndStatsRow extends ConsumerWidget {
         }).length ??
         0;
 
-    return SizedBox(
-      height: _statOverlap * 2,
-      child: Row(
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        MediaQuery.of(context).padding.top + AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.lg,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: HeroHeader.gradientFor(AppColors.dashboard),
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: StatTile(
-              icon: Icons.local_fire_department,
-              value: '${workoutStreak.value?.current ?? 0}',
-              label: 'Streak Workout',
-              color: Colors.deepOrange,
-              fill: true,
-            ),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white.withValues(alpha: 0.25),
+                backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                child: avatarUrl == null
+                    ? Text(
+                        initial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Halo, $displayName!',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _dayFormat.format(DateTime.now()),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: StatTile(
-              icon: Icons.bolt,
-              value: '${deadlineStreak.value?.current ?? 0}',
-              label: 'Streak Deadline',
-              color: Colors.indigo,
-              fill: true,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: StatTile(
-              icon: Icons.task_alt,
-              value: '$doneToday',
-              label: 'Selesai Hari Ini',
-              color: Colors.teal,
-              fill: true,
-            ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: HeroStat(
+                  data: HeroStatData(
+                    icon: Icons.local_fire_department,
+                    value: '$workoutStreak',
+                    label: 'Streak Workout',
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: HeroStat(
+                  data: HeroStatData(
+                    icon: Icons.bolt,
+                    value: '$deadlineStreak',
+                    label: 'Streak Deadline',
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: HeroStat(
+                  data: HeroStatData(
+                    icon: Icons.task_alt,
+                    value: '$doneToday',
+                    label: 'Selesai Hari Ini',
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -259,6 +265,8 @@ class _TodayScheduleCard extends ConsumerWidget {
                 icon: Icons.school_outlined,
                 title: 'Tidak ada jadwal hari ini',
                 subtitle: 'Nikmati waktu luangmu!',
+                color: _academicColor,
+                compact: true,
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,8 +276,7 @@ class _TodayScheduleCard extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: Row(
                         children: [
-                          Icon(Icons.access_time,
-                              size: 18, color: Theme.of(context).colorScheme.primary),
+                          const Icon(Icons.access_time, size: 18, color: _academicColor),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text('${schedule.timeRangeLabel} - ${schedule.courseName}'
@@ -300,6 +307,8 @@ class _UpcomingDeadlinesCard extends ConsumerWidget {
                 icon: Icons.celebration_outlined,
                 title: 'Tidak ada deadline mendatang',
                 subtitle: 'Mantap, semua tugas aman!',
+                color: _deadlineColor,
+                compact: true,
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,7 +318,7 @@ class _UpcomingDeadlinesCard extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: Row(
                         children: [
-                          Icon(Icons.alarm, size: 18, color: Theme.of(context).colorScheme.primary),
+                          const Icon(Icons.alarm, size: 18, color: _deadlineColor),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text('${task.title} - ${_deadlineFormat.format(task.deadline)}'),
@@ -338,10 +347,12 @@ class _TodayWorkoutCard extends ConsumerWidget {
             ? const EmptyState(
                 icon: Icons.fitness_center,
                 title: 'Belum ada sesi workout hari ini',
+                color: _workoutColor,
+                compact: true,
               )
             : Row(
                 children: [
-                  Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
+                  const Icon(Icons.check_circle, color: _workoutColor),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text('${data.exercises.length} latihan tercatat'

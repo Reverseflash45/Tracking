@@ -26,10 +26,17 @@ class AcademicRepository {
     });
   }
 
+  Future<void> updateCourse({required String id, required String name, String? lecturer}) {
+    return _client.from('courses').update({
+      'name': name,
+      'lecturer': lecturer,
+    }).eq('id', id);
+  }
+
   Future<List<ClassSchedule>> fetchSchedules(String userId) async {
     final rows = await _client
         .from('class_schedules')
-        .select('*, courses(name)')
+        .select('*, courses(name, lecturer)')
         .eq('user_id', userId)
         .order('day_of_week')
         .order('start_time');
@@ -58,6 +65,27 @@ class AcademicRepository {
       'is_phl': isPhl,
       'specific_date': specificDate?.toIso8601String().substring(0, 10),
     });
+  }
+
+  Future<void> updateSchedule({
+    required String id,
+    required String courseId,
+    required int dayOfWeek,
+    required String startTime,
+    required String endTime,
+    String? room,
+    bool isPhl = false,
+    DateTime? specificDate,
+  }) {
+    return _client.from('class_schedules').update({
+      'course_id': courseId,
+      'day_of_week': dayOfWeek,
+      'start_time': startTime,
+      'end_time': endTime,
+      'room': room,
+      'is_phl': isPhl,
+      'specific_date': specificDate?.toIso8601String().substring(0, 10),
+    }).eq('id', id);
   }
 
   Future<void> deleteSchedule(String id) {
@@ -92,6 +120,23 @@ class AcademicRepository {
       'priority': priority.dbValue,
       'status': TaskStatus.todo.dbValue,
     });
+  }
+
+  Future<void> updateTask({
+    required String id,
+    String? courseId,
+    required String title,
+    String? description,
+    required DateTime deadline,
+    required TaskPriority priority,
+  }) {
+    return _client.from('tasks').update({
+      'course_id': courseId,
+      'title': title,
+      'description': description,
+      'deadline': deadline.toIso8601String(),
+      'priority': priority.dbValue,
+    }).eq('id', id);
   }
 
   Future<void> updateTaskStatus(String id, TaskStatus status) {

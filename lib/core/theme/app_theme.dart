@@ -27,7 +27,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: colorScheme.surface,
+      scaffoldBackgroundColor: colorScheme.surfaceContainerLowest,
       appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
