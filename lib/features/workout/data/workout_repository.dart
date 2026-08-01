@@ -1,25 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/local_cache.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import 'models/exercise_entry.dart';
 import 'models/workout_session.dart';
 import 'models/workout_template.dart';
 
 class WorkoutRepository {
-  WorkoutRepository(this._client);
+  WorkoutRepository(this._client, this._cache);
 
   final SupabaseClient _client;
+  final LocalCache _cache;
 
   Future<List<WorkoutSession>> fetchSessions(String userId) async {
-    final rows = await _client
-        .from('workout_sessions')
-        .select('*, workout_exercises(*)')
-        .eq('user_id', userId)
-        .order('session_date', ascending: false);
-    return (rows as List)
-        .map((row) => WorkoutSession.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'workout_sessions_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('workout_sessions')
+                      .select('*, workout_exercises(*)')
+                      .eq('user_id', userId)
+                      .order('session_date', ascending: false))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: WorkoutSession.fromMap,
+    );
   }
 
   Future<void> addSession({
@@ -41,8 +48,12 @@ class WorkoutRepository {
     final sessionId = sessionRow['id'] as String;
     if (exercises.isEmpty) return;
 
-    await _client.from('workout_exercises').insert(
-          exercises.map((e) => e.toInsertMap(sessionId: sessionId, userId: userId)).toList(),
+    await _client
+        .from('workout_exercises')
+        .insert(
+          exercises
+              .map((e) => e.toInsertMap(sessionId: sessionId, userId: userId))
+              .toList(),
         );
   }
 
@@ -56,16 +67,23 @@ class WorkoutRepository {
     String? notes,
     required List<ExerciseEntry> exercises,
   }) async {
-    await _client.from('workout_sessions').update({
-      'session_date': sessionDate.toIso8601String().substring(0, 10),
-      'notes': notes,
-    }).eq('id', sessionId);
+    await _client
+        .from('workout_sessions')
+        .update({
+          'session_date': sessionDate.toIso8601String().substring(0, 10),
+          'notes': notes,
+        })
+        .eq('id', sessionId);
 
     await _client.from('workout_exercises').delete().eq('session_id', sessionId);
 
     if (exercises.isEmpty) return;
-    await _client.from('workout_exercises').insert(
-          exercises.map((e) => e.toInsertMap(sessionId: sessionId, userId: userId)).toList(),
+    await _client
+        .from('workout_exercises')
+        .insert(
+          exercises
+              .map((e) => e.toInsertMap(sessionId: sessionId, userId: userId))
+              .toList(),
         );
   }
 
@@ -76,14 +94,19 @@ class WorkoutRepository {
   // --- Template ---
 
   Future<List<WorkoutTemplate>> fetchTemplates(String userId) async {
-    final rows = await _client
-        .from('workout_templates')
-        .select('*, workout_template_exercises(*)')
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return (rows as List)
-        .map((row) => WorkoutTemplate.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'workout_templates_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('workout_templates')
+                      .select('*, workout_template_exercises(*)')
+                      .eq('user_id', userId)
+                      .order('created_at', ascending: false))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: WorkoutTemplate.fromMap,
+    );
   }
 
   Future<void> addTemplate({
@@ -112,5 +135,8 @@ class WorkoutRepository {
 }
 
 final workoutRepositoryProvider = Provider<WorkoutRepository>((ref) {
-  return WorkoutRepository(ref.watch(supabaseClientProvider));
+  return WorkoutRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(localCacheProvider),
+  );
 });
