@@ -11,6 +11,11 @@ class AppColors {
   static const Color workout = Color(0xFF00897B);
   static const Color profile = Color(0xFF8E24AA);
 
+  /// Hijau tua untuk keuangan. Sengaja lebih gelap dari [priorityLow] dan
+  /// [statusDone] yang sama-sama hijau, supaya tidak tertukar dengan penanda
+  /// status di daftar tugas.
+  static const Color finance = Color(0xFF2E7D32);
+
   static const Color priorityHigh = Color(0xFFE53935);
   static const Color priorityMedium = Color(0xFFFB8C00);
   static const Color priorityLow = Color(0xFF43A047);

@@ -16,6 +16,8 @@ import '../../academic/presentation/academic_providers.dart';
 import '../../academic/presentation/quick_capture_sheet.dart';
 import '../../body/data/body_repository.dart';
 import '../../body/domain/calorie_calculator.dart';
+import '../../finance/data/finance_repository.dart';
+import '../../finance/domain/finance_stats.dart';
 import '../../nutrition/data/nutrition_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
@@ -92,6 +94,13 @@ class DashboardPage extends ConsumerWidget {
                     color: _deadlineColor,
                   ),
                   const _TodayNutritionCard(),
+                  const SizedBox(height: AppSpacing.md),
+                  const SectionHeader(
+                    title: 'Keuangan',
+                    icon: Icons.savings_outlined,
+                    color: AppColors.finance,
+                  ),
+                  const _FinanceCard(),
                 ],
               ),
             ),
@@ -352,6 +361,109 @@ class _UpcomingDeadlinesCard extends ConsumerWidget {
               ),
         loading: () => const LinearProgressIndicator(),
         error: (error, stackTrace) => Text('Gagal memuat: $error'),
+      ),
+    );
+  }
+}
+
+/// Ringkasan anggaran. Yang ditonjolkan jatah harian, bukan total pengeluaran —
+/// "boleh habis berapa hari ini" lebih menentukan keputusanmu siang ini
+/// daripada "sudah habis berapa bulan ini".
+class _FinanceCard extends ConsumerWidget {
+  const _FinanceCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final summaryAsync = ref.watch(financeSummaryProvider);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/finance'),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: summaryAsync.when(
+            data: (summary) {
+              final jatah = summary.jatahHarian;
+              final kebobolan = (summary.sisaBudget ?? 0) <= 0;
+
+              if (jatah == null) {
+                return Row(
+                  children: [
+                    const Icon(Icons.savings_outlined,
+                        size: 18, color: AppColors.finance),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        summary.kosong
+                            ? 'Belum ada catatan keuangan'
+                            : 'Keluar ${formatRupiah(summary.pengeluaran)} periode ini',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, size: 20),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        kebobolan ? 'Lewat anggaran' : 'Jatah hari ini',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        kebobolan
+                            ? formatRupiah(summary.sisaBudget!.abs())
+                            : formatRupiah(jatah),
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          height: 1,
+                          color: kebobolan
+                              ? AppColors.priorityHigh
+                              : AppColors.finance,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${summary.sisaHari} hari lagi',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right, size: 20),
+                ],
+              );
+            },
+            loading: () => const SizedBox(
+              height: 40,
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            error: (error, _) => Row(
+              children: [
+                Icon(Icons.error_outline, size: 18, color: colorScheme.error),
+                const SizedBox(width: AppSpacing.sm),
+                const Expanded(
+                  child: Text('Gagal memuat keuangan', style: TextStyle(fontSize: 13)),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
