@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/share/image_share.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/hero_header.dart';
@@ -12,6 +13,7 @@ import '../../nutrition/data/nutrition_repository.dart';
 import '../../run/data/run_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../domain/wrapped_stats.dart';
+import 'wrapped_share_card.dart';
 
 final _numberFormat = NumberFormat.decimalPattern('id_ID');
 final _rangeFormat = DateFormat('d MMM', 'id_ID');
@@ -90,6 +92,24 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
               tooltip: 'Kembali',
               onPressed: () => context.pop(),
             ),
+            trailing: stats == null || stats.kosong
+                ? null
+                : HeroIconButton(
+                    icon: Icons.ios_share,
+                    tooltip: 'Bagikan rekap',
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => SharePreviewPage(
+                          title: 'Bagikan Rekap',
+                          accent: AppColors.profile,
+                          card: WrappedShareCard(stats: stats),
+                          fileName: 'wrapped-${_period.name}-'
+                              '${DateTime.now().toIso8601String().substring(0, 10)}.png',
+                          text: 'Rekap ${stats.period.phrase}: ${stats.persona}',
+                        ),
+                      ),
+                    ),
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),

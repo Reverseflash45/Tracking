@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/share/image_share.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -14,6 +15,7 @@ import '../../../core/widgets/section_header.dart';
 import '../data/run_repository.dart';
 import '../domain/geo.dart';
 import '../domain/run_stats.dart';
+import 'run_share_card.dart';
 import 'run_tracker_page.dart';
 
 const _color = AppColors.workout;
@@ -250,7 +252,28 @@ class _RunDetailPage extends StatelessWidget {
     final pace = run.pace;
 
     return Scaffold(
-      appBar: AppBar(title: Text(formatDistance(run.distanceMeters))),
+      appBar: AppBar(
+        title: Text(formatDistance(run.distanceMeters)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share),
+            tooltip: 'Bagikan',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => SharePreviewPage(
+                  title: 'Bagikan Lari',
+                  accent: _color,
+                  card: RunShareCard(run: run),
+                  fileName: 'lari-'
+                      '${run.startedAt.toIso8601String().substring(0, 10)}.png',
+                  text: 'Lari ${formatDistance(run.distanceMeters)} '
+                      'dalam ${formatDuration(run.durationSeconds)}',
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
