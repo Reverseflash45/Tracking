@@ -10,6 +10,7 @@ class FinanceSummary {
     required this.perKategori,
     required this.budget,
     required this.sisaHari,
+    this.rutinBelumJatuhTempo = 0,
   });
 
   final DateTime start;
@@ -29,15 +30,33 @@ class FinanceSummary {
   /// Sisa hari sampai periode berakhir, termasuk hari ini.
   final int sisaHari;
 
+  /// Total pengeluaran rutin yang jatuh temponya masih di depan dalam periode
+  /// ini — uang yang sudah dipesan tapi belum keluar.
+  final double rutinBelumJatuhTempo;
+
   double get selisih => pemasukan - pengeluaran;
 
-  /// Sisa anggaran. Null kalau anggarannya belum diisi.
+  /// Sisa anggaran mentah, belum memperhitungkan tagihan yang akan datang.
   double? get sisaBudget => budget == null ? null : budget! - pengeluaran;
+
+  /// Sisa anggaran setelah tagihan rutin yang belum jatuh tempo dipotong.
+  ///
+  /// Ini angka yang benar-benar boleh kamu pakai. Bisa negatif, dan kalau
+  /// negatif memang itu keadaannya — menyembunyikannya di nol malah
+  /// menghilangkan peringatan yang paling perlu kamu lihat.
+  double? get sisaBebas {
+    final sisa = sisaBudget;
+    return sisa == null ? null : sisa - rutinBelumJatuhTempo;
+  }
 
   /// Berapa yang boleh dipakai per hari supaya anggaran cukup sampai akhir
   /// periode. Null kalau anggaran belum diisi; 0 kalau sudah kebobolan.
+  ///
+  /// Dihitung dari [sisaBebas], bukan [sisaBudget]. Membagi rata uang yang
+  /// sudah dipesan untuk kos membuat angka ini selalu terlihat lebih longgar
+  /// daripada kenyataan.
   double? get jatahHarian {
-    final sisa = sisaBudget;
+    final sisa = sisaBebas;
     if (sisa == null) return null;
     if (sisa <= 0) return 0;
     if (sisaHari <= 0) return sisa;
@@ -85,11 +104,91 @@ DateTime periodEnd(DateTime start, int? paydayDay) {
       .subtract(const Duration(days: 1));
 }
 
+/// Pengeluaran yang datang tiap bulan di tanggal yang sama.
+class RecurringExpense {
+  const RecurringExpense({
+    required this.id,
+    required this.name,
+    required this.amount,
+    required this.category,
+    required this.dueDay,
+    this.active = true,
+  });
+
+  final String id;
+  final String name;
+  final double amount;
+  final TxCategory category;
+
+  /// Tanggal jatuh tempo tiap bulan, 1–28.
+  final int dueDay;
+
+  final bool active;
+
+  factory RecurringExpense.fromMap(Map<String, dynamic> map) => RecurringExpense(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        amount: (map['amount'] as num).toDouble(),
+        category: TxCategory.fromDb(map['category'] as String?),
+        dueDay: (map['due_day'] as num).toInt(),
+        active: map['active'] as bool? ?? true,
+      );
+
+  Map<String, dynamic> toMap(String userId) => {
+        'user_id': userId,
+        'name': name,
+        'amount': amount,
+        'category': category.dbValue,
+        'due_day': dueDay,
+        'active': active,
+      };
+}
+
+/// Kapan [expense] jatuh tempo di dalam periode yang dimulai [start].
+///
+/// Periode anggaran tidak selalu mulai tanggal 1 — kalau uang sakumu datang
+/// tanggal 5, periode berjalan dari tanggal 5 ke tanggal 4 bulan berikutnya.
+/// Yang dicari: kemunculan pertama tanggal jatuh tempo sejak periode dimulai.
+///
+/// [end] tidak dipakai untuk memilih tanggal, hanya penanda batas bagi
+/// pemanggil — hasilnya bisa saja jatuh di luar periode.
+DateTime dueDateIn(RecurringExpense expense, DateTime start) {
+  final due = DateTime(start.year, start.month, expense.dueDay);
+  if (!due.isBefore(start)) return due;
+  return DateTime(start.year, start.month + 1, expense.dueDay);
+}
+
+/// Total tagihan rutin yang jatuh temponya belum lewat dalam periode ini.
+///
+/// Yang sudah lewat tanggalnya tidak dihitung: entah sudah kamu bayar (dan
+/// sudah masuk pengeluaran), entah telat. Menghitungnya dua kali akan membuat
+/// sisa uangmu terlihat lebih sedikit daripada kenyataan.
+double upcomingRecurring({
+  required List<RecurringExpense> expenses,
+  required DateTime now,
+  required DateTime start,
+  required DateTime end,
+}) {
+  final today = DateTime(now.year, now.month, now.day);
+  var total = 0.0;
+
+  for (final expense in expenses) {
+    if (!expense.active) continue;
+    final due = dueDateIn(expense, start);
+    if (due.isAfter(end)) continue;
+    if (due.isBefore(today)) continue;
+    total += expense.amount;
+  }
+
+  return total;
+}
+
 FinanceSummary summarize({
   required List<Transaction> transactions,
   required DateTime now,
   double? budget,
   int? paydayDay,
+  List<RecurringExpense> recurring = const [],
 }) {
   final start = periodStart(now, paydayDay);
   final end = periodEnd(start, paydayDay);
@@ -131,6 +230,12 @@ FinanceSummary summarize({
     perKategori: urut,
     budget: budget,
     sisaHari: sisaHari,
+    rutinBelumJatuhTempo: upcomingRecurring(
+      expenses: recurring,
+      now: now,
+      start: start,
+      end: end,
+    ),
   );
 }
 

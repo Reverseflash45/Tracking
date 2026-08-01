@@ -18,6 +18,7 @@ Transaction _tx(
 }
 
 void main() {
+  mainRutin();
   group('periodStart / periodEnd', () {
     test('tanpa tanggal kiriman, periodenya bulan kalender', () {
       final start = periodStart(DateTime(2026, 8, 15), null);
@@ -205,6 +206,134 @@ void main() {
       expect(formatRupiahRingkas(1200000), 'Rp1,2jt');
       expect(formatRupiahRingkas(15000000), 'Rp15jt');
       expect(formatRupiahRingkas(500), 'Rp500');
+    });
+  });
+}
+
+// --- Pengeluaran rutin ---
+
+RecurringExpense _rutin(String nama, double jumlah, int tanggal,
+        {bool aktif = true}) =>
+    RecurringExpense(
+      id: nama,
+      name: nama,
+      amount: jumlah,
+      category: TxCategory.lainnya,
+      dueDay: tanggal,
+      active: aktif,
+    );
+
+void mainRutin() {
+  group('upcomingRecurring', () {
+    final start = DateTime(2026, 8, 1);
+    final end = DateTime(2026, 8, 31);
+
+    test('yang belum lewat tanggalnya dihitung', () {
+      final total = upcomingRecurring(
+        expenses: [_rutin('Kos', 800000, 25)],
+        now: DateTime(2026, 8, 10),
+        start: start,
+        end: end,
+      );
+      expect(total, 800000);
+    });
+
+    test('yang sudah lewat tanggalnya tidak dihitung dua kali', () {
+      // Sudah tanggal 26, kos tanggal 25 entah sudah dibayar (dan masuk
+      // pengeluaran) entah telat. Menghitungnya lagi membuat sisa uang
+      // terlihat lebih sedikit daripada kenyataan.
+      final total = upcomingRecurring(
+        expenses: [_rutin('Kos', 800000, 25)],
+        now: DateTime(2026, 8, 26),
+        start: start,
+        end: end,
+      );
+      expect(total, 0);
+    });
+
+    test('jatuh tempo hari ini masih dihitung', () {
+      final total = upcomingRecurring(
+        expenses: [_rutin('Kos', 800000, 25)],
+        now: DateTime(2026, 8, 25),
+        start: start,
+        end: end,
+      );
+      expect(total, 800000);
+    });
+
+    test('yang nonaktif dilewati', () {
+      final total = upcomingRecurring(
+        expenses: [_rutin('Spotify', 55000, 20, aktif: false)],
+        now: DateTime(2026, 8, 1),
+        start: start,
+        end: end,
+      );
+      expect(total, 0);
+    });
+
+    test('periode yang tidak mulai tanggal 1 tetap benar', () {
+      // Uang saku datang tanggal 5, jadi periodenya 5 Agu - 4 Sep. Kos
+      // tanggal 2 jatuh temponya 2 September, masih di dalam periode.
+      final mulai = DateTime(2026, 8, 5);
+      final selesai = DateTime(2026, 9, 4);
+      final total = upcomingRecurring(
+        expenses: [_rutin('Kos', 800000, 2)],
+        now: DateTime(2026, 8, 10),
+        start: mulai,
+        end: selesai,
+      );
+      expect(total, 800000);
+    });
+
+    test('yang jatuh di luar periode tidak dihitung', () {
+      final mulai = DateTime(2026, 8, 5);
+      final selesai = DateTime(2026, 9, 4);
+      final total = upcomingRecurring(
+        expenses: [_rutin('Kos', 800000, 20)],
+        now: DateTime(2026, 8, 25),
+        start: mulai,
+        end: selesai,
+      );
+      // Tanggal 20 Agustus sudah lewat, dan 20 September di luar periode.
+      expect(total, 0);
+    });
+  });
+
+  group('jatah harian setelah tagihan rutin', () {
+    test('uang yang sudah dipesan tidak ikut dibagi rata', () {
+      final ringkasan = summarize(
+        transactions: const [],
+        now: DateTime(2026, 8, 1),
+        budget: 3100000,
+        recurring: [_rutin('Kos', 800000, 25)],
+      );
+
+      expect(ringkasan.sisaBudget, 3100000);
+      expect(ringkasan.rutinBelumJatuhTempo, 800000);
+      expect(ringkasan.sisaBebas, 2300000);
+      // 31 hari di Agustus.
+      expect(ringkasan.jatahHarian, closeTo(2300000 / 31, 0.01));
+    });
+
+    test('tanpa pengeluaran rutin angkanya tidak berubah', () {
+      final ringkasan = summarize(
+        transactions: const [],
+        now: DateTime(2026, 8, 1),
+        budget: 3100000,
+      );
+      expect(ringkasan.rutinBelumJatuhTempo, 0);
+      expect(ringkasan.sisaBebas, ringkasan.sisaBudget);
+    });
+
+    test('tagihan melebihi sisa uang menghasilkan jatah nol, bukan negatif', () {
+      final ringkasan = summarize(
+        transactions: const [],
+        now: DateTime(2026, 8, 1),
+        budget: 500000,
+        recurring: [_rutin('Kos', 800000, 25)],
+      );
+      expect(ringkasan.sisaBebas, -300000);
+      expect(ringkasan.jatahHarian, 0);
     });
   });
 }

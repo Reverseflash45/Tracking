@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/ocr/barcode_scanner.dart';
 import '../../../core/offline/pending_writes.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../data/food_database.dart';
 import '../data/nutrition_repository.dart';
 import '../domain/daily_nutrition.dart';
 import '../domain/food_log.dart';
@@ -47,6 +49,75 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
   late Meal _meal = widget.existing?.meal ?? widget.meal ?? Meal.guessFor(DateTime.now());
   bool _showDetail = false;
   bool _saving = false;
+  bool _memindai = false;
+
+  /// Baca barcode kemasan lalu isi form dari basis data terbuka.
+  ///
+  /// Hasilnya selalu masuk form untuk kamu periksa, tidak pernah langsung
+  /// tersimpan — datanya sumbangan orang banyak, jadi bisa saja keliru atau
+  /// takaran sajinya beda dengan kemasan yang kamu pegang.
+  Future<void> _scanBarcode() async {
+    final hasil = await scanBarcodeFromPhoto();
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    if (hasil.gagal) {
+      if (hasil.error != 'Batal') {
+        messenger.showSnackBar(SnackBar(content: Text(hasil.error!)));
+      }
+      return;
+    }
+
+    setState(() => _memindai = true);
+    try {
+      final produk = await lookupBarcode(hasil.code!);
+      if (!mounted) return;
+
+      if (produk == null) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Produk ini belum ada di basis data. Isi manual saja '
+                '— catatannya tetap tersimpan seperti biasa.'),
+            duration: Duration(seconds: 5),
+          ),
+        );
+        return;
+      }
+
+      // Kalau takaran sajinya tercantum, itu yang dipakai. Kalau tidak, 100 g
+      // sebagai titik awal yang jelas asalnya, bukan tebakan porsi.
+      final gram = produk.servingGrams ?? 100;
+      final gizi = produk.per100g.untukGram(gram);
+
+      setState(() {
+        _nameController.text = produk.judul;
+        _caloriesController.text = _trim(gizi.calories);
+        _proteinController.text = _trim(gizi.proteinG);
+        _carbsController.text = _trim(gizi.carbsG);
+        _fatController.text = _trim(gizi.fatG);
+        _servingController.text = _trim(gram);
+        _fiberController.text = gizi.fiberG == null ? '' : _trim(gizi.fiberG!);
+        _sugarController.text = gizi.sugarG == null ? '' : _trim(gizi.sugarG!);
+        _sodiumController.text = gizi.sodiumMg == null ? '' : _trim(gizi.sodiumMg!);
+        _showDetail = true;
+      });
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Terisi untuk ${_trim(gram)} g'
+            '${produk.servingGrams == null ? ' (takaran saji tidak tercantum)' : ''}. '
+            'Periksa dulu sebelum simpan.',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } on FoodLookupException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _memindai = false);
+    }
+  }
 
   bool get _isEdit => widget.existing != null;
 
@@ -209,6 +280,26 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                   ),
                 ],
               ),
+              // Scan barcode juga menimpa seluruh isi form, jadi ikut aturan
+              // yang sama dengan pintasan di bawahnya.
+              if (!_isEdit && barcodeScanSupported) ...[
+                const SizedBox(height: AppSpacing.md),
+                OutlinedButton.icon(
+                  onPressed: _memindai ? null : _scanBarcode,
+                  style: OutlinedButton.styleFrom(foregroundColor: _color),
+                  icon: _memindai
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.qr_code_scanner, size: 18),
+                  label: Text(
+                    _memindai ? 'Mencari...' : 'Scan barcode kemasan',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
               // Pintasan "sering dicatat" menimpa seluruh isi form, jadi hanya
               // masuk akal saat mencatat baru — bukan saat mengoreksi satu entri.
               if (!_isEdit && frequent.isNotEmpty) ...[

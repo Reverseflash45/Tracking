@@ -89,6 +89,32 @@ class FinancePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _BudgetCard(summary: s, onSetup: () => _showBudgetSheet(context, ref)),
+                    const SizedBox(height: AppSpacing.sm),
+                    Card(
+                      margin: EdgeInsets.zero,
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        onTap: () => context.push('/finance/recurring'),
+                        dense: true,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.event_repeat, size: 16, color: _color),
+                        ),
+                        title: const Text(
+                          'Pengeluaran Rutin',
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                        ),
+                        subtitle: const Text(
+                          'Kos, internet, langganan — disisihkan dari jatah harian',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                        trailing: const Icon(Icons.chevron_right, size: 20),
+                      ),
+                    ),
                     if (s.perKategori.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.lg),
                       const SectionHeader(
@@ -435,6 +461,29 @@ class _BudgetCard extends StatelessWidget {
               '${formatRupiah(summary.budget!)} terpakai (${persen.round()}%)',
               style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
             ),
+            // Uang yang sudah dipesan harus disebut, bukan cuma diam-diam
+            // dipotong dari jatah harian — kalau tidak, angkanya terlihat
+            // terlalu kecil tanpa sebab yang jelas.
+            if (summary.rutinBelumJatuhTempo > 0) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(Icons.lock_clock, size: 12, color: colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      '${formatRupiah(summary.rutinBelumJatuhTempo)} disisihkan '
+                      'untuk tagihan rutin yang belum jatuh tempo',
+                      style: TextStyle(
+                        fontSize: 11,
+                        height: 1.35,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
