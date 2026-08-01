@@ -1,4 +1,5 @@
 import '../../academic/data/models/task.dart';
+import '../../run/data/run_repository.dart';
 import '../../nutrition/domain/daily_nutrition.dart';
 import '../../nutrition/domain/food_log.dart';
 import '../../workout/data/models/workout_session.dart';
@@ -106,6 +107,9 @@ class WrappedStats {
     required this.prBeban,
     required this.hariPalingProduktif,
     required this.nutrisi,
+    required this.sesiLari,
+    required this.jarakLariMeter,
+    required this.lariTerjauhMeter,
     required this.persona,
   });
 
@@ -128,9 +132,16 @@ class WrappedStats {
 
   final NutritionRecap nutrisi;
 
+  final int sesiLari;
+  final double jarakLariMeter;
+
+  /// Lari terjauh dalam satu sesi, dipakai sebagai rekor pribadi.
+  final double lariTerjauhMeter;
+
   final String persona;
 
-  bool get kosong => tugasSelesai == 0 && sesiWorkout == 0 && nutrisi.kosong;
+  bool get kosong =>
+      tugasSelesai == 0 && sesiWorkout == 0 && sesiLari == 0 && nutrisi.kosong;
 
   /// Dibulatkan ke bilangan bulat; 0 kalau belum ada tugas yang selesai.
   int get persenTepatWaktu =>
@@ -144,6 +155,7 @@ WrappedStats computeWrappedStats({
   required List<WorkoutSession> sessions,
   List<FoodLog> foods = const [],
   List<WaterLog> waters = const [],
+  List<RunLog> runs = const [],
 }) {
   final range = rangeFor(period, now);
 
@@ -185,17 +197,29 @@ WrappedStats computeWrappedStats({
     }
   }
 
+  // --- Lari ---
+  final lariPeriode = runs.where((run) => range.contains(run.startedAt)).toList();
+  var jarakLari = 0.0;
+  var lariTerjauh = 0.0;
+  for (final run in lariPeriode) {
+    jarakLari += run.distanceMeters;
+    if (run.distanceMeters > lariTerjauh) lariTerjauh = run.distanceMeters;
+  }
+
   // --- Nutrisi ---
   final nutrisi = _recapNutrisi(range: range, foods: foods, waters: waters);
 
   // --- Hari aktif ---
   // Sengaja tidak menghitung hari yang hanya ada catatan makan: mencatat
   // makanan bukan aktivitas, dan memasukkannya akan menggelembungkan angka ini.
+  // Hari lari ikut dihitung — itu jelas aktivitas.
   final hariAktif = <DateTime>{
     for (final task in selesai)
       DateTime(task.completedAt!.year, task.completedAt!.month, task.completedAt!.day),
     for (final session in sesiPeriode)
       DateTime(session.sessionDate.year, session.sessionDate.month, session.sessionDate.day),
+    for (final run in lariPeriode)
+      DateTime(run.startedAt.year, run.startedAt.month, run.startedAt.day),
   };
 
   return WrappedStats(
@@ -211,10 +235,14 @@ WrappedStats computeWrappedStats({
     prBeban: pr,
     hariPalingProduktif: _topKey(perHari),
     nutrisi: nutrisi,
+    sesiLari: lariPeriode.length,
+    jarakLariMeter: jarakLari,
+    lariTerjauhMeter: lariTerjauh,
     persona: _persona(
       tugasSelesai: selesai.length,
       tepatWaktu: tepatWaktu,
-      sesiWorkout: sesiPeriode.length,
+      // Lari ikut dihitung sebagai sesi olahraga saat memilih julukan.
+      sesiWorkout: sesiPeriode.length + lariPeriode.length,
       hariCatatMakan: nutrisi.hariTercatat,
     ),
   );

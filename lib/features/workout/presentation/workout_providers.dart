@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/supabase/supabase_client_provider.dart';
+import '../../run/data/run_repository.dart';
 import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
 import '../data/models/workout_template.dart';
@@ -22,9 +23,17 @@ final workoutTemplatesProvider =
   return ref.watch(workoutRepositoryProvider).fetchTemplates(userId);
 });
 
+/// Streak menghitung semua hari kamu bergerak — sesi angkat beban maupun lari.
 final workoutStreakProvider = Provider.autoDispose<AsyncValue<WorkoutStreak>>((ref) {
   final sessions = ref.watch(workoutSessionsProvider);
-  return sessions.whenData(calculateWorkoutStreak);
+  final runs = ref.watch(runsProvider).value ?? const <RunLog>[];
+
+  return sessions.whenData(
+    (list) => calculateStreakFromDates([
+      for (final session in list) session.sessionDate,
+      for (final run in runs) run.startedAt,
+    ]),
+  );
 });
 
 final todayWorkoutSessionProvider = Provider.autoDispose<AsyncValue<WorkoutSession?>>((ref) {
