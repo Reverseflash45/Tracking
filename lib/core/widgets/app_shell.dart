@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../offline/pending_writes.dart';
 import '../theme/app_colors.dart';
 
 class _TabData {
@@ -50,13 +52,49 @@ const _tabs = [
   ),
 ];
 
-class AppShell extends StatelessWidget {
+/// Rangka app sekaligus tempat antrean offline dikirim ulang.
+///
+/// Pengirimannya dipicu saat app dibuka dan saat kembali dari latar belakang —
+/// dua saat yang paling mungkin bersamaan dengan sinyal baru kembali ada,
+/// tanpa perlu mendengarkan status jaringan terus-menerus.
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _kirimAntrean());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _kirimAntrean();
+  }
+
+  Future<void> _kirimAntrean() async {
+    final hasil = await ref.read(pendingWriteQueueProvider).flush();
+    if (hasil.terkirim > 0 && mounted) {
+      ref.invalidate(pendingWritesProvider);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final navigationShell = widget.navigationShell;
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: Container(

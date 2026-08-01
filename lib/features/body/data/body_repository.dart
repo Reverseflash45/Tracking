@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/local_cache.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../domain/body_profile.dart';
 
 class BodyRepository {
-  BodyRepository(this._client);
+  BodyRepository(this._client, this._cache);
 
   final SupabaseClient _client;
+  final LocalCache _cache;
 
   Future<BodyProfile?> fetchProfile(String userId) async {
     final row = await _client
@@ -20,22 +22,26 @@ class BodyRepository {
   }
 
   Future<void> saveProfile({required String userId, required BodyProfile profile}) {
-    return _client.from('body_profiles').upsert(
-          profile.toUpsertMap(userId),
-          onConflict: 'user_id',
-        );
+    return _client
+        .from('body_profiles')
+        .upsert(profile.toUpsertMap(userId), onConflict: 'user_id');
   }
 
   /// Riwayat berat, terbaru dulu.
   Future<List<WeightLog>> fetchWeightLogs(String userId) async {
-    final rows = await _client
-        .from('weight_logs')
-        .select('logged_on, weight_kg')
-        .eq('user_id', userId)
-        .order('logged_on', ascending: false);
-    return (rows as List)
-        .map((row) => WeightLog.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'weight_logs_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('weight_logs')
+                      .select('logged_on, weight_kg')
+                      .eq('user_id', userId)
+                      .order('logged_on', ascending: false))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: WeightLog.fromMap,
+    );
   }
 
   /// Satu catatan berat per hari — mencatat ulang di hari yang sama menimpa
@@ -46,19 +52,16 @@ class BodyRepository {
     DateTime? loggedOn,
   }) {
     final date = loggedOn ?? DateTime.now();
-    return _client.from('weight_logs').upsert(
-      {
-        'user_id': userId,
-        'logged_on': date.toIso8601String().substring(0, 10),
-        'weight_kg': weightKg,
-      },
-      onConflict: 'user_id,logged_on',
-    );
+    return _client.from('weight_logs').upsert({
+      'user_id': userId,
+      'logged_on': date.toIso8601String().substring(0, 10),
+      'weight_kg': weightKg,
+    }, onConflict: 'user_id,logged_on');
   }
 }
 
 final bodyRepositoryProvider = Provider<BodyRepository>((ref) {
-  return BodyRepository(ref.watch(supabaseClientProvider));
+  return BodyRepository(ref.watch(supabaseClientProvider), ref.watch(localCacheProvider));
 });
 
 final bodyProfileProvider = FutureProvider.autoDispose<BodyProfile?>((ref) async {

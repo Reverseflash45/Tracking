@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/offline/pending_writes.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -189,6 +190,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
     _ticker = null;
 
     if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
 
     if (_recorder.distanceMeters < 10) {
       final buang = await showDialog<bool>(
@@ -222,7 +224,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
 
     setState(() => _saving = true);
     try {
-      await ref.read(runRepositoryProvider).addRun(
+      final terkirim = await ref.read(runRepositoryProvider).addRun(
             userId: userId,
             run: RunLog(
               id: '',
@@ -231,8 +233,21 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
               distanceMeters: _recorder.distanceMeters,
               route: _recorder.points,
             ),
+            queue: ref.read(pendingWriteQueueProvider),
           );
       ref.invalidate(runsProvider);
+      ref.invalidate(pendingWritesProvider);
+      if (!terkirim) {
+        // Larinya tersimpan di HP, bukan hilang. Ini harus dikatakan, bukan
+        // dibiarkan terlihat seperti berhasil terkirim.
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Tidak ada sinyal — larimu disimpan di HP dan '
+                'dikirim otomatis nanti.'),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {

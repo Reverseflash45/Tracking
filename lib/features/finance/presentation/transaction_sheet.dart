@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/offline/pending_writes.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -140,14 +141,29 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
         fromReceipt: _fromReceipt,
       );
 
+      var terkirim = true;
       if (_isEdit) {
+        // Mengubah tetap butuh sinyal — antrean hanya untuk catatan baru.
         await repo.updateTransaction(userId, tx);
       } else {
-        await repo.addTransaction(userId, tx);
+        terkirim = await repo.addTransaction(
+          userId,
+          tx,
+          queue: ref.read(pendingWriteQueueProvider),
+        );
       }
 
       ref.invalidate(transactionsProvider);
-      if (mounted) Navigator.of(context).pop();
+      ref.invalidate(pendingWritesProvider);
+      if (!mounted) return;
+      if (!terkirim) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tersimpan di HP — dikirim otomatis begitu ada sinyal.'),
+          ),
+        );
+      }
+      Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);

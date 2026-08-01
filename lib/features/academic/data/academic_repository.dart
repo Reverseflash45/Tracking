@@ -1,21 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/local_cache.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import 'models/class_schedule.dart';
 import 'models/course.dart';
 import 'models/task.dart';
 
 class AcademicRepository {
-  AcademicRepository(this._client);
+  AcademicRepository(this._client, this._cache);
 
   final SupabaseClient _client;
+  final LocalCache _cache;
 
   Future<List<Course>> fetchCourses(String userId) async {
-    final rows = await _client.from('courses').select().eq('user_id', userId).order('name');
-    return (rows as List)
-        .map((row) => Course.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'courses_$userId',
+      remote: () async =>
+          ((await _client.from('courses').select().eq('user_id', userId).order('name'))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: Course.fromMap,
+    );
   }
 
   Future<void> addCourse({required String userId, required String name, String? lecturer}) {
@@ -58,22 +65,27 @@ class AcademicRepository {
   }
 
   Future<void> updateCourse({required String id, required String name, String? lecturer}) {
-    return _client.from('courses').update({
-      'name': name,
-      'lecturer': lecturer,
-    }).eq('id', id);
+    return _client
+        .from('courses')
+        .update({'name': name, 'lecturer': lecturer})
+        .eq('id', id);
   }
 
   Future<List<ClassSchedule>> fetchSchedules(String userId) async {
-    final rows = await _client
-        .from('class_schedules')
-        .select('*, courses(name, lecturer)')
-        .eq('user_id', userId)
-        .order('day_of_week')
-        .order('start_time');
-    return (rows as List)
-        .map((row) => ClassSchedule.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'schedules_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('class_schedules')
+                      .select('*, courses(name, lecturer)')
+                      .eq('user_id', userId)
+                      .order('day_of_week')
+                      .order('start_time'))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: ClassSchedule.fromMap,
+    );
   }
 
   Future<void> addSchedule({
@@ -108,15 +120,18 @@ class AcademicRepository {
     bool isPhl = false,
     DateTime? specificDate,
   }) {
-    return _client.from('class_schedules').update({
-      'course_id': courseId,
-      'day_of_week': dayOfWeek,
-      'start_time': startTime,
-      'end_time': endTime,
-      'room': room,
-      'is_phl': isPhl,
-      'specific_date': specificDate?.toIso8601String().substring(0, 10),
-    }).eq('id', id);
+    return _client
+        .from('class_schedules')
+        .update({
+          'course_id': courseId,
+          'day_of_week': dayOfWeek,
+          'start_time': startTime,
+          'end_time': endTime,
+          'room': room,
+          'is_phl': isPhl,
+          'specific_date': specificDate?.toIso8601String().substring(0, 10),
+        })
+        .eq('id', id);
   }
 
   Future<void> deleteSchedule(String id) {
@@ -124,14 +139,19 @@ class AcademicRepository {
   }
 
   Future<List<AcademicTask>> fetchTasks(String userId) async {
-    final rows = await _client
-        .from('tasks')
-        .select('*, courses(name)')
-        .eq('user_id', userId)
-        .order('deadline');
-    return (rows as List)
-        .map((row) => AcademicTask.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'tasks_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('tasks')
+                      .select('*, courses(name)')
+                      .eq('user_id', userId)
+                      .order('deadline'))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: AcademicTask.fromMap,
+    );
   }
 
   Future<void> addTask({
@@ -161,20 +181,28 @@ class AcademicRepository {
     required DateTime deadline,
     required TaskPriority priority,
   }) {
-    return _client.from('tasks').update({
-      'course_id': courseId,
-      'title': title,
-      'description': description,
-      'deadline': deadline.toIso8601String(),
-      'priority': priority.dbValue,
-    }).eq('id', id);
+    return _client
+        .from('tasks')
+        .update({
+          'course_id': courseId,
+          'title': title,
+          'description': description,
+          'deadline': deadline.toIso8601String(),
+          'priority': priority.dbValue,
+        })
+        .eq('id', id);
   }
 
   Future<void> updateTaskStatus(String id, TaskStatus status) {
-    return _client.from('tasks').update({
-      'status': status.dbValue,
-      'completed_at': status == TaskStatus.done ? DateTime.now().toIso8601String() : null,
-    }).eq('id', id);
+    return _client
+        .from('tasks')
+        .update({
+          'status': status.dbValue,
+          'completed_at': status == TaskStatus.done
+              ? DateTime.now().toIso8601String()
+              : null,
+        })
+        .eq('id', id);
   }
 
   Future<void> deleteTask(String id) {
@@ -183,5 +211,8 @@ class AcademicRepository {
 }
 
 final academicRepositoryProvider = Provider<AcademicRepository>((ref) {
-  return AcademicRepository(ref.watch(supabaseClientProvider));
+  return AcademicRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(localCacheProvider),
+  );
 });

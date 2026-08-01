@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/local_cache.dart';
+import '../../../core/offline/pending_writes.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../domain/daily_nutrition.dart';
 import '../domain/food_log.dart';
@@ -15,9 +17,10 @@ import '../domain/food_log.dart';
 const int _historyDays = 400;
 
 class NutritionRepository {
-  NutritionRepository(this._client);
+  NutritionRepository(this._client, this._cache);
 
   final SupabaseClient _client;
+  final LocalCache _cache;
 
   String _sinceDate() => DateTime.now()
       .subtract(const Duration(days: _historyDays))
@@ -25,37 +28,53 @@ class NutritionRepository {
       .substring(0, 10);
 
   Future<List<FoodLog>> fetchFoods(String userId) async {
-    final rows = await _client
-        .from('food_logs')
-        .select()
-        .eq('user_id', userId)
-        .gte('logged_on', _sinceDate())
-        .order('logged_at', ascending: false);
-    return (rows as List)
-        .map((row) => FoodLog.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'food_logs_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('food_logs')
+                      .select()
+                      .eq('user_id', userId)
+                      .gte('logged_on', _sinceDate())
+                      .order('logged_at', ascending: false))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: FoodLog.fromMap,
+    );
   }
 
   Future<List<WaterLog>> fetchWaters(String userId) async {
-    final rows = await _client
-        .from('water_logs')
-        .select()
-        .eq('user_id', userId)
-        .gte('logged_on', _sinceDate())
-        .order('logged_at', ascending: false);
-    return (rows as List)
-        .map((row) => WaterLog.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'water_logs_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('water_logs')
+                      .select()
+                      .eq('user_id', userId)
+                      .gte('logged_on', _sinceDate())
+                      .order('logged_at', ascending: false))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: WaterLog.fromMap,
+    );
   }
 
-  Future<void> addFood({
+  /// Catat makanan. Masuk antrean kalau sinyalnya sedang mati.
+  ///
+  /// Mengembalikan true kalau langsung terkirim.
+  Future<bool> addFood({
     required String userId,
     required FoodLog food,
+    required PendingWriteQueue queue,
     DateTime? date,
   }) {
-    return _client.from('food_logs').insert(
-          food.toInsertMap(userId: userId, date: date ?? DateTime.now()),
-        );
+    return queue.submit(
+      table: 'food_logs',
+      payload: food.toInsertMap(userId: userId, date: date ?? DateTime.now()),
+      label: food.name,
+    );
   }
 
   Future<void> updateFood({required String id, required FoodLog food}) {
@@ -66,11 +85,7 @@ class NutritionRepository {
     return _client.from('food_logs').delete().eq('id', id);
   }
 
-  Future<void> addWater({
-    required String userId,
-    required int ml,
-    DateTime? date,
-  }) {
+  Future<void> addWater({required String userId, required int ml, DateTime? date}) {
     final day = date ?? DateTime.now();
     return _client.from('water_logs').insert({
       'user_id': userId,
@@ -85,7 +100,10 @@ class NutritionRepository {
 }
 
 final nutritionRepositoryProvider = Provider<NutritionRepository>((ref) {
-  return NutritionRepository(ref.watch(supabaseClientProvider));
+  return NutritionRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(localCacheProvider),
+  );
 });
 
 final foodLogsProvider = FutureProvider.autoDispose<List<FoodLog>>((ref) async {

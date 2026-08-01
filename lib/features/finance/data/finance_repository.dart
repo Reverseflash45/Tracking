@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/local_cache.dart';
+import '../../../core/offline/pending_writes.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../domain/finance_stats.dart';
 import '../domain/transaction.dart';
@@ -10,9 +12,10 @@ import '../domain/transaction.dart';
 const int _historyDays = 400;
 
 class FinanceRepository {
-  FinanceRepository(this._client);
+  FinanceRepository(this._client, this._cache);
 
   final SupabaseClient _client;
+  final LocalCache _cache;
 
   Future<List<Transaction>> fetchTransactions(String userId) async {
     final since = DateTime.now()
@@ -20,17 +23,21 @@ class FinanceRepository {
         .toIso8601String()
         .substring(0, 10);
 
-    final rows = await _client
-        .from('transactions')
-        .select()
-        .eq('user_id', userId)
-        .gte('occurred_on', since)
-        .order('occurred_on', ascending: false)
-        .order('created_at', ascending: false);
-
-    return (rows as List)
-        .map((row) => Transaction.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return fetchWithCache(
+      cache: _cache,
+      key: 'transactions_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('transactions')
+                      .select()
+                      .eq('user_id', userId)
+                      .gte('occurred_on', since)
+                      .order('occurred_on', ascending: false)
+                      .order('created_at', ascending: false))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: Transaction.fromMap,
+    );
   }
 
   Future<FinanceSettings> fetchSettings(String userId) async {
@@ -48,8 +55,20 @@ class FinanceRepository {
     return _client.from('finance_settings').upsert(settings.toMap(userId));
   }
 
-  Future<void> addTransaction(String userId, Transaction tx) {
-    return _client.from('transactions').insert(tx.toMap(userId));
+  /// Catat transaksi. Masuk antrean kalau sinyalnya sedang mati — mencatat
+  /// pengeluaran justru sering dilakukan di warung yang sinyalnya jelek.
+  ///
+  /// Mengembalikan true kalau langsung terkirim.
+  Future<bool> addTransaction(
+    String userId,
+    Transaction tx, {
+    required PendingWriteQueue queue,
+  }) {
+    return queue.submit(
+      table: 'transactions',
+      payload: tx.toMap(userId),
+      label: tx.product ?? tx.merchant ?? tx.category.label,
+    );
   }
 
   Future<void> updateTransaction(String userId, Transaction tx) {
@@ -62,18 +81,19 @@ class FinanceRepository {
 }
 
 final financeRepositoryProvider = Provider<FinanceRepository>((ref) {
-  return FinanceRepository(ref.watch(supabaseClientProvider));
+  return FinanceRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(localCacheProvider),
+  );
 });
 
-final transactionsProvider =
-    FutureProvider.autoDispose<List<Transaction>>((ref) async {
+final transactionsProvider = FutureProvider.autoDispose<List<Transaction>>((ref) async {
   final userId = ref.watch(currentUserProvider)?.id;
   if (userId == null) return const [];
   return ref.watch(financeRepositoryProvider).fetchTransactions(userId);
 });
 
-final financeSettingsProvider =
-    FutureProvider.autoDispose<FinanceSettings>((ref) async {
+final financeSettingsProvider = FutureProvider.autoDispose<FinanceSettings>((ref) async {
   final userId = ref.watch(currentUserProvider)?.id;
   if (userId == null) return const FinanceSettings();
   return ref.watch(financeRepositoryProvider).fetchSettings(userId);
@@ -81,8 +101,7 @@ final financeSettingsProvider =
 
 /// Ringkasan periode anggaran berjalan, dipakai halaman Keuangan dan kartu
 /// ringkas di Dashboard.
-final financeSummaryProvider =
-    Provider.autoDispose<AsyncValue<FinanceSummary>>((ref) {
+final financeSummaryProvider = Provider.autoDispose<AsyncValue<FinanceSummary>>((ref) {
   final transactions = ref.watch(transactionsProvider);
   final settings = ref.watch(financeSettingsProvider);
 

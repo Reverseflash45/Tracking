@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/domain/achievements.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
+import '../../../core/offline/offline_banner.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -66,6 +67,9 @@ class DashboardPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Ditaruh paling atas: catatan yang tertahan harus terlihat
+                  // sebelum kamu menganggap semuanya sudah tersimpan.
+                  const OfflineBanner(),
                   const _AchievementsRow(),
                   const SectionHeader(
                     title: 'Jadwal Hari Ini',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/offline/pending_writes.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -134,14 +135,29 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
         sodiumMg: _parse(_sodiumController.text),
       );
 
+      var terkirim = true;
       if (_isEdit) {
+        // Mengubah tetap butuh sinyal — antrean hanya untuk catatan baru.
         await repository.updateFood(id: widget.existing!.id, food: food);
       } else {
-        await repository.addFood(userId: userId, food: food);
+        terkirim = await repository.addFood(
+          userId: userId,
+          food: food,
+          queue: ref.read(pendingWriteQueueProvider),
+        );
       }
 
       ref.invalidate(foodLogsProvider);
-      if (mounted) Navigator.of(context).pop();
+      ref.invalidate(pendingWritesProvider);
+      if (!mounted) return;
+      if (!terkirim) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tersimpan di HP — dikirim otomatis begitu ada sinyal.'),
+          ),
+        );
+      }
+      Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
