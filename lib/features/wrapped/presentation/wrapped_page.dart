@@ -9,6 +9,7 @@ import '../../../core/widgets/hero_header.dart';
 import '../../academic/data/models/class_schedule.dart' show weekDayName;
 import '../../academic/presentation/academic_providers.dart';
 import '../../nutrition/data/nutrition_repository.dart';
+import '../../run/data/run_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../domain/wrapped_stats.dart';
 
@@ -56,7 +57,9 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
     final sessions = ref.watch(workoutSessionsProvider).value;
     final foods = ref.watch(foodLogsProvider).value;
     final waters = ref.watch(waterLogsProvider).value;
-    final loading = tasks == null || sessions == null || foods == null || waters == null;
+    final runs = ref.watch(runsProvider).value;
+    final loading =
+        tasks == null || sessions == null || foods == null || waters == null || runs == null;
 
     final stats = loading
         ? null
@@ -67,6 +70,7 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
             sessions: sessions,
             foods: foods,
             waters: waters,
+            runs: runs,
           );
 
     final cards = stats == null ? const <_StoryCardData>[] : _buildCards(stats);
@@ -200,6 +204,20 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
                   '(${stats.nutrisi.makananFavorit!.count}x)',
             if (stats.nutrisi.hariTercatat > 0 && stats.nutrisi.totalGelas > 0)
               '${stats.nutrisi.totalGelas} gelas air diminum',
+          ].join('\n'),
+        ),
+      if (stats.sesiLari > 0)
+        _StoryCardData(
+          icon: Icons.directions_run,
+          eyebrow: 'Jarak lari',
+          value: stats.jarakLariMeter < 1000
+              ? '${stats.jarakLariMeter.round()} m'
+              : '${(stats.jarakLariMeter / 1000).toStringAsFixed(1)} km',
+          caption: [
+            '${stats.sesiLari} sesi lari $phrase',
+            if (stats.lariTerjauhMeter > 0)
+              'Terjauh sekali lari: '
+                  '${(stats.lariTerjauhMeter / 1000).toStringAsFixed(2)} km',
           ].join('\n'),
         ),
       _StoryCardData(

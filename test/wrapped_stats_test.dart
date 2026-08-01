@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/features/academic/data/models/task.dart';
 import 'package:tracking/features/nutrition/domain/food_log.dart';
+import 'package:tracking/features/run/data/run_repository.dart';
 import 'package:tracking/features/workout/data/models/exercise_entry.dart';
 import 'package:tracking/features/workout/data/models/workout_session.dart';
 import 'package:tracking/features/wrapped/domain/wrapped_stats.dart';
@@ -393,6 +394,84 @@ void main() {
       );
 
       expect(stats.hariAktif, 0);
+    });
+  });
+
+  group('lari', () {
+    RunLog run(DateTime date, double meters) => RunLog(
+          id: date.toIso8601String(),
+          startedAt: date,
+          durationSeconds: 1800,
+          distanceMeters: meters,
+          route: const [],
+        );
+
+    test('jarak dijumlahkan dan terjauh dicatat', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        runs: [
+          run(DateTime(2026, 7, 28), 3000),
+          run(DateTime(2026, 7, 30), 5200),
+        ],
+      );
+
+      expect(stats.sesiLari, 2);
+      expect(stats.jarakLariMeter, 8200);
+      expect(stats.lariTerjauhMeter, 5200);
+    });
+
+    test('lari di luar periode tidak ikut dihitung', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        // Minggu berjalan dimulai Senin 27 Juli.
+        runs: [run(DateTime(2026, 7, 20), 9000)],
+      );
+
+      expect(stats.sesiLari, 0);
+      expect(stats.jarakLariMeter, 0);
+    });
+
+    test('hari lari dihitung sebagai hari aktif', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        runs: [run(DateTime(2026, 7, 29), 4000)],
+      );
+
+      expect(stats.hariAktif, 1);
+    });
+
+    test('lari saja sudah membuat rekap tidak kosong', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        runs: [run(DateTime(2026, 7, 29), 4000)],
+      );
+
+      expect(stats.kosong, isFalse);
+    });
+
+    test('lari ikut menentukan julukan olahraga', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.bulanan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        runs: [for (var i = 1; i <= 5; i++) run(DateTime(2026, 7, i * 3), 3000)],
+      );
+
+      // Lima sesi olahraga sudah cukup, meski tak satu pun sesi angkat beban.
+      expect(stats.persona, 'Gym Rat');
     });
   });
 }

@@ -11,10 +11,18 @@ DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 
 /// Streak workout dihitung dari tanggal sesi unik. Streak "aktif" boleh punya
 /// grace 1 hari (kalau belum sempat workout hari ini tapi kemarin masih jalan).
-WorkoutStreak calculateWorkoutStreak(List<WorkoutSession> sessions) {
-  if (sessions.isEmpty) return const WorkoutStreak(current: 0, best: 0);
+WorkoutStreak calculateWorkoutStreak(List<WorkoutSession> sessions) =>
+    calculateStreakFromDates(sessions.map((s) => s.sessionDate));
 
-  final uniqueDates = sessions.map((s) => _dateOnly(s.sessionDate)).toSet().toList()
+/// Streak dari kumpulan tanggal aktif apa pun.
+///
+/// Dipisah dari [calculateWorkoutStreak] supaya hari lari bisa ikut dihitung.
+/// Lari 10 km lalu streak-nya putus karena tidak mencatat sesi angkat beban itu
+/// jelas salah — yang dihitung "hari kamu bergerak", bukan "hari kamu ke gym".
+WorkoutStreak calculateStreakFromDates(Iterable<DateTime> dates) {
+  if (dates.isEmpty) return const WorkoutStreak(current: 0, best: 0);
+
+  final uniqueDates = dates.map(_dateOnly).toSet().toList()
     ..sort((a, b) => b.compareTo(a));
 
   final today = _dateOnly(DateTime.now());

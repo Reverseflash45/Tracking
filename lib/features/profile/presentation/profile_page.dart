@@ -246,6 +246,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     trailing: const Icon(Icons.chevron_right),
                   ),
                 ),
+                Card(
+                  child: ListTile(
+                    onTap: () => context.push('/profile/insight'),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.dashboard.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.insights, size: 18, color: AppColors.dashboard),
+                    ),
+                    title: const Text(
+                      'Pola',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: const Text('Hubungan antara olahraga dan tugasmu'),
+                    trailing: const Icon(Icons.chevron_right),
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
                   title: 'Data',
