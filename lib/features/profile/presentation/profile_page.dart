@@ -227,43 +227,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   icon: Icons.auto_awesome,
                   color: AppColors.profile,
                 ),
-                Card(
-                  child: ListTile(
-                    onTap: () => context.push('/profile/wrapped'),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.profile.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.auto_awesome, size: 18, color: AppColors.profile),
-                    ),
-                    title: const Text(
-                      'Wrapped',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: const Text('Rekap mingguan, bulanan, dan tahunanmu'),
-                    trailing: const Icon(Icons.chevron_right),
-                  ),
+                _MenuTile(
+                  icon: Icons.auto_awesome,
+                  color: AppColors.profile,
+                  title: 'Wrapped',
+                  subtitle: 'Rekap mingguan, bulanan, dan tahunanmu',
+                  onTap: () => context.push('/profile/wrapped'),
                 ),
-                Card(
-                  child: ListTile(
-                    onTap: () => context.push('/profile/insight'),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.dashboard.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.insights, size: 18, color: AppColors.dashboard),
-                    ),
-                    title: const Text(
-                      'Pola',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: const Text('Hubungan antara olahraga dan tugasmu'),
-                    trailing: const Icon(Icons.chevron_right),
-                  ),
+                const SizedBox(height: AppSpacing.sm),
+                _MenuTile(
+                  icon: Icons.insights,
+                  color: AppColors.dashboard,
+                  title: 'Pola',
+                  subtitle: 'Hubungan antara olahraga dan tugasmu',
+                  onTap: () => context.push('/profile/insight'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _MenuTile(
+                  icon: Icons.forum_outlined,
+                  color: AppColors.dashboard,
+                  title: 'Tanya Data',
+                  subtitle: 'Tanya apa saja tentang catatanmu sendiri',
+                  onTap: () => context.push('/profile/tanya'),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
@@ -271,39 +256,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   icon: Icons.backup_outlined,
                   color: AppColors.profile,
                 ),
-                Card(
-                  child: ListTile(
-                    onTap: _exporting ? null : _exportData,
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.profile.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: _exporting
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.profile,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.download_outlined,
-                              size: 18,
-                              color: AppColors.profile,
-                            ),
-                    ),
-                    title: Text(
-                      _exporting ? 'Menyiapkan...' : 'Export Data',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: const Text(
-                      'Simpan seluruh datamu sebagai satu berkas JSON',
-                    ),
-                    trailing: _exporting ? null : const Icon(Icons.chevron_right),
-                  ),
+                _MenuTile(
+                  icon: Icons.download_outlined,
+                  color: AppColors.profile,
+                  title: _exporting ? 'Menyiapkan...' : 'Export Data',
+                  subtitle: 'Simpan seluruh datamu sebagai satu berkas JSON',
+                  busy: _exporting,
+                  onTap: _exporting ? null : _exportData,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
@@ -322,6 +281,97 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Kartu menu di halaman profil.
+///
+/// Dijadikan satu widget karena ketiganya harus punya tinggi dan jarak yang
+/// sama persis. Sebelumnya ditulis terpisah, dan subjudul yang panjangnya beda
+/// membuat kartunya terlihat berdesakan satu sama lain.
+class _MenuTile extends StatelessWidget {
+  const _MenuTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.busy = false,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          // Padding sendiri, bukan ListTile: subjudul dua baris di ListTile
+          // menempel ke tepi kartu dan bikin sesak.
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 14,
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: busy
+                    ? SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: color),
+                      )
+                    : Icon(icon, size: 18, color: color),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.35,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!busy) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Icon(Icons.chevron_right, size: 20, color: colorScheme.onSurfaceVariant),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
