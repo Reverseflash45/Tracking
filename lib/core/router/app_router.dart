@@ -8,6 +8,7 @@ import '../../features/academic/presentation/task_detail_page.dart';
 import '../../features/academic/presentation/task_form_page.dart';
 import '../../features/academic/presentation/tasks_page.dart';
 import '../../features/assistant/presentation/assistant_page.dart';
+import '../../features/assistant/presentation/preset_answers_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/register_page.dart';
 import '../../features/body/presentation/body_profile_form_page.dart';
@@ -200,7 +201,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ),
                 GoRoute(
                   path: 'tanya',
-                  builder: (context, state) => const AssistantPage(),
+                  // Jalur utama gratis: pertanyaan siap pakai yang jawabannya
+                  // dihitung di HP. Ketik bebas jadi cabang opsional karena
+                  // butuh Edge Function dan berbayar.
+                  builder: (context, state) => const PresetAnswersPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'bebas',
+                      builder: (context, state) => const AssistantPage(),
+                    ),
+                  ],
                 ),
               ],
             ),
