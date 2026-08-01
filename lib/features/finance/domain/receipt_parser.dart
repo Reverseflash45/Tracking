@@ -6,46 +6,152 @@
 /// tidak pernah langsung masuk catatan.
 library;
 
-/// Kata kunci yang mendahului angka total, diurutkan dari yang paling
-/// meyakinkan. Struk sering memuat beberapa sekaligus ("SUBTOTAL", "TOTAL",
-/// "TUNAI", "KEMBALI") jadi urutan ini yang menentukan mana yang menang.
+/// Kata kunci yang mendahului angka total, **diurutkan dari yang paling
+/// meyakinkan ke yang paling longgar**.
+///
+/// Urutannya yang bekerja, bukan sekadar isinya. Satu struk lazim memuat
+/// beberapa sekaligus ("SUBTOTAL", "TOTAL", "TUNAI", "KEMBALI", "PAID") dan
+/// yang menang adalah kata kunci yang lebih dulu ketemu di daftar ini. Karena
+/// itu frasa spesifik ditaruh di atas, dan kata longgar seperti 'paid' atau
+/// 'bayar' ditaruh paling bawah — supaya cuma dipakai kalau tidak ada
+/// petunjuk yang lebih baik.
 const List<String> _totalKeywords = [
+  // --- Paling meyakinkan: frasa lengkap ---
   'grand total',
-  // Struk digital (ShopeeFood, GoFood, m-banking) memakai frasa yang lebih
-  // panjang. Ditaruh sebelum 'total' polos supaya yang lebih spesifik menang.
+  'total keseluruhan',
   'total pembayaran',
+  'total yang dibayar',
+  'total yang harus dibayar',
+  'total dibayar',
   'total tagihan',
-  'total pesanan',
-  'total bayar',
+  'total transaksi',
   'total belanja',
+  'total bayar',
   'total harga',
+  'total biaya',
+  'total akhir',
+  'total pesanan',
+  'jumlah pembayaran',
+  'jumlah tagihan',
   'jumlah bayar',
+  'jumlah harga',
+  'nominal pembayaran',
+  'nominal transaksi',
+  'harus dibayar',
+  'wajib dibayar',
+  'sisa tagihan',
+
+  // --- Struk berbahasa Inggris (banyak POS memakai ini apa adanya) ---
+  'amount due',
+  'amount paid',
+  'total amount',
+  'net total',
+  'nett total',
+  'balance due',
+
+  // --- Umum ---
   'total',
   'jumlah',
+
+  // --- Longgar: cuma dipakai kalau semua di atas gagal ---
+  // ShopeeFood menulis totalnya cukup dengan "Paid". Tidak ada kata "total"
+  // di seluruh strukmu selain "Subtotal Pesanan", yang justru harus ditolak.
+  'paid',
+  'lunas',
+  'terbayar',
+  'dibayarkan',
+  'dibayar',
+  'nominal',
+  'tagihan',
+  'bayar',
 ];
 
 /// Kata yang menandakan angka di barisnya BUKAN yang kita cari, meski
-/// mengandung kata kunci di atas. "Kembali" adalah uang kembalian, dan
-/// "subtotal" belum termasuk pajak.
+/// mengandung kata kunci di atas.
+///
+/// Ini pasangan wajib dari daftar longgar di atas: makin longgar kata
+/// kuncinya, makin daftar ini yang menahan salah tangkap. "Kembali" adalah
+/// uang kembalian, "subtotal" belum termasuk ongkir, dan "Waktu Pembayaran"
+/// isinya tanggal.
 const List<String> _rejectKeywords = [
+  // Bukan uang yang keluar
   'kembali',
   'kembalian',
   'sub total',
   'subtotal',
   'total item',
   'total qty',
+  'total menu',
   'total diskon',
   'diskon',
+  'voucher',
+  'promo',
+  'potongan',
   'ppn',
   'pajak',
   'npwp',
-  // Struk digital memajang angka lain yang bukan uang keluar: koin/poin hadiah
-  // dan "total hemat" dari promo.
+  'refund',
+  'dikembalikan',
+  'saldo',
+  'sisa saldo',
+  'belum dibayar',
+  'belum bayar',
+  'unpaid',
+
+  // Angka hadiah, bukan pengeluaran
   'koin',
   'poin',
+  'point',
   'hemat',
   'cashback',
+  'reward',
+
+  // Baris yang isinya tanggal, nomor, atau keterangan — bukan nominal
+  'waktu',
+  'tanggal',
+  'jam ',
+  'metode',
+  'status',
+  'informasi',
+  'catatan',
+  'no. pesanan',
+  'nomor pesanan',
+  'id pesanan',
+  'id transaksi',
+  'no. transaksi',
+  'kode',
+  'estimasi',
+  'minimal',
+  'min.',
 ];
+
+/// Batas atas nominal yang masih masuk akal (Rp 100 juta).
+///
+/// Bukan untuk membatasi belanjaanmu, tapi untuk membuang nomor yang kebetulan
+/// terbaca sebagai angka. Nomor pesanan "3198462280678912001" di strukmu
+/// terbaca sebagai tiga triliun rupiah dan langsung nangkring di urutan
+/// pertama daftar pilihan.
+const double _maxReasonableAmount = 100000000;
+
+/// Nama bulan beserta nomornya.
+///
+/// Dipakai untuk dua hal: membaca tanggal bergaya "1 Agt 2026", dan mengenali
+/// tahun yang berdiri tepat sesudah nama bulan supaya tidak terbaca sebagai
+/// nominal.
+const Map<String, int> _monthWords = {
+  'jan': 1, 'januari': 1,
+  'feb': 2, 'februari': 2,
+  'mar': 3, 'maret': 3,
+  'apr': 4, 'april': 4,
+  'mei': 5,
+  'jun': 6, 'juni': 6,
+  'jul': 7, 'juli': 7,
+  'agt': 8, 'ags': 8, 'agu': 8, 'agustus': 8,
+  'sep': 9, 'sept': 9, 'september': 9,
+  'okt': 10, 'oktober': 10,
+  'nov': 11, 'november': 11,
+  'des': 12, 'desember': 12,
+};
 
 /// Kata yang menandakan sebuah baris adalah judul layar atau tombol aplikasi,
 /// bukan nama tempat.
@@ -55,18 +161,36 @@ const List<String> _rejectKeywords = [
 /// ShopeeFood ke Layar Utama"). Tanpa saringan ini, judul halaman itulah yang
 /// tercatat sebagai nama tempat.
 const List<String> _notMerchant = [
+  // Judul halaman
   'rincian',
   'detail',
   'ringkasan',
+  'informasi',
   'pesananmu',
   'pesanan saya',
   'riwayat',
-  'layar utama',
   'struk',
   'nota',
   'invoice',
   'receipt',
   'faktur',
+
+  // Tombol dan ajakan
+  'layar utama',
+  'pesan lagi',
+  'beli lagi',
+  'pesan makan',
+  'beri nilai',
+  'bantuan',
+  'tambah',
+  'lihat',
+  'salin',
+  'kembali',
+  'lanjut',
+  'unduh',
+  'bagikan',
+
+  // Baris nilai, bukan nama
   'berhasil',
   'selesai',
   'terima kasih',
@@ -74,12 +198,58 @@ const List<String> _notMerchant = [
   'metode',
   'total',
   'subtotal',
-  'pesan lagi',
-  'beli lagi',
-  'bantuan',
-  'tambah',
-  'lihat',
-  'kembali',
+  'catatan',
+  'waktu',
+  'tanggal',
+  'status',
+];
+
+/// Nama layanan atau gerai yang bisa dikenali langsung dari teksnya.
+///
+/// Dipakai sebagai cadangan terakhir untuk nama tempat. Di tangkapan layar
+/// aplikasi, bagian atas layar cuma berisi judul halaman — tapi nama
+/// layanannya hampir selalu tercetak di suatu tempat. "ShopeeFood" memang
+/// bukan nama warungnya, tapi jauh lebih berguna daripada kolom kosong, dan
+/// dia tidak mengaku jadi sesuatu yang bukan dirinya.
+///
+/// Urutannya penting: yang lebih panjang harus di atas, supaya "ShopeeFood"
+/// tidak keburu tertangkap sebagai "Shopee".
+const List<String> _knownPlaces = [
+  'ShopeeFood',
+  'GrabFood',
+  'GoFood',
+  'Shopee',
+  'Tokopedia',
+  'Bukalapak',
+  'Lazada',
+  'Blibli',
+  'Traveloka',
+  'Gojek',
+  'Grab',
+  'Alfamidi',
+  'Alfamart',
+  'Indomaret',
+  'Superindo',
+  'Hypermart',
+  'Transmart',
+  'Lotte Mart',
+  'Ranch Market',
+  'Kopi Kenangan',
+  'Janji Jiwa',
+  'Point Coffee',
+  'Fore Coffee',
+  'Starbucks',
+  'Chatime',
+  'Mixue',
+  'Dunkin',
+  'Pizza Hut',
+  'Burger King',
+  'Richeese',
+  'HokBen',
+  'Yoshinoya',
+  'Solaria',
+  'McDonald',
+  'KFC',
 ];
 
 /// Berapa banyak baris teratas yang dianggap bagian kepala struk.
@@ -165,14 +335,41 @@ bool _partOfDateOrTime(String line, RegExpMatch match) {
   return separators.contains(before) || separators.contains(after);
 }
 
+/// Angka empat digit yang berdiri tepat setelah nama bulan itu tahun.
+///
+/// "Waktu Pembayaran  1 Agt 2026 18:24" tidak boleh menyumbang Rp2.026 —
+/// dan baris itu ikut terbaca begitu kata kunci 'bayar' dipakai.
+bool _looksLikeYear(String line, RegExpMatch match) {
+  final token = match.group(0)!;
+  if (token.length != 4 || int.tryParse(token) == null) return false;
+
+  final year = int.parse(token);
+  if (year < 1900 || year > 2100) return false;
+
+  final words = line
+      .substring(0, match.start)
+      .toLowerCase()
+      .split(RegExp(r'[^a-z]+'))
+      .where((word) => word.isNotEmpty)
+      .toList();
+
+  // Harus kata persis di depannya. Tanpa syarat ini "Martabak 2000" ikut
+  // terbuang karena "Martabak" diawali "mar".
+  return words.isNotEmpty && _monthWords.containsKey(words.last);
+}
+
 /// Nominal yang masuk akal sebagai harga di sebuah baris.
 Iterable<double> _amountsIn(String line) sync* {
   for (final match in _numberPattern.allMatches(line)) {
     if (_partOfDateOrTime(line, match)) continue;
+    if (_looksLikeYear(line, match)) continue;
+
     final value = parseRupiah(match.group(0)!);
     if (value == null) continue;
     // Angka satu-dua digit hampir selalu kuantitas, bukan harga.
     if (value < 100) continue;
+    // Angka raksasa itu nomor pesanan atau nomor telepon, bukan uang.
+    if (value > _maxReasonableAmount) continue;
     yield value;
   }
 }
@@ -217,29 +414,54 @@ double? _findTotal(List<String> lines) {
   return null;
 }
 
+/// Tanggal berangka: 03/08/2026, 25-07-26, 2.8.2026.
+final RegExp _numericDatePattern = RegExp(r'(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})');
+
+/// Tanggal bertulis: "1 Agt 2026", "25 Juli 2026". Bentuk ini yang dipakai
+/// struk digital, dan sebelumnya tidak pernah terbaca sama sekali.
+final RegExp _textDatePattern = RegExp(r'(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})');
+
+/// Rakit tanggal sambil memastikan tanggalnya benar-benar ada — DateTime
+/// menggeser 31 Februari jadi 3 Maret tanpa mengeluh.
+DateTime? _buildDate(int day, int month, int year) {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  final parsed = DateTime(year, month, day);
+  if (parsed.month != month || parsed.day != day) return null;
+  return parsed;
+}
+
+DateTime? _parseNumericDate(String line) {
+  final match = _numericDatePattern.firstMatch(line);
+  if (match == null) return null;
+
+  var year = int.parse(match.group(3)!);
+  if (year < 100) year += 2000;
+
+  return _buildDate(int.parse(match.group(1)!), int.parse(match.group(2)!), year);
+}
+
+DateTime? _parseTextDate(String line) {
+  final match = _textDatePattern.firstMatch(line);
+  if (match == null) return null;
+
+  final month = _monthWords[match.group(2)!.toLowerCase()];
+  if (month == null) return null;
+
+  return _buildDate(int.parse(match.group(1)!), month, int.parse(match.group(3)!));
+}
+
 /// Tanggal dalam format yang lazim di struk Indonesia.
 DateTime? _findDate(List<String> lines, {DateTime? now}) {
   final today = now ?? DateTime.now();
-  final pattern = RegExp(r'(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})');
 
   for (final line in lines) {
-    final match = pattern.firstMatch(line);
-    if (match == null) continue;
+    final parsed = _parseNumericDate(line) ?? _parseTextDate(line);
+    if (parsed == null) continue;
 
-    final day = int.parse(match.group(1)!);
-    final month = int.parse(match.group(2)!);
-    var year = int.parse(match.group(3)!);
-    if (year < 100) year += 2000;
-
-    if (month < 1 || month > 12 || day < 1 || day > 31) continue;
-
-    final parsed = DateTime(year, month, day);
     // Tanggal hasil OCR gampang salah baca. Yang mustahil dibuang: struk dari
     // masa depan atau dari lebih dari dua tahun lalu hampir pasti salah baca.
     if (parsed.isAfter(today)) continue;
     if (today.difference(parsed).inDays > 730) continue;
-    // Pastikan tanggalnya benar-benar ada (31 Februari akan bergeser).
-    if (parsed.month != month || parsed.day != day) continue;
 
     return parsed;
   }
@@ -267,12 +489,30 @@ String? _findMerchant(List<String> lines) {
     // seperti "Ongkos Kirim  Rp10.000" di struk aplikasi.
     if (_amountsIn(trimmed).isNotEmpty) continue;
 
+    // Garis miring menandai satuan, bukan nama: "KB/S" dan "MB/S" di baris
+    // status HP ikut terbaca dan bentuknya persis seperti singkatan toko.
+    if (trimmed.contains('/') || trimmed.contains(r'\')) continue;
+
+    // Nama tempat di struk selalu punya huruf besar — ALL CAPS atau Title
+    // Case. Kalimat yang seluruhnya huruf kecil itu teks iklan, seperti
+    // "jadi lebih cepat dan mudah".
+    if (trimmed == trimmed.toLowerCase()) continue;
+
     final lower = trimmed.toLowerCase();
     if (lower.startsWith('jl') || lower.startsWith('jalan')) continue;
     if (lower.contains('telp') || lower.contains('npwp')) continue;
     if (_notMerchant.any(lower.contains)) continue;
 
     return trimmed;
+  }
+  return null;
+}
+
+/// Cadangan terakhir: nama layanan yang dikenali dari mana pun di teks.
+String? _findKnownPlace(String rawText) {
+  final lower = rawText.toLowerCase();
+  for (final place in _knownPlaces) {
+    if (lower.contains(place.toLowerCase())) return place;
   }
   return null;
 }
@@ -292,7 +532,10 @@ ReceiptGuess parseReceipt(String rawText, {DateTime? now}) {
   return ReceiptGuess(
     total: total,
     date: _findDate(lines, now: now),
-    merchant: _findMerchant(lines),
+    // Kepala struk dulu; nama layanan cuma dipakai kalau di sana tidak ada
+    // yang layak, karena nama warungnya selalu lebih berguna daripada nama
+    // aplikasi pengantarnya.
+    merchant: _findMerchant(lines) ?? _findKnownPlace(rawText),
     // Kandidat hanya berguna waktu totalnya tidak ketemu. Kalau sudah ketemu,
     // menawarkan angka lain justru membuat ragu pada jawaban yang benar.
     candidates: total == null ? _collectCandidates(lines) : const [],
