@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/features/finance/domain/receipt_parser.dart';
+import 'package:tracking/features/finance/domain/transaction.dart';
 
 final _now = DateTime(2026, 8, 3);
 
@@ -388,6 +389,14 @@ Beri Nilai & Tip  Pesan lagi
       expect(parseReceipt(teks, now: _now).date, DateTime(2026, 8, 1));
     });
 
+    test('nama produk terbaca dari baris berkuantitas', () {
+      expect(parseReceipt(teks, now: _now).product, 'Martabak telor istimewa');
+    });
+
+    test('jenis tempatnya resto online', () {
+      expect(parseReceipt(teks, now: _now).placeKind, PlaceKind.restoOnline);
+    });
+
     test('nomor pesanan tidak ikut jadi angka pilihan', () {
       // Totalnya ketemu jadi kandidat kosong, tapi kalaupun ditawarkan,
       // nomor pesanan tidak boleh ada di dalamnya.
@@ -397,6 +406,89 @@ Beri Nilai & Tip  Pesan lagi
       );
       expect(semua.candidates, isNot(contains(3198462280678912001)));
       expect(semua.candidates, contains(54500));
+    });
+  });
+
+  group('parseReceipt — nama produk', () {
+    test('satu barang diisi', () {
+      final hasil = parseReceipt(
+        'WARUNG\n1x Nasi Goreng Spesial  Rp18.000\nTOTAL 18.000',
+        now: _now,
+      );
+      expect(hasil.product, 'Nasi Goreng Spesial');
+    });
+
+    test('lebih dari satu barang dikosongkan, bukan dipilih salah satu', () {
+      // Struk lima barang tidak punya satu "nama produk". Memilih salah
+      // satunya berarti mengarang.
+      final hasil = parseReceipt(
+        'TOKO\n1x Roti  Rp12.000\n2x Susu  Rp20.000\nTOTAL 32.000',
+        now: _now,
+      );
+      expect(hasil.product, isNull);
+    });
+
+    test('tanpa penanda kuantitas tidak menebak apa pun', () {
+      final hasil = parseReceipt(
+        'MINIMARKET\nINDOMIE GORENG  3.500\nTOTAL 3.500',
+        now: _now,
+      );
+      expect(hasil.product, isNull);
+    });
+
+    test('kode barang di depan kuantitas tidak ikut terbawa', () {
+      final hasil = parseReceipt(
+        'TOKO\nMN3RASN 1x Martabak telor  Rp60.000\nTOTAL 60.000',
+        now: _now,
+      );
+      expect(hasil.product, 'Martabak telor');
+    });
+
+    test('nama yang isinya angka semua ditolak', () {
+      final hasil = parseReceipt(
+        'TOKO\n1x 12345  Rp5.000\nTOTAL 5.000',
+        now: _now,
+      );
+      expect(hasil.product, isNull);
+    });
+  });
+
+  group('parseReceipt — jenis tempat', () {
+    test('layanan antar makanan jadi resto online', () {
+      expect(
+        parseReceipt('Dipesan lewat GoFood\nTOTAL 25.000', now: _now).placeKind,
+        PlaceKind.restoOnline,
+      );
+    });
+
+    test('marketplace jadi toko online', () {
+      expect(
+        parseReceipt('Pesanan Tokopedia\nTOTAL 150.000', now: _now).placeKind,
+        PlaceKind.tokoOnline,
+      );
+    });
+
+    test('minimarket jadi toko offline', () {
+      expect(
+        parseReceipt('INDOMARET\nTOTAL 20.000', now: _now).placeKind,
+        PlaceKind.tokoOffline,
+      );
+    });
+
+    test('jenis tetap terbaca meski nama tokonya dari kepala struk', () {
+      final hasil = parseReceipt(
+        'WARUNG SATE PAK NO\nDipesan lewat GoFood\nTOTAL 30.000',
+        now: _now,
+      );
+      expect(hasil.merchant, 'WARUNG SATE PAK NO');
+      expect(hasil.placeKind, PlaceKind.restoOnline);
+    });
+
+    test('layanan tak dikenal dikosongkan, bukan ditebak', () {
+      expect(
+        parseReceipt('WARUNG PECEL BU SRI\nTOTAL 12.000', now: _now).placeKind,
+        isNull,
+      );
     });
   });
 

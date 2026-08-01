@@ -44,11 +44,13 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountController;
   late final TextEditingController _merchantController;
+  late final TextEditingController _productController;
   late final TextEditingController _noteController;
 
   late TxKind _kind;
   late TxCategory _category;
   late DateTime _date;
+  PlaceKind? _placeKind;
   bool _saving = false;
 
   bool get _isEdit => widget.existing != null;
@@ -67,6 +69,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
     _kind = existing?.kind ?? TxKind.pengeluaran;
     _category = existing?.category ?? TxCategory.makan;
     _date = existing?.occurredOn ?? guess?.date ?? DateTime.now();
+    _placeKind = existing?.placeKind ?? guess?.placeKind;
 
     _amountController = TextEditingController(
       text: existing != null
@@ -76,6 +79,9 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
     _merchantController = TextEditingController(
       text: existing?.merchant ?? guess?.merchant ?? '',
     );
+    _productController = TextEditingController(
+      text: existing?.product ?? guess?.product ?? '',
+    );
     _noteController = TextEditingController(text: existing?.note ?? '');
   }
 
@@ -83,8 +89,14 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
   void dispose() {
     _amountController.dispose();
     _merchantController.dispose();
+    _productController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  String? _bersih(TextEditingController controller) {
+    final text = controller.text.trim();
+    return text.isEmpty ? null : text;
   }
 
   void _setKind(TxKind kind) {
@@ -121,10 +133,10 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
         kind: _kind,
         category: _category,
         amount: parseRupiah(_amountController.text) ?? 0,
-        merchant: _merchantController.text.trim().isEmpty
-            ? null
-            : _merchantController.text.trim(),
-        note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+        placeKind: _placeKind,
+        merchant: _bersih(_merchantController),
+        product: _bersih(_productController),
+        note: _bersih(_noteController),
         fromReceipt: _fromReceipt,
       );
 
@@ -341,13 +353,59 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                 ),
               ),
 
+              // Tempat dipecah tiga: jenisnya, nama tokonya, dan barangnya.
+              // Satu kolom bebas tidak bisa menjawab "paling sering jajan di
+              // resto online atau masak sendiri?" — tiga kolom ini bisa.
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Tempat (opsional)',
+                style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final place in PlaceKind.values)
+                    ChoiceChip(
+                      avatar: Icon(
+                        place.icon,
+                        size: 15,
+                        color: _placeKind == place ? _color : colorScheme.onSurfaceVariant,
+                      ),
+                      label: Text(place.label),
+                      selected: _placeKind == place,
+                      // Bisa dibatalkan dengan mengetuk ulang — tidak semua
+                      // pengeluaran punya tempat (transfer, iuran, parkir).
+                      onSelected: (dipilih) =>
+                          setState(() => _placeKind = dipilih ? place : null),
+                      selectedColor: _color.withValues(alpha: 0.18),
+                      labelStyle: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: _placeKind == place ? _color : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+
               const SizedBox(height: 12),
               TextFormField(
                 controller: _merchantController,
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
-                  labelText: 'Tempat (opsional)',
+                  labelText: 'Nama toko (opsional)',
                   hintText: 'Misal: Warung Bu Sri',
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _productController,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(
+                  labelText: 'Nama produk (opsional)',
+                  hintText: 'Misal: Martabak telor',
                 ),
               ),
 

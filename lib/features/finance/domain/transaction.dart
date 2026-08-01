@@ -53,6 +53,35 @@ enum TxCategory {
       TxCategory.values.where((category) => category.kind == kind).toList();
 }
 
+/// Jenis tempat: dua sumbu, toko/resto dan offline/online.
+///
+/// "Resto Online" bukan bagian dari daftar yang kamu sebut, tapi itu justru
+/// jenis strukmu sendiri — martabak lewat ShopeeFood bukan toko online dan
+/// bukan resto offline. Tanpa pilihan ini, pesan-antar makanan tidak punya
+/// tempat yang benar.
+enum PlaceKind {
+  tokoOffline('toko_offline', 'Toko Offline', Icons.storefront_outlined),
+  tokoOnline('toko_online', 'Toko Online', Icons.shopping_cart_outlined),
+  restoOffline('resto_offline', 'Resto Offline', Icons.restaurant_menu),
+  restoOnline('resto_online', 'Resto Online', Icons.delivery_dining_outlined);
+
+  const PlaceKind(this.dbValue, this.label, this.icon);
+
+  final String dbValue;
+  final String label;
+  final IconData icon;
+
+  /// Null berarti tidak diisi — tidak semua pengeluaran punya tempat
+  /// (transfer, iuran, parkir).
+  static PlaceKind? fromDb(String? value) {
+    if (value == null) return null;
+    for (final kind in PlaceKind.values) {
+      if (kind.dbValue == value) return kind;
+    }
+    return null;
+  }
+}
+
 class Transaction {
   const Transaction({
     required this.id,
@@ -60,7 +89,9 @@ class Transaction {
     required this.kind,
     required this.category,
     required this.amount,
+    this.placeKind,
     this.merchant,
+    this.product,
     this.note,
     this.fromReceipt = false,
   });
@@ -70,7 +101,15 @@ class Transaction {
   final TxKind kind;
   final TxCategory category;
   final double amount;
+
+  final PlaceKind? placeKind;
+
+  /// Nama toko atau warungnya. Kolom database-nya masih bernama `merchant`.
   final String? merchant;
+
+  /// Barang atau menu yang dibeli.
+  final String? product;
+
   final String? note;
 
   /// Angkanya berasal dari pembacaan foto struk, jadi lebih mungkin meleset
@@ -86,7 +125,9 @@ class Transaction {
         kind: TxKind.fromDb(map['kind'] as String?),
         category: TxCategory.fromDb(map['category'] as String?),
         amount: (map['amount'] as num).toDouble(),
+        placeKind: PlaceKind.fromDb(map['place_type'] as String?),
         merchant: map['merchant'] as String?,
+        product: map['product_name'] as String?,
         note: map['note'] as String?,
         fromReceipt: map['source'] == 'struk',
       );
@@ -97,7 +138,9 @@ class Transaction {
         'kind': kind.dbValue,
         'category': category.dbValue,
         'amount': amount,
+        'place_type': placeKind?.dbValue,
         'merchant': merchant,
+        'product_name': product,
         'note': note,
         'source': fromReceipt ? 'struk' : 'manual',
       };
