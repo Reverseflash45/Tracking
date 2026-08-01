@@ -29,8 +29,8 @@ HP kamu  ──(pertanyaan + ringkasan data)──►  Edge Function  ──(+ A
 
 1. Buka **https://console.anthropic.com**, daftar atau masuk.
 2. Masuk ke **Billing**, isi saldo. **Ini berbayar** — tidak ada tier gratis
-   untuk API. Isi 5 dolar dulu untuk mencoba; itu cukup untuk ribuan
-   pertanyaan dengan pengaturan yang ada di kode ini.
+   untuk API. Isi 5 dolar dulu untuk mencoba; lihat bagian "Soal biaya" di
+   bawah untuk perkiraan berapa pertanyaan yang kamu dapat.
 3. Masuk ke **API Keys** → **Create Key**. Salin sekarang juga —
    **key-nya cuma ditampilkan sekali**.
 
@@ -117,15 +117,30 @@ supabase functions logs tanya
 ## Soal biaya
 
 Tiap pertanyaan mengirim ringkasan 30 hari terakhir (bukan data mentah — itu
-sengaja, supaya murah) plus jawabannya. Kasarnya beberapa ratus rupiah per
-pertanyaan.
+sengaja, supaya murah) plus jawabannya.
 
-Dua pengaman sudah dipasang di kode:
+Dengan `claude-opus-5` seperti di kode sekarang, kasarnya **Rp 300–550 per
+pertanyaan**. Saldo 5 dolar berarti sekitar **150–250 pertanyaan**. Angka pasnya
+tergantung seberapa banyak datamu — makin banyak yang tercatat, makin panjang
+ringkasannya, makin mahal.
+
+Kalau itu terlalu mahal untuk dipakai santai, ganti satu baris di
+[index.ts](index.ts):
+
+```ts
+model: "claude-haiku-4-5",
+```
+
+Haiku sekitar **lima kali lebih murah** — kira-kira Rp 60–110 per pertanyaan,
+jadi 5 dolar cukup untuk seribuan pertanyaan. Untuk tanya-jawab sederhana atas
+ringkasan yang angkanya sudah dihitung app, selisih kualitasnya kecil. Naikkan
+lagi ke Opus kalau jawabannya terasa dangkal.
+
+Pengaman yang sudah terpasang di kode:
 
 - Pertanyaan dibatasi 500 karakter, ringkasan 12.000 karakter.
 - `effort` disetel `low` — pertanyaan sederhana atas ringkasan yang sudah
-  dihitung app tidak butuh penalaran dalam. Kalau jawabannya terasa dangkal,
-  naikkan ke `"medium"` di [index.ts](index.ts).
+  dihitung app tidak butuh penalaran dalam.
 
 Pasang **spend limit** di console Anthropic (Billing → Limits) supaya ada batas
 keras. Lakukan ini sebelum lupa.
