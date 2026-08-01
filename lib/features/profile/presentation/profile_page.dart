@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../assistant/domain/preset_answers.dart' show questionCatalog;
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notification_settings_controller.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
@@ -244,10 +245,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _MenuTile(
-                  icon: Icons.forum_outlined,
+                  icon: Icons.help_outline,
                   color: AppColors.dashboard,
                   title: 'Tanya Data',
-                  subtitle: 'Tanya apa saja tentang catatanmu sendiri',
+                  // Dihitung dari katalog, bukan ditulis manual — angka yang
+                  // dipatok akan basi begitu ada pertanyaan baru.
+                  subtitle: '${questionCatalog.length} pertanyaan siap pakai '
+                      'tentang catatanmu',
                   onTap: () => context.push('/profile/tanya'),
                 ),
                 const SizedBox(height: AppSpacing.md),
