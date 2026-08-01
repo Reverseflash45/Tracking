@@ -246,7 +246,9 @@ class _AchievementsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final workoutStreak = ref.watch(workoutStreakProvider).value?.current ?? 0;
+    // Badge "Workout 30 Hari" harus berarti 30 hari latihan. Hari istirahat
+    // menyambung streak, tapi tidak boleh ikut mengisi lencananya.
+    final workoutStreak = ref.watch(workoutStreakProvider).value?.activeInCurrent ?? 0;
     final deadlineStreak = ref.watch(deadlineStreakProvider).value?.current ?? 0;
     final achievements = computeAchievements(
       workoutStreak: workoutStreak,

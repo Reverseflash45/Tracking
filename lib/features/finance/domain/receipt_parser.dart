@@ -11,6 +11,11 @@ library;
 /// "TUNAI", "KEMBALI") jadi urutan ini yang menentukan mana yang menang.
 const List<String> _totalKeywords = [
   'grand total',
+  // Struk digital (ShopeeFood, GoFood, m-banking) memakai frasa yang lebih
+  // panjang. Ditaruh sebelum 'total' polos supaya yang lebih spesifik menang.
+  'total pembayaran',
+  'total tagihan',
+  'total pesanan',
   'total bayar',
   'total belanja',
   'total harga',
@@ -34,10 +39,69 @@ const List<String> _rejectKeywords = [
   'ppn',
   'pajak',
   'npwp',
+  // Struk digital memajang angka lain yang bukan uang keluar: koin/poin hadiah
+  // dan "total hemat" dari promo.
+  'koin',
+  'poin',
+  'hemat',
+  'cashback',
 ];
 
+/// Kata yang menandakan sebuah baris adalah judul layar atau tombol aplikasi,
+/// bukan nama tempat.
+///
+/// Struk digital tidak dimulai dengan nama toko seperti struk kertas — bagian
+/// atasnya penuh judul halaman ("Rincian Pesananmu") dan ajakan ("Tambah
+/// ShopeeFood ke Layar Utama"). Tanpa saringan ini, judul halaman itulah yang
+/// tercatat sebagai nama tempat.
+const List<String> _notMerchant = [
+  'rincian',
+  'detail',
+  'ringkasan',
+  'pesananmu',
+  'pesanan saya',
+  'riwayat',
+  'layar utama',
+  'struk',
+  'nota',
+  'invoice',
+  'receipt',
+  'faktur',
+  'berhasil',
+  'selesai',
+  'terima kasih',
+  'pembayaran',
+  'metode',
+  'total',
+  'subtotal',
+  'pesan lagi',
+  'beli lagi',
+  'bantuan',
+  'tambah',
+  'lihat',
+  'kembali',
+];
+
+/// Berapa banyak baris teratas yang dianggap bagian kepala struk.
+///
+/// Lebih longgar daripada struk kertas karena tangkapan layar menyisipkan
+/// beberapa baris hiasan (jam, sinyal, judul halaman) sebelum isi sebenarnya.
+const int _merchantSearchLines = 8;
+
+/// Batas kandidat nominal yang ditawarkan. Lebih dari ini bukan membantu
+/// memilih, tapi memindahkan pekerjaan mencari dari struk ke layar.
+const int _maxCandidates = 6;
+
+final RegExp _numberPattern = RegExp(r'\d[\d.,]*');
+
 class ReceiptGuess {
-  const ReceiptGuess({this.total, this.date, this.merchant, this.rawLines = const []});
+  const ReceiptGuess({
+    this.total,
+    this.date,
+    this.merchant,
+    this.candidates = const [],
+    this.rawLines = const [],
+  });
 
   /// Nominal total. Null kalau tidak ada yang meyakinkan.
   final double? total;
@@ -46,6 +110,13 @@ class ReceiptGuess {
 
   /// Nama tempat, biasanya baris pertama struk.
   final String? merchant;
+
+  /// Semua nominal yang benar-benar tertulis di struk, dari yang terbesar.
+  ///
+  /// Dipakai kalau [total] tidak ketemu. Menawarkan angka yang memang ada di
+  /// struk untuk dipilih itu jujur; memilihkan salah satunya sendiri tanpa
+  /// petunjuk kata kunci itu menebak.
+  final List<double> candidates;
 
   /// Seluruh baris hasil OCR, ditampilkan supaya kamu bisa mengecek sendiri
   /// kalau tebakannya meleset.
@@ -84,19 +155,46 @@ double? parseRupiah(String raw) {
   return double.tryParse(text.replaceAll(RegExp(r'[.,]'), ''));
 }
 
-/// Ambil nominal terbesar dari sebuah baris. Baris total sering berbentuk
-/// "TOTAL 3 15.000" — jumlah item ikut tercetak, dan yang kita mau yang besar.
-double? _largestAmountIn(String line) {
-  final matches = RegExp(r'\d[\d.,]*').allMatches(line);
-  double? best;
-  for (final match in matches) {
+/// Angka yang menempel pada '/', ':', atau '-' hampir pasti potongan tanggal
+/// atau jam, bukan nominal. Tanpa ini "01/08/2026" menyumbang 2026 sebagai
+/// harga, dan itu angka yang cukup masuk akal untuk lolos tanpa dicurigai.
+bool _partOfDateOrTime(String line, RegExpMatch match) {
+  const separators = {'/', ':', '-'};
+  final before = match.start > 0 ? line[match.start - 1] : '';
+  final after = match.end < line.length ? line[match.end] : '';
+  return separators.contains(before) || separators.contains(after);
+}
+
+/// Nominal yang masuk akal sebagai harga di sebuah baris.
+Iterable<double> _amountsIn(String line) sync* {
+  for (final match in _numberPattern.allMatches(line)) {
+    if (_partOfDateOrTime(line, match)) continue;
     final value = parseRupiah(match.group(0)!);
     if (value == null) continue;
     // Angka satu-dua digit hampir selalu kuantitas, bukan harga.
     if (value < 100) continue;
+    yield value;
+  }
+}
+
+/// Ambil nominal terbesar dari sebuah baris. Baris total sering berbentuk
+/// "TOTAL 3 15.000" — jumlah item ikut tercetak, dan yang kita mau yang besar.
+double? _largestAmountIn(String line) {
+  double? best;
+  for (final value in _amountsIn(line)) {
     if (best == null || value > best) best = value;
   }
   return best;
+}
+
+/// Kumpulkan semua nominal di struk sebagai bahan pilihan manual.
+List<double> _collectCandidates(List<String> lines) {
+  final seen = <double>{};
+  for (final line in lines) {
+    seen.addAll(_amountsIn(line));
+  }
+  final sorted = seen.toList()..sort((a, b) => b.compareTo(a));
+  return sorted.take(_maxCandidates).toList();
 }
 
 double? _findTotal(List<String> lines) {
@@ -148,20 +246,31 @@ DateTime? _findDate(List<String> lines, {DateTime? now}) {
   return null;
 }
 
-/// Nama tempat: baris pertama yang terlihat seperti nama, bukan angka atau
-/// alamat.
+/// Nama tempat: baris pertama yang terlihat seperti nama, bukan angka, alamat,
+/// atau judul halaman aplikasi.
+///
+/// Kalau tidak ada yang lolos, hasilnya null. Mengisi kolom ini dengan baris
+/// mana pun yang kebetulan ada di atas cuma memindahkan pekerjaan menghapus ke
+/// kamu, dan lebih buruk lagi kalau kamu tidak sempat memeriksanya.
 String? _findMerchant(List<String> lines) {
-  for (final line in lines.take(5)) {
+  for (final line in lines.take(_merchantSearchLines)) {
     final trimmed = line.trim();
     if (trimmed.length < 3) continue;
 
-    // Baris yang didominasi angka itu nomor struk, telepon, atau alamat.
+    // Baris yang didominasi angka itu nomor struk, telepon, alamat, atau
+    // baris status HP di tangkapan layar ("19.00  22:04  62").
     final digits = trimmed.replaceAll(RegExp(r'[^0-9]'), '').length;
     if (digits > trimmed.length / 3) continue;
+
+    // Nama tempat tidak memuat harga. Baris yang mengandung nominal itu baris
+    // barang atau baris total, bukan kepala struk. Ini yang menyaring baris
+    // seperti "Ongkos Kirim  Rp10.000" di struk aplikasi.
+    if (_amountsIn(trimmed).isNotEmpty) continue;
 
     final lower = trimmed.toLowerCase();
     if (lower.startsWith('jl') || lower.startsWith('jalan')) continue;
     if (lower.contains('telp') || lower.contains('npwp')) continue;
+    if (_notMerchant.any(lower.contains)) continue;
 
     return trimmed;
   }
@@ -178,10 +287,15 @@ ReceiptGuess parseReceipt(String rawText, {DateTime? now}) {
 
   if (lines.isEmpty) return const ReceiptGuess();
 
+  final total = _findTotal(lines);
+
   return ReceiptGuess(
-    total: _findTotal(lines),
+    total: total,
     date: _findDate(lines, now: now),
     merchant: _findMerchant(lines),
+    // Kandidat hanya berguna waktu totalnya tidak ketemu. Kalau sudah ketemu,
+    // menawarkan angka lain justru membuat ragu pada jawaban yang benar.
+    candidates: total == null ? _collectCandidates(lines) : const [],
     rawLines: lines,
   );
 }

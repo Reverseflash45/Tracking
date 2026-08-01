@@ -9,7 +9,9 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
+import '../data/rest_day_repository.dart';
 import '../data/workout_repository.dart';
+import 'rest_day_card.dart';
 import 'workout_providers.dart';
 
 final _weekDayFormat = DateFormat('EEEE', 'id_ID');
@@ -198,12 +200,21 @@ class WorkoutHistoryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionsAsync = ref.watch(workoutSessionsProvider);
     final sessions = sessionsAsync.value ?? const <WorkoutSession>[];
+    final restDays = ref.watch(restDaysProvider).value ?? const <RestDay>[];
     final streak = ref.watch(workoutStreakProvider).value;
 
     final now = DateTime.now();
     final thisMonth = sessions
         .where((s) => s.sessionDate.year == now.year && s.sessionDate.month == now.month)
         .length;
+
+    // Riwayat menggabungkan sesi dan hari istirahat supaya urutan tanggalnya
+    // utuh — hari istirahat yang tersembunyi tidak bisa kamu batalkan lagi.
+    final entries = <({DateTime date, WorkoutSession? session, RestDay? rest})>[
+      for (final session in sessions)
+        (date: session.sessionDate, session: session, rest: null),
+      for (final day in restDays) (date: day.restOn, session: null, rest: day),
+    ]..sort((a, b) => b.date.compareTo(a.date));
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -217,7 +228,10 @@ class WorkoutHistoryPage extends ConsumerWidget {
         label: const Text('Workout'),
       ),
       body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(workoutSessionsProvider),
+        onRefresh: () async {
+          ref.invalidate(workoutSessionsProvider);
+          ref.invalidate(restDaysProvider);
+        },
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -253,10 +267,12 @@ class WorkoutHistoryPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const RestDayCard(),
+                  const SizedBox(height: AppSpacing.sm),
                   const _ToolShortcuts(),
                   const SizedBox(height: AppSpacing.lg),
                   sessionsAsync.when(
-                    data: (items) => items.isEmpty
+                    data: (_) => entries.isEmpty
                         ? const EmptyState(
                             icon: Icons.fitness_center,
                             title: 'Belum ada sesi workout',
@@ -265,10 +281,12 @@ class WorkoutHistoryPage extends ConsumerWidget {
                           )
                         : Column(
                             children: [
-                              for (final session in items)
+                              for (final entry in entries)
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                                  child: _SessionCard(session: session),
+                                  child: entry.session != null
+                                      ? _SessionCard(session: entry.session!)
+                                      : _RestDayTile(restDay: entry.rest!),
                                 ),
                             ],
                           ),
@@ -473,6 +491,108 @@ class _SessionCard extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Baris riwayat untuk hari istirahat.
+///
+/// Sengaja dibuat lebih ramping dan berwarna lain dari kartu sesi — sekilas
+/// harus kelihatan bahwa hari ini tidak ada latihannya.
+class _RestDayTile extends ConsumerWidget {
+  const _RestDayTile({required this.restDay});
+
+  final RestDay restDay;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Dismissible(
+      key: ValueKey('rest-${restDay.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.errorContainer,
+          borderRadius: BorderRadius.circular(AppTheme.radius),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Icon(Icons.delete_outline, color: colorScheme.onErrorContainer),
+      ),
+      onDismissed: (_) async {
+        await ref.read(restDayRepositoryProvider).deleteRestDay(restDay.id);
+        ref.invalidate(restDaysProvider);
+      },
+      child: Card(
+        margin: EdgeInsets.zero,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 10,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.statusInProgress.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${restDay.restOn.day}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: AppColors.statusInProgress,
+                        height: 1.1,
+                      ),
+                    ),
+                    Text(
+                      _monthFormat.format(restDay.restOn),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.statusInProgress,
+                        height: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _weekDayFormat.format(restDay.restOn),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      restDay.note?.trim().isNotEmpty == true
+                          ? restDay.note!
+                          : 'Hari istirahat',
+                      style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.bedtime_outlined,
+                size: 17,
+                color: colorScheme.onSurfaceVariant,
               ),
             ],
           ),

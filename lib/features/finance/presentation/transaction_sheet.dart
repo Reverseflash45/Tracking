@@ -6,6 +6,7 @@ import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/finance_repository.dart';
+import '../domain/finance_stats.dart';
 import '../domain/receipt_parser.dart';
 import '../domain/transaction.dart';
 
@@ -52,6 +53,10 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
 
   bool get _isEdit => widget.existing != null;
   bool get _fromReceipt => widget.guess != null || (widget.existing?.fromReceipt ?? false);
+
+  /// Kandidat nominal hanya relevan saat mengisi catatan baru dari struk.
+  List<double> get _candidates =>
+      _isEdit ? const [] : (widget.guess?.candidates ?? const []);
 
   @override
   void initState() {
@@ -204,9 +209,13 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          widget.guess!.total == null
-                              ? 'Nominalnya tidak ketemu di struk. Isi manual ya.'
-                              : 'Ini tebakan dari foto — periksa dulu sebelum simpan.',
+                          widget.guess!.total != null
+                              ? 'Ini tebakan dari foto — periksa dulu sebelum simpan.'
+                              : _candidates.isEmpty
+                                  ? 'Nominalnya tidak ketemu di struk. Isi manual ya.'
+                                  : 'Kata "total" tidak terbaca, jadi nominalnya '
+                                      'tidak ditebak. Pilih salah satu angka di '
+                                      'bawah atau ketik sendiri.',
                           style: TextStyle(
                             fontSize: 11.5,
                             height: 1.4,
@@ -240,7 +249,10 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _amountController,
-                autofocus: !_fromReceipt,
+                // Kursor langsung ditaruh di sini kalau nominalnya belum
+                // terisi — termasuk waktu pembacaan struk gagal, karena itu
+                // justru saat kamu paling butuh mengetik cepat.
+                autofocus: !_isEdit && _amountController.text.isEmpty,
                 keyboardType: TextInputType.number,
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 decoration: const InputDecoration(
@@ -254,6 +266,38 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                   return null;
                 },
               ),
+
+              // Kalau totalnya tidak ketemu, angka yang memang tertulis di
+              // struk ditawarkan untuk dipilih. Menawarkan lebih jujur
+              // daripada memilihkan, dan tetap lebih cepat daripada mengetik.
+              if (_candidates.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Angka yang terbaca di struk:',
+                  style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final value in _candidates)
+                      ActionChip(
+                        visualDensity: VisualDensity.compact,
+                        label: Text(
+                          formatRupiah(value),
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onPressed: () => setState(() {
+                          _amountController.text = value.round().toString();
+                        }),
+                      ),
+                  ],
+                ),
+              ],
 
               const SizedBox(height: AppSpacing.md),
               Wrap(

@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart'
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'line_layout.dart';
+
 /// Pembaca teks dari foto, berjalan sepenuhnya di perangkat.
 ///
 /// Dipakai bersama oleh pembaca struk dan pembaca KRS. Sama seperti deteksi
@@ -68,7 +70,22 @@ Future<ScanResult> scanTextFromPhoto({bool fromCamera = true}) async {
       );
     }
 
-    return ScanResult(text: recognized.text);
+    // recognized.text menyusun teks per blok. Untuk struk dan tabel KRS yang
+    // isinya baris label-nilai, susunan itu memisahkan pasangan yang justru
+    // harus dibaca bersama — jadi baris disusun ulang dari posisinya.
+    final lines = <ScanLine>[
+      for (final block in recognized.blocks)
+        for (final line in block.lines)
+          ScanLine(
+            text: line.text,
+            left: line.boundingBox.left,
+            top: line.boundingBox.top,
+            bottom: line.boundingBox.bottom,
+          ),
+    ];
+
+    final rows = groupIntoRows(lines);
+    return ScanResult(text: rows.isEmpty ? recognized.text : rows.join('\n'));
   } catch (e) {
     return ScanResult(text: '', error: 'Gagal membaca foto: $e');
   } finally {
