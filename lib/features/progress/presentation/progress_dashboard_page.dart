@@ -561,7 +561,9 @@ class _AchievementSection extends ConsumerWidget {
     final workoutStreak = ref.watch(workoutStreakProvider).value;
     final deadlineStreak = ref.watch(deadlineStreakProvider).value;
     final achievements = computeAchievements(
-      workoutStreak: workoutStreak?.current ?? 0,
+      // Hari istirahat menyambung streak, tapi bukan hari latihan — lencananya
+      // dihitung dari hari yang benar-benar ada gerakannya.
+      workoutStreak: workoutStreak?.activeInCurrent ?? 0,
       deadlineStreak: deadlineStreak?.current ?? 0,
     );
 

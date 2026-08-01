@@ -130,6 +130,87 @@ TOTAL         140.000
 ''';
       expect(parseReceipt(teks, now: _now).total, 140000);
     });
+
+    test('total pembayaran struk digital dikenali', () {
+      // Bentuk ini muncul setelah baris hasil OCR disusun ulang dari posisinya
+      // di layar — sebelum itu label dan nominalnya ada di blok terpisah.
+      const teks = '''
+Rincian Pesananmu
+Subtotal  Rp45.000
+Ongkos Kirim  Rp10.000
+Total Pembayaran  Rp55.000
+''';
+      expect(parseReceipt(teks, now: _now).total, 55000);
+    });
+
+    test('total koin dan total hemat bukan uang yang keluar', () {
+      const teks = '''
+Total Hemat  Rp12.000
+Total Koin  Rp500
+Total Pembayaran  Rp38.000
+''';
+      expect(parseReceipt(teks, now: _now).total, 38000);
+    });
+
+    test('tahun pada tanggal tidak tertukar jadi nominal', () {
+      const teks = '''
+TOKO
+TOTAL
+01/08/2026
+''';
+      // 2026 angkanya cukup besar untuk lolos sebagai harga kalau tidak
+      // dikenali sebagai potongan tanggal.
+      expect(parseReceipt(teks, now: _now).total, isNull);
+    });
+  });
+
+  group('parseReceipt — kandidat nominal', () {
+    test('ditawarkan saat total tidak ketemu, terbesar dulu', () {
+      const teks = '''
+WARUNG PECEL
+NASI PECEL   12.000
+ES TEH        3.000
+GORENGAN      5.000
+''';
+
+      final hasil = parseReceipt(teks, now: _now);
+      expect(hasil.total, isNull);
+      expect(hasil.candidates, [12000, 5000, 3000]);
+    });
+
+    test('tidak ditawarkan saat totalnya sudah ketemu', () {
+      final hasil = parseReceipt('TOKO\nNASI 12.000\nTOTAL 12.000', now: _now);
+      expect(hasil.total, 12000);
+      expect(hasil.candidates, isEmpty);
+    });
+
+    test('angka yang sama tidak ditawarkan dua kali', () {
+      const teks = '''
+KEDAI
+KOPI    18.000
+KOPI    18.000
+''';
+      expect(parseReceipt(teks, now: _now).candidates, [18000]);
+    });
+
+    test('jam dan tanggal tidak ikut jadi kandidat', () {
+      const teks = '''
+KEDAI
+03/08/2026 14:22
+KOPI 18.000
+''';
+      expect(parseReceipt(teks, now: _now).candidates, [18000]);
+    });
+
+    test('jumlahnya dibatasi supaya tidak jadi daftar belanja', () {
+      final baris = [
+        for (var i = 1; i <= 12; i++) 'ITEM $i  ${i * 1000}',
+      ].join('\n');
+
+      final hasil = parseReceipt('TOKO\n$baris', now: _now);
+      expect(hasil.candidates, hasLength(6));
+      expect(hasil.candidates.first, 12000);
+    });
   });
 
   group('parseReceipt — tanggal', () {
@@ -202,6 +283,35 @@ TOTAL         140.000
         now: _now,
       );
       expect(hasil.merchant, 'TOKO BUKU GRAMEDIA');
+    });
+
+    test('judul halaman aplikasi tidak dianggap nama tempat', () {
+      // Ini yang sebelumnya tercatat sebagai "tempat" dari tangkapan layar
+      // ShopeeFood: judul halaman, bukan nama warung.
+      const teks = '''
+19.00  22:04
+Rincian Pesananmu
+Tambah ShopeeFood ke Layar Utama
+Total Pembayaran  Rp55.000
+''';
+
+      final hasil = parseReceipt(teks, now: _now);
+      expect(hasil.merchant, isNull);
+      // Yang penting tetap kebaca.
+      expect(hasil.total, 55000);
+    });
+
+    test('baris berisi harga tidak dianggap nama tempat', () {
+      final hasil = parseReceipt(
+        'Ongkos Kirim  Rp10.000\nWARUNG SATE PAK NO\nTOTAL 35.000',
+        now: _now,
+      );
+      expect(hasil.merchant, 'WARUNG SATE PAK NO');
+    });
+
+    test('tidak ada yang layak berarti dikosongkan, bukan diisi asal', () {
+      final hasil = parseReceipt('12345\nJL MERDEKA 1\nTOTAL 10.000', now: _now);
+      expect(hasil.merchant, isNull);
     });
   });
 
