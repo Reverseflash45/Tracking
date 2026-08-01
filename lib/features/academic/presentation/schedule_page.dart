@@ -46,10 +46,21 @@ class SchedulePage extends ConsumerWidget {
               title: 'Jadwal Kuliah',
               subtitle: 'Semua jadwal perkuliahanmu dalam seminggu',
               color: AppColors.academic,
-              trailing: HeroIconButton(
-                icon: Icons.calendar_month,
-                tooltip: 'Kalender',
-                onPressed: () => context.push('/academic/schedule/calendar'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  HeroIconButton(
+                    icon: Icons.document_scanner_outlined,
+                    tooltip: 'Import dari foto KRS',
+                    onPressed: () => context.push('/academic/schedule/import'),
+                  ),
+                  const SizedBox(width: 6),
+                  HeroIconButton(
+                    icon: Icons.calendar_month,
+                    tooltip: 'Kalender',
+                    onPressed: () => context.push('/academic/schedule/calendar'),
+                  ),
+                ],
               ),
               stats: [
                 HeroStatData(icon: Icons.today_outlined, value: '$todayCount', label: 'Hari Ini'),

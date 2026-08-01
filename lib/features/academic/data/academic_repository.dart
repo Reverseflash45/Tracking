@@ -26,6 +26,37 @@ class AcademicRepository {
     });
   }
 
+  /// Cari mata kuliah bernama [name], buat kalau belum ada, lalu kembalikan
+  /// id-nya.
+  ///
+  /// Dipakai import KRS. Tanpa pencocokan nama, mengimpor ulang KRS yang sama
+  /// akan membuat "Basis Data" berkali-kali dan memecah jadwalnya ke beberapa
+  /// mata kuliah kembar.
+  Future<String> ensureCourse({
+    required String userId,
+    required String name,
+    String? lecturer,
+  }) async {
+    final trimmed = name.trim();
+
+    final existing = await _client
+        .from('courses')
+        .select('id')
+        .eq('user_id', userId)
+        .ilike('name', trimmed)
+        .maybeSingle();
+
+    if (existing != null) return existing['id'] as String;
+
+    final created = await _client
+        .from('courses')
+        .insert({'user_id': userId, 'name': trimmed, 'lecturer': lecturer})
+        .select('id')
+        .single();
+
+    return created['id'] as String;
+  }
+
   Future<void> updateCourse({required String id, required String name, String? lecturer}) {
     return _client.from('courses').update({
       'name': name,
