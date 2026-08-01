@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/academic/presentation/krs_import_page.dart';
 import '../../features/academic/presentation/schedule_form_page.dart';
 import '../../features/academic/presentation/schedule_page.dart';
 import '../../features/academic/presentation/task_detail_page.dart';
@@ -77,6 +78,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'calendar',
                   builder: (context, state) => const CalendarPage(),
+                ),
+                GoRoute(
+                  path: 'import',
+                  builder: (context, state) => const KrsImportPage(),
                 ),
                 GoRoute(
                   path: ':id/edit',
