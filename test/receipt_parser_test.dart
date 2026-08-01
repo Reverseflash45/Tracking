@@ -286,12 +286,11 @@ KOPI 18.000
     });
 
     test('judul halaman aplikasi tidak dianggap nama tempat', () {
-      // Ini yang sebelumnya tercatat sebagai "tempat" dari tangkapan layar
-      // ShopeeFood: judul halaman, bukan nama warung.
+      // Ini yang sebelumnya tercatat sebagai "tempat": judul halaman.
       const teks = '''
 19.00  22:04
 Rincian Pesananmu
-Tambah ShopeeFood ke Layar Utama
+Tambah Layar Utama
 Total Pembayaran  Rp55.000
 ''';
 
@@ -299,6 +298,35 @@ Total Pembayaran  Rp55.000
       expect(hasil.merchant, isNull);
       // Yang penting tetap kebaca.
       expect(hasil.total, 55000);
+    });
+
+    test('kalimat iklan huruf kecil semua bukan nama tempat', () {
+      final hasil = parseReceipt(
+        'jadi lebih cepat dan mudah\nWARUNG MBAK YUS\nTOTAL 15.000',
+        now: _now,
+      );
+      expect(hasil.merchant, 'WARUNG MBAK YUS');
+    });
+
+    test('satuan di baris status HP bukan nama tempat', () {
+      final hasil = parseReceipt('KB/S\nKEDAI SUSU\nTOTAL 9.000', now: _now);
+      expect(hasil.merchant, 'KEDAI SUSU');
+    });
+
+    test('nama layanan dipakai kalau kepala struknya tidak ada yang layak', () {
+      final hasil = parseReceipt(
+        'Rincian Pesananmu\nTambah ShopeeFood ke Layar Utama\nPaid Rp20.000',
+        now: _now,
+      );
+      expect(hasil.merchant, 'ShopeeFood');
+    });
+
+    test('nama warung tetap menang atas nama layanan', () {
+      final hasil = parseReceipt(
+        'WARUNG SATE PAK NO\nDipesan lewat GoFood\nTOTAL 30.000',
+        now: _now,
+      );
+      expect(hasil.merchant, 'WARUNG SATE PAK NO');
     });
 
     test('baris berisi harga tidak dianggap nama tempat', () {
@@ -312,6 +340,63 @@ Total Pembayaran  Rp55.000
     test('tidak ada yang layak berarti dikosongkan, bukan diisi asal', () {
       final hasil = parseReceipt('12345\nJL MERDEKA 1\nTOTAL 10.000', now: _now);
       expect(hasil.merchant, isNull);
+    });
+  });
+
+  group('parseReceipt — struk ShopeeFood sungguhan', () {
+    // Disalin apa adanya dari hasil OCR di HP, termasuk salah bacanya
+    // ("Rp&.500", "Biaya Pengiriman O"). Ini kasus yang gagal total sebelumnya:
+    // nominal kosong, tempat terisi "KB/S", dan nomor pesanan tampil sebagai
+    // pilihan Rp3.198.462.280.678.912.000.
+    const teks = '''
+21:45  803
+18.59  i 62
+KB/S
+Rincian Pesananmu
+Tambah ShopeeFood ke Layar Utama
+Pesan makan di ShopeeFood   Tambah
+jadi lebih cepat dan mudah
+Rincian Pesanan
+MN3RASN 1x Martabak telor istimewa  Rp60.000
+mix 3 rasa  Rp6.100
+Subtotal Pesanan (1 menu)  Rp60.000
+Voucher Diskon  -Rp10.000
+Biaya Pengiriman O  Rp&.500 Rp3.500
+Biaya Layanan  Rp1.000
+Paid  Rp54.500
+Sudah termasuk pajak
+Informasi Pesanan
+Catatan Tambahan  Tidak ada
+No. Pesanan  3198462280678912001 SALIN
+Waktu Pemesanan  1 Agt 2026 18:24
+Waktu Pembayaran  1 Agt 2026 18:24
+Pembayaran  SeaBank Bayar Instan
+Beri Nilai & Tip  Pesan lagi
+''';
+
+    test('"Paid" dikenali sebagai total, bukan subtotal', () {
+      // Tidak ada kata "total" di struk ini selain "Subtotal Pesanan", yang
+      // justru harus ditolak. Yang dibayar Rp54.500, bukan Rp60.000.
+      expect(parseReceipt(teks, now: _now).total, 54500);
+    });
+
+    test('nama layanan terbaca, bukan "KB/S"', () {
+      expect(parseReceipt(teks, now: _now).merchant, 'ShopeeFood');
+    });
+
+    test('tanggal bertulis "1 Agt 2026" terbaca', () {
+      expect(parseReceipt(teks, now: _now).date, DateTime(2026, 8, 1));
+    });
+
+    test('nomor pesanan tidak ikut jadi angka pilihan', () {
+      // Totalnya ketemu jadi kandidat kosong, tapi kalaupun ditawarkan,
+      // nomor pesanan tidak boleh ada di dalamnya.
+      final semua = parseReceipt(
+        teks.replaceAll('Paid  Rp54.500', 'Rp54.500'),
+        now: _now,
+      );
+      expect(semua.candidates, isNot(contains(3198462280678912001)));
+      expect(semua.candidates, contains(54500));
     });
   });
 
