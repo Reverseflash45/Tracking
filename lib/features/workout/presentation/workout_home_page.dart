@@ -124,6 +124,11 @@ class _ToolGrid extends StatelessWidget {
       route: '/workout/nutrition',
     ),
     _ToolCard(
+      icon: Icons.bedtime_outlined,
+      label: 'Tidur',
+      route: '/workout/sleep',
+    ),
+    _ToolCard(
       icon: Icons.local_fire_department,
       label: 'Kalkulator Kalori',
       route: '/workout/calories',
@@ -132,6 +137,11 @@ class _ToolGrid extends StatelessWidget {
       icon: Icons.accessibility_new,
       label: 'Profil Tubuh',
       route: '/workout/body',
+    ),
+    _ToolCard(
+      icon: Icons.photo_camera_outlined,
+      label: 'Foto Progres',
+      route: '/workout/photos',
     ),
     _ToolCard(
       icon: Icons.sports_gymnastics,

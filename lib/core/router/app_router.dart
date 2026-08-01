@@ -13,18 +13,22 @@ import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/register_page.dart';
 import '../../features/body/presentation/body_profile_form_page.dart';
 import '../../features/body/presentation/calorie_page.dart';
+import '../../features/body/presentation/progress_photo_page.dart';
 import '../../features/calendar/presentation/calendar_page.dart';
 import '../../features/finance/presentation/finance_page.dart';
+import '../../features/finance/presentation/recurring_page.dart';
 import '../../features/insight/presentation/insight_page.dart';
 import '../../features/live/presentation/live_workout_page.dart';
 import '../../features/run/presentation/run_history_page.dart';
 import '../../features/run/presentation/run_tracker_page.dart';
+import '../../features/sleep/presentation/sleep_page.dart';
 import '../../features/muscle/presentation/muscle_builder_page.dart';
 import '../../features/muscle/presentation/muscle_detail_page.dart';
 import '../../features/nutrition/presentation/nutrition_page.dart';
 import '../../features/progress/presentation/progress_dashboard_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
+import '../../features/search/presentation/search_page.dart';
 import '../../features/workout/presentation/workout_form_page.dart';
 import '../../features/workout/presentation/workout_history_page.dart';
 import '../../features/workout/presentation/workout_home_page.dart';
@@ -61,8 +65,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               builder: (context, state) => const DashboardPage(),
               routes: [
                 GoRoute(
+                  path: 'search',
+                  builder: (context, state) => const SearchPage(),
+                ),
+                GoRoute(
                   path: 'finance',
                   builder: (context, state) => const FinancePage(),
+                  routes: [
+                    GoRoute(
+                      path: 'recurring',
+                      builder: (context, state) => const RecurringPage(),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -165,6 +179,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'calories',
                   builder: (context, state) => const CaloriePage(),
+                ),
+                GoRoute(
+                  path: 'photos',
+                  builder: (context, state) => const ProgressPhotoPage(),
+                ),
+                GoRoute(
+                  path: 'sleep',
+                  builder: (context, state) => const SleepPage(),
                 ),
                 GoRoute(
                   path: 'nutrition',

@@ -15,6 +15,8 @@ import '../../finance/domain/transaction.dart';
 import '../../nutrition/domain/food_log.dart';
 import '../../run/data/run_repository.dart';
 import '../../run/domain/run_stats.dart';
+import '../../sleep/data/sleep_repository.dart';
+import '../../sleep/domain/sleep_stats.dart';
 import '../../workout/data/models/workout_session.dart';
 
 /// Rentang yang dipakai pertanyaan bertema "belakangan ini".
@@ -60,6 +62,7 @@ class QuestionInput {
     this.runs = const [],
     this.foods = const [],
     this.transactions = const [],
+    this.sleep = const [],
     this.finance,
   });
 
@@ -69,6 +72,7 @@ class QuestionInput {
   final List<RunLog> runs;
   final List<FoodLog> foods;
   final List<Transaction> transactions;
+  final List<SleepLog> sleep;
   final FinanceSummary? finance;
 
   DateTime get today => DateTime(now.year, now.month, now.day);
@@ -85,6 +89,7 @@ enum QuestionCategory {
   latihan('Latihan', Icons.fitness_center),
   lari('Lari', Icons.directions_run),
   makan('Makan', Icons.restaurant_menu),
+  tidur('Tidur', Icons.bedtime_outlined),
   keuangan('Keuangan', Icons.savings_outlined),
   lintas('Hubungan Antar Data', Icons.insights);
 
@@ -677,6 +682,110 @@ final List<Question> questionCatalog = [
         '${_angka(rataTidak)} kkal di hari biasa. Ini pola, bukan sebab-akibat. '
         'Dari ${saatOlahraga.length} hari olahraga dan ${saatTidak.length} '
         'hari biasa.',
+      );
+    },
+  ),
+
+  // ---------- Tidur ----------
+  Question(
+    id: 'rata-tidur',
+    text: 'Rata-rata aku tidur berapa jam?',
+    category: QuestionCategory.tidur,
+    answer: (input) {
+      final ringkasan = summarizeSleep(input.sleep, now: input.now);
+      if (ringkasan.kosong) {
+        return const Answer.kosong('Belum ada catatan tidur dua minggu terakhir.');
+      }
+
+      final cukup = ringkasan.rataJam >= kSleepTargetMin;
+      return Answer(
+        formatJamTidur(ringkasan.rataJam),
+        'Dari ${ringkasan.hariTercatat} hari yang kamu catat. Anjuran umum '
+        '${kSleepTargetMin.round()}–${kSleepTargetMax.round()} jam.',
+        tone: cukup ? AnswerTone.bagus : AnswerTone.perhatian,
+      );
+    },
+  ),
+  Question(
+    id: 'malam-kurang-tidur',
+    text: 'Berapa malam aku kurang tidur?',
+    category: QuestionCategory.tidur,
+    answer: (input) {
+      final ringkasan = summarizeSleep(input.sleep, now: input.now);
+      if (ringkasan.kosong) {
+        return const Answer.kosong('Belum ada catatan tidur dua minggu terakhir.');
+      }
+
+      return Answer(
+        '${ringkasan.hariKurang} dari ${ringkasan.hariTercatat} malam',
+        'Kurang berarti di bawah ${kSleepTargetMin.round()} jam. Hari yang '
+        'tidak kamu catat tidak ikut dihitung sebagai kurang tidur.',
+        tone: ringkasan.hariKurang > ringkasan.hariCukup
+            ? AnswerTone.perhatian
+            : AnswerTone.netral,
+      );
+    },
+  ),
+  Question(
+    id: 'tidur-vs-tugas',
+    text: 'Setelah tidur cukup, tugasku selesai lebih banyak?',
+    category: QuestionCategory.lintas,
+    answer: (input) {
+      // Tidur dicatat di tanggal bangun, jadi tidur hari X memang menjelaskan
+      // produktivitas hari X. Tidak ada penggeseran tanggal di sini.
+      final jamPerHari = <DateTime, double>{};
+      for (final log in input.sleep) {
+        if (!input.baru(log.loggedOn)) continue;
+        jamPerHari[DateTime(
+          log.loggedOn.year,
+          log.loggedOn.month,
+          log.loggedOn.day,
+        )] = log.hours;
+      }
+
+      final selesaiPerHari = <DateTime, int>{};
+      for (final task in input.tasks) {
+        final done = task.completedAt;
+        if (done == null || !input.baru(done)) continue;
+        final hari = DateTime(done.year, done.month, done.day);
+        selesaiPerHari[hari] = (selesaiPerHari[hari] ?? 0) + 1;
+      }
+
+      final saatCukup = <int>[];
+      final saatKurang = <int>[];
+      jamPerHari.forEach((hari, jam) {
+        final selesai = selesaiPerHari[hari] ?? 0;
+        (jam >= kSleepTargetMin ? saatCukup : saatKurang).add(selesai);
+      });
+
+      if (saatCukup.length < 3 || saatKurang.length < 3) {
+        return const Answer.kosong(
+          'Butuh minimal 3 hari tidur cukup dan 3 hari kurang tidur yang '
+          'tercatat sebelum ini bisa dibandingkan.',
+        );
+      }
+
+      final rataCukup = saatCukup.reduce((a, b) => a + b) / saatCukup.length;
+      final rataKurang = saatKurang.reduce((a, b) => a + b) / saatKurang.length;
+      final selisih = rataCukup - rataKurang;
+
+      if (selisih.abs() < 0.5) {
+        return Answer(
+          'Tidak berbeda',
+          'Selisihnya di bawah setengah tugas per hari — terlalu kecil untuk '
+          'berarti. Dari ${saatCukup.length} hari cukup dan '
+          '${saatKurang.length} hari kurang.',
+        );
+      }
+
+      return Answer(
+        selisih > 0
+            ? '${selisih.toStringAsFixed(1)} tugas lebih banyak'
+            : '${selisih.abs().toStringAsFixed(1)} tugas lebih sedikit',
+        'Rata-rata ${rataCukup.toStringAsFixed(1)} tugas di hari tidur cukup, '
+        '${rataKurang.toStringAsFixed(1)} di hari kurang tidur. Ini pola, '
+        'bukan sebab-akibat. Dari ${saatCukup.length} hari cukup dan '
+        '${saatKurang.length} hari kurang.',
       );
     },
   ),

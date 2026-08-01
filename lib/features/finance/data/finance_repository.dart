@@ -40,6 +40,36 @@ class FinanceRepository {
     );
   }
 
+  Future<List<RecurringExpense>> fetchRecurring(String userId) {
+    return fetchWithCache(
+      cache: _cache,
+      key: 'recurring_expenses_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('recurring_expenses')
+                      .select()
+                      .eq('user_id', userId)
+                      .order('due_day'))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: RecurringExpense.fromMap,
+    );
+  }
+
+  Future<void> saveRecurring(String userId, RecurringExpense expense) {
+    if (expense.id.isEmpty) {
+      return _client.from('recurring_expenses').insert(expense.toMap(userId));
+    }
+    return _client
+        .from('recurring_expenses')
+        .update(expense.toMap(userId))
+        .eq('id', expense.id);
+  }
+
+  Future<void> deleteRecurring(String id) {
+    return _client.from('recurring_expenses').delete().eq('id', id);
+  }
+
   Future<FinanceSettings> fetchSettings(String userId) async {
     final row = await _client
         .from('finance_settings')
@@ -99,6 +129,13 @@ final financeSettingsProvider = FutureProvider.autoDispose<FinanceSettings>((ref
   return ref.watch(financeRepositoryProvider).fetchSettings(userId);
 });
 
+final recurringExpensesProvider =
+    FutureProvider.autoDispose<List<RecurringExpense>>((ref) async {
+  final userId = ref.watch(currentUserProvider)?.id;
+  if (userId == null) return const [];
+  return ref.watch(financeRepositoryProvider).fetchRecurring(userId);
+});
+
 /// Ringkasan periode anggaran berjalan, dipakai halaman Keuangan dan kartu
 /// ringkas di Dashboard.
 final financeSummaryProvider = Provider.autoDispose<AsyncValue<FinanceSummary>>((ref) {
@@ -123,6 +160,7 @@ final financeSummaryProvider = Provider.autoDispose<AsyncValue<FinanceSummary>>(
       now: DateTime.now(),
       budget: config.monthlyBudget,
       paydayDay: config.paydayDay,
+      recurring: ref.watch(recurringExpensesProvider).value ?? const [],
     ),
   );
 });
