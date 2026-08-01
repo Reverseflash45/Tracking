@@ -11,6 +11,7 @@ import '../../features/auth/presentation/register_page.dart';
 import '../../features/body/presentation/body_profile_form_page.dart';
 import '../../features/body/presentation/calorie_page.dart';
 import '../../features/calendar/presentation/calendar_page.dart';
+import '../../features/finance/presentation/finance_page.dart';
 import '../../features/insight/presentation/insight_page.dart';
 import '../../features/live/presentation/live_workout_page.dart';
 import '../../features/run/presentation/run_history_page.dart';
@@ -51,7 +52,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(path: '/', builder: (context, state) => const DashboardPage()),
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const DashboardPage(),
+              routes: [
+                GoRoute(
+                  path: 'finance',
+                  builder: (context, state) => const FinancePage(),
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
