@@ -27,6 +27,7 @@ import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
 import '../../features/workout/presentation/workout_form_page.dart';
 import '../../features/workout/presentation/workout_history_page.dart';
+import '../../features/workout/presentation/workout_home_page.dart';
 import '../../features/workout/presentation/workout_progress_page.dart';
 import '../../features/wrapped/presentation/wrapped_page.dart';
 import '../supabase/supabase_client_provider.dart';
@@ -117,8 +118,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/workout',
-              builder: (context, state) => const WorkoutHistoryPage(),
+              builder: (context, state) => const WorkoutHomePage(),
               routes: [
+                GoRoute(
+                  // Riwayat dipisah dari halaman utama: ratusan sesi tidak
+                  // boleh menenggelamkan pintasan alat lainnya.
+                  path: 'history',
+                  builder: (context, state) => const WorkoutHistoryPage(),
+                ),
                 GoRoute(
                   path: 'new',
                   // ?from=<id> membuka form berisi salinan sesi tersebut.

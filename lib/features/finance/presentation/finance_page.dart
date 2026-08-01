@@ -562,14 +562,24 @@ class _TxTile extends ConsumerWidget {
           ),
           title: Row(
             children: [
+              // Nama produk paling depan kalau ada — "Martabak telor" lebih
+              // memberi tahu daripada "ShopeeFood" waktu menyisir riwayat.
               Flexible(
                 child: Text(
-                  tx.merchant?.isNotEmpty == true ? tx.merchant! : tx.category.label,
+                  tx.product?.isNotEmpty == true
+                      ? tx.product!
+                      : (tx.merchant?.isNotEmpty == true
+                          ? tx.merchant!
+                          : tx.category.label),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                 ),
               ),
+              if (tx.placeKind != null) ...[
+                const SizedBox(width: 5),
+                Icon(tx.placeKind!.icon, size: 12, color: colorScheme.onSurfaceVariant),
+              ],
               // Catatan hasil OCR ditandai: angkanya lebih mungkin meleset
               // daripada yang kamu ketik sendiri.
               if (tx.fromReceipt) ...[
@@ -583,8 +593,14 @@ class _TxTile extends ConsumerWidget {
             ],
           ),
           subtitle: Text(
-            '${_dayFormat.format(tx.occurredOn)}'
-            '${tx.note?.isNotEmpty == true ? ' · ${tx.note}' : ''}',
+            [
+              _dayFormat.format(tx.occurredOn),
+              // Nama toko turun ke baris kedua kalau judulnya sudah dipakai
+              // nama produk, supaya keduanya tetap terbaca.
+              if (tx.product?.isNotEmpty == true && tx.merchant?.isNotEmpty == true)
+                tx.merchant!,
+              if (tx.note?.isNotEmpty == true) tx.note!,
+            ].join(' · '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),

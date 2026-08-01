@@ -11,172 +11,12 @@ import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
 import '../data/rest_day_repository.dart';
 import '../data/workout_repository.dart';
-import 'rest_day_card.dart';
+import '../domain/history_filter.dart';
 import 'workout_providers.dart';
 
 final _weekDayFormat = DateFormat('EEEE', 'id_ID');
 final _monthFormat = DateFormat('MMM', 'id_ID');
 final _volumeFormat = NumberFormat.decimalPattern('id_ID');
-
-/// Pintasan ke alat bantu kebugaran. Ditaruh di sini, bukan di bottom nav,
-/// supaya jumlah tab tetap 5 sesuai panduan Material 3.
-class _ToolShortcuts extends StatelessWidget {
-  const _ToolShortcuts();
-
-  static const _tools = [
-    _ToolCard(
-      icon: Icons.directions_run,
-      label: 'Lari',
-      route: '/workout/run',
-    ),
-    _ToolCard(
-      icon: Icons.videocam_outlined,
-      label: 'Latihan Terpandu',
-      route: '/workout/live',
-    ),
-    _ToolCard(
-      icon: Icons.restaurant_menu,
-      label: 'Nutrisi',
-      route: '/workout/nutrition',
-    ),
-    _ToolCard(
-      icon: Icons.local_fire_department,
-      label: 'Kalkulator Kalori',
-      route: '/workout/calories',
-    ),
-    _ToolCard(
-      icon: Icons.accessibility_new,
-      label: 'Profil Tubuh',
-      route: '/workout/body',
-    ),
-    _ToolCard(
-      icon: Icons.sports_gymnastics,
-      label: 'Muscle Builder',
-      route: '/workout/muscle',
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    // Progres dibuat selebar layar karena isinya ringkasan lintas fitur —
-    // sisanya grid 2x2, karena empat kolom bikin label seperti "Muscle
-    // Builder" terpotong di layar HP sempit.
-    return Column(
-      children: [
-        const _ProgressCard(),
-        const SizedBox(height: AppSpacing.sm),
-        for (var i = 0; i < _tools.length; i += 2) ...[
-          if (i > 0) const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Expanded(child: _tools[i]),
-              const SizedBox(width: AppSpacing.sm),
-              if (i + 1 < _tools.length)
-                Expanded(child: _tools[i + 1])
-              else
-                const Spacer(),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _ProgressCard extends StatelessWidget {
-  const _ProgressCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/workout/stats'),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.dashboard.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.insights, size: 20, color: AppColors.dashboard),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Progres',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Grafik berat badan, nutrisi, dan latihan',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, size: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ToolCard extends StatelessWidget {
-  const _ToolCard({required this.icon, required this.label, required this.route});
-
-  final IconData icon;
-  final String label;
-  final String route;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push(route),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.workout.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 18, color: AppColors.workout),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, height: 1.2),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Ringkasan satu latihan menyesuaikan tipenya: beban punya kg, bodyweight
 /// hanya set x rep, isometrik dalam detik, cardio dalam menit.
@@ -185,48 +25,52 @@ String _exerciseSummary(ExerciseEntry exercise) {
   return switch (exercise.type) {
     ExerciseType.cardio => '${exercise.durationMinutes ?? 0} menit',
     ExerciseType.isometrik => '${exercise.sets ?? 0}x${exercise.durationSeconds ?? 0} detik',
-    ExerciseType.bodyweight =>
-      exercise.weightKg != null && exercise.weightKg! > 0
-          ? '+${exercise.weightKg} kg  ·  $setsReps'
-          : setsReps,
+    ExerciseType.bodyweight => exercise.weightKg != null && exercise.weightKg! > 0
+        ? '+${exercise.weightKg} kg  ·  $setsReps'
+        : setsReps,
     ExerciseType.beban => '${exercise.weightKg ?? 0} kg  ·  $setsReps',
   };
 }
 
-class WorkoutHistoryPage extends ConsumerWidget {
+/// Riwayat lengkap: semua sesi latihan dan hari istirahat, bisa disaring.
+///
+/// Halaman terpisah dari dashboard Workout. Setahun latihan bisa ratusan
+/// baris, dan tanpa saringan, mencari "kapan terakhir deadlift" berarti
+/// menggulir sampai habis.
+class WorkoutHistoryPage extends ConsumerStatefulWidget {
   const WorkoutHistoryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WorkoutHistoryPage> createState() => _WorkoutHistoryPageState();
+}
+
+class _WorkoutHistoryPageState extends ConsumerState<WorkoutHistoryPage> {
+  // Bawaan 30 hari, bukan "Semua". Yang dicari orang di riwayat hampir selalu
+  // yang belum lama, dan memuat 400 baris untuk itu cuma bikin tersendat.
+  HistoryFilter _filter = const HistoryFilter();
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sessionsAsync = ref.watch(workoutSessionsProvider);
     final sessions = sessionsAsync.value ?? const <WorkoutSession>[];
     final restDays = ref.watch(restDaysProvider).value ?? const <RestDay>[];
-    final streak = ref.watch(workoutStreakProvider).value;
 
-    final now = DateTime.now();
-    final thisMonth = sessions
-        .where((s) => s.sessionDate.year == now.year && s.sessionDate.month == now.month)
-        .length;
-
-    // Riwayat menggabungkan sesi dan hari istirahat supaya urutan tanggalnya
-    // utuh — hari istirahat yang tersembunyi tidak bisa kamu batalkan lagi.
-    final entries = <({DateTime date, WorkoutSession? session, RestDay? rest})>[
-      for (final session in sessions)
-        (date: session.sessionDate, session: session, rest: null),
-      for (final day in restDays) (date: day.restOn, session: null, rest: day),
-    ]..sort((a, b) => b.date.compareTo(a.date));
+    final rows = filterHistory(
+      sessions: sessions,
+      restDays: restDays,
+      filter: _filter,
+      now: DateTime.now(),
+    );
+    final summary = summarizeHistory(rows, kind: _filter.kind);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await context.push('/workout/new');
-          ref.invalidate(workoutSessionsProvider);
-        },
-        backgroundColor: AppColors.workout,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Workout'),
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(workoutSessionsProvider);
@@ -236,57 +80,61 @@ class WorkoutHistoryPage extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader(
-              title: 'Workout',
-              subtitle: 'Riwayat latihan dan perkembanganmu',
+              title: 'Riwayat Latihan',
+              subtitle: 'Semua catatan, bisa disaring',
               color: AppColors.workout,
-              trailing: HeroIconButton(
-                icon: Icons.show_chart,
-                tooltip: 'Lihat progress',
-                onPressed: () => context.push('/workout/progress'),
+              leading: HeroIconButton(
+                icon: Icons.arrow_back,
+                tooltip: 'Kembali',
+                onPressed: () => context.pop(),
               ),
               stats: [
                 HeroStatData(
-                  icon: Icons.local_fire_department,
-                  value: '${streak?.current ?? 0}',
-                  label: 'Streak Aktif',
+                  icon: Icons.fitness_center,
+                  value: '${summary.sesi}',
+                  label: 'Sesi',
                 ),
                 HeroStatData(
-                  icon: Icons.emoji_events_outlined,
-                  value: '${streak?.best ?? 0}',
-                  label: 'Streak Terbaik',
+                  icon: Icons.scale_outlined,
+                  value: summary.volumeKg > 0
+                      ? _volumeFormat.format(summary.volumeKg.round())
+                      : '0',
+                  label: 'Volume (kg)',
                 ),
                 HeroStatData(
-                  icon: Icons.calendar_month_outlined,
-                  value: '$thisMonth',
-                  label: 'Bulan Ini',
+                  icon: Icons.bedtime_outlined,
+                  value: '${summary.hariIstirahat}',
+                  label: 'Istirahat',
                 ),
               ],
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.xl,
+              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const RestDayCard(),
-                  const SizedBox(height: AppSpacing.sm),
-                  const _ToolShortcuts(),
-                  const SizedBox(height: AppSpacing.lg),
+                  _FilterBar(
+                    filter: _filter,
+                    controller: _searchController,
+                    onChanged: (filter) => setState(() => _filter = filter),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   sessionsAsync.when(
-                    data: (_) => entries.isEmpty
-                        ? const EmptyState(
-                            icon: Icons.fitness_center,
-                            title: 'Belum ada sesi workout',
-                            subtitle: 'Tekan tombol + untuk mencatat latihan',
-                            color: AppColors.workout,
-                          )
+                    data: (_) => rows.isEmpty
+                        ? _EmptyForFilter(filter: _filter)
                         : Column(
                             children: [
-                              for (final entry in entries)
+                              for (final row in rows)
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                                  child: entry.session != null
-                                      ? _SessionCard(session: entry.session!)
-                                      : _RestDayTile(restDay: entry.rest!),
+                                  child: row.isRest
+                                      ? _RestDayTile(restDay: row.rest!)
+                                      : _SessionCard(session: row.session!),
                                 ),
                             ],
                           ),
@@ -307,6 +155,190 @@ class WorkoutHistoryPage extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FilterBar extends StatelessWidget {
+  const _FilterBar({
+    required this.filter,
+    required this.controller,
+    required this.onChanged,
+  });
+
+  final HistoryFilter filter;
+  final TextEditingController controller;
+  final ValueChanged<HistoryFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: controller,
+          onChanged: (value) => onChanged(filter.copyWith(query: value)),
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: 'Cari nama latihan',
+            hintStyle: const TextStyle(fontSize: 13),
+            prefixIcon: const Icon(Icons.search, size: 19),
+            suffixIcon: filter.query.isEmpty
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    tooltip: 'Hapus pencarian',
+                    onPressed: () {
+                      controller.clear();
+                      onChanged(filter.copyWith(query: ''));
+                    },
+                  ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _ChipRow(
+          label: 'Periode',
+          children: [
+            for (final period in HistoryPeriod.values)
+              _FilterChip(
+                label: period.label,
+                selected: filter.period == period,
+                onTap: () => onChanged(filter.copyWith(period: period)),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        _ChipRow(
+          label: 'Jenis',
+          children: [
+            for (final kind in HistoryKind.values)
+              _FilterChip(
+                label: kind.label,
+                selected: filter.kind == kind,
+                onTap: () => onChanged(filter.copyWith(kind: kind)),
+              ),
+          ],
+        ),
+        if (filter.aktif) ...[
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () {
+                controller.clear();
+                onChanged(const HistoryFilter(period: HistoryPeriod.semua));
+              },
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: colorScheme.onSurfaceVariant,
+              ),
+              icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+              label: const Text('Tampilkan semua', style: TextStyle(fontSize: 12)),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Baris chip yang bisa digeser mendatar.
+///
+/// Digulir, bukan dibungkus ke bawah, supaya tinggi saringannya tetap dan
+/// daftar di bawahnya tidak melompat tiap kali pilihan berubah.
+class _ChipRow extends StatelessWidget {
+  const _ChipRow({required this.label, required this.children});
+
+  final String label;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 34,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+          for (final child in children)
+            Padding(padding: const EdgeInsets.only(right: 6), child: child),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onTap(),
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        selectedColor: AppColors.workout.withValues(alpha: 0.18),
+        labelStyle: TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w600,
+          color: selected ? AppColors.workout : colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+/// Kosong karena belum ada catatan, atau kosong karena saringannya terlalu
+/// sempit — dua hal yang berbeda dan butuh jawaban berbeda.
+class _EmptyForFilter extends StatelessWidget {
+  const _EmptyForFilter({required this.filter});
+
+  final HistoryFilter filter;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!filter.aktif) {
+      return const EmptyState(
+        icon: Icons.fitness_center,
+        title: 'Belum ada sesi workout',
+        subtitle: 'Tekan tombol + di halaman Workout untuk mencatat latihan',
+        color: AppColors.workout,
+      );
+    }
+
+    return const EmptyState(
+      icon: Icons.search_off,
+      title: 'Tidak ada yang cocok',
+      subtitle: 'Coba longgarkan saringannya — periode lebih panjang, '
+          'jenis "Semua", atau hapus pencarian',
+      color: AppColors.workout,
     );
   }
 }
@@ -353,6 +385,7 @@ class _SessionCard extends ConsumerWidget {
         ref.invalidate(workoutSessionsProvider);
       },
       child: Card(
+        margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         child: Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -503,7 +536,7 @@ class _SessionCard extends ConsumerWidget {
 /// Baris riwayat untuk hari istirahat.
 ///
 /// Sengaja dibuat lebih ramping dan berwarna lain dari kartu sesi — sekilas
-/// harus kelihatan bahwa hari ini tidak ada latihannya.
+/// harus kelihatan bahwa hari itu tidak ada latihannya.
 class _RestDayTile extends ConsumerWidget {
   const _RestDayTile({required this.restDay});
 

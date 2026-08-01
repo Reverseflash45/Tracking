@@ -6,6 +6,8 @@
 /// tidak pernah langsung masuk catatan.
 library;
 
+import 'transaction.dart' show PlaceKind;
+
 /// Kata kunci yang mendahului angka total, **diurutkan dari yang paling
 /// meyakinkan ke yang paling longgar**.
 ///
@@ -214,43 +216,61 @@ const List<String> _notMerchant = [
 ///
 /// Urutannya penting: yang lebih panjang harus di atas, supaya "ShopeeFood"
 /// tidak keburu tertangkap sebagai "Shopee".
-const List<String> _knownPlaces = [
-  'ShopeeFood',
-  'GrabFood',
-  'GoFood',
-  'Shopee',
-  'Tokopedia',
-  'Bukalapak',
-  'Lazada',
-  'Blibli',
-  'Traveloka',
-  'Gojek',
-  'Grab',
-  'Alfamidi',
-  'Alfamart',
-  'Indomaret',
-  'Superindo',
-  'Hypermart',
-  'Transmart',
-  'Lotte Mart',
-  'Ranch Market',
-  'Kopi Kenangan',
-  'Janji Jiwa',
-  'Point Coffee',
-  'Fore Coffee',
-  'Starbucks',
-  'Chatime',
-  'Mixue',
-  'Dunkin',
-  'Pizza Hut',
-  'Burger King',
-  'Richeese',
-  'HokBen',
-  'Yoshinoya',
-  'Solaria',
-  'McDonald',
-  'KFC',
+///
+/// Jenis tempatnya ikut dicatat karena itu bisa disimpulkan dengan pasti dari
+/// nama layanannya — GoFood tidak mungkin toko offline.
+const List<(String, PlaceKind)> _knownPlaces = [
+  ('ShopeeFood', PlaceKind.restoOnline),
+  ('GrabFood', PlaceKind.restoOnline),
+  ('GoFood', PlaceKind.restoOnline),
+  ('Shopee', PlaceKind.tokoOnline),
+  ('Tokopedia', PlaceKind.tokoOnline),
+  ('Bukalapak', PlaceKind.tokoOnline),
+  ('Lazada', PlaceKind.tokoOnline),
+  ('Blibli', PlaceKind.tokoOnline),
+  ('Traveloka', PlaceKind.tokoOnline),
+  ('Gojek', PlaceKind.tokoOnline),
+  ('Grab', PlaceKind.tokoOnline),
+  ('Alfamidi', PlaceKind.tokoOffline),
+  ('Alfamart', PlaceKind.tokoOffline),
+  ('Indomaret', PlaceKind.tokoOffline),
+  ('Superindo', PlaceKind.tokoOffline),
+  ('Hypermart', PlaceKind.tokoOffline),
+  ('Transmart', PlaceKind.tokoOffline),
+  ('Lotte Mart', PlaceKind.tokoOffline),
+  ('Ranch Market', PlaceKind.tokoOffline),
+  ('Kopi Kenangan', PlaceKind.restoOffline),
+  ('Janji Jiwa', PlaceKind.restoOffline),
+  ('Point Coffee', PlaceKind.restoOffline),
+  ('Fore Coffee', PlaceKind.restoOffline),
+  ('Starbucks', PlaceKind.restoOffline),
+  ('Chatime', PlaceKind.restoOffline),
+  ('Mixue', PlaceKind.restoOffline),
+  ('Dunkin', PlaceKind.restoOffline),
+  ('Pizza Hut', PlaceKind.restoOffline),
+  ('Burger King', PlaceKind.restoOffline),
+  ('Richeese', PlaceKind.restoOffline),
+  ('HokBen', PlaceKind.restoOffline),
+  ('Yoshinoya', PlaceKind.restoOffline),
+  ('Solaria', PlaceKind.restoOffline),
+  ('McDonald', PlaceKind.restoOffline),
+  ('KFC', PlaceKind.restoOffline),
 ];
+
+/// Baris barang di struk: "MN3RASN 1x Martabak telor istimewa  Rp60.000".
+///
+/// Penanda "1x" itu yang membedakan baris barang dari baris ongkir, diskon,
+/// atau total — ketiganya tidak pernah punya kuantitas.
+final RegExp _itemPattern = RegExp(
+  r'(?:^|\s)\d+\s*x\s+(.+)$',
+  caseSensitive: false,
+);
+
+/// Harga yang menempel di belakang nama barang.
+final RegExp _trailingPricePattern = RegExp(
+  r'\s+(rp\.?\s*)?\d[\d.,]*\s*$',
+  caseSensitive: false,
+);
 
 /// Berapa banyak baris teratas yang dianggap bagian kepala struk.
 ///
@@ -269,6 +289,8 @@ class ReceiptGuess {
     this.total,
     this.date,
     this.merchant,
+    this.placeKind,
+    this.product,
     this.candidates = const [],
     this.rawLines = const [],
   });
@@ -278,8 +300,14 @@ class ReceiptGuess {
 
   final DateTime? date;
 
-  /// Nama tempat, biasanya baris pertama struk.
+  /// Nama toko, biasanya baris pertama struk.
   final String? merchant;
+
+  /// Jenis tempat, hanya terisi kalau nama layanannya dikenali.
+  final PlaceKind? placeKind;
+
+  /// Nama barang, hanya terisi kalau di struk cuma ada satu barang.
+  final String? product;
 
   /// Semua nominal yang benar-benar tertulis di struk, dari yang terbesar.
   ///
@@ -508,13 +536,40 @@ String? _findMerchant(List<String> lines) {
   return null;
 }
 
-/// Cadangan terakhir: nama layanan yang dikenali dari mana pun di teks.
-String? _findKnownPlace(String rawText) {
+/// Nama layanan yang dikenali dari mana pun di teks, beserta jenis tempatnya.
+(String, PlaceKind)? _findKnownPlace(String rawText) {
   final lower = rawText.toLowerCase();
   for (final place in _knownPlaces) {
-    if (lower.contains(place.toLowerCase())) return place;
+    if (lower.contains(place.$1.toLowerCase())) return place;
   }
   return null;
+}
+
+/// Nama barang dari baris yang punya penanda kuantitas.
+///
+/// Hanya diisi kalau barangnya **tepat satu**. Struk dengan lima barang tidak
+/// punya satu "nama produk" — memilih salah satunya berarti mengarang, dan
+/// menggabung semuanya bikin kolomnya jadi paragraf.
+String? _findProduct(List<String> lines) {
+  final found = <String>[];
+
+  for (final line in lines) {
+    final match = _itemPattern.firstMatch(line);
+    if (match == null) continue;
+
+    var name = match.group(1)!.replaceFirst(_trailingPricePattern, '').trim();
+    // Sisa tanda baca di ujung, biasanya dari kolom yang terpotong.
+    name = name.replaceAll(RegExp(r'^[-·:.,]+|[-·:.,]+$'), '').trim();
+
+    if (name.length < 3) continue;
+    // Nama yang isinya angka semua itu kode barang, bukan nama.
+    if (RegExp(r'^[\d\s.,]+$').hasMatch(name)) continue;
+
+    found.add(name);
+    if (found.length > 1) return null;
+  }
+
+  return found.length == 1 ? found.first : null;
 }
 
 /// Baca teks OCR mentah jadi tebakan terstruktur.
@@ -528,6 +583,7 @@ ReceiptGuess parseReceipt(String rawText, {DateTime? now}) {
   if (lines.isEmpty) return const ReceiptGuess();
 
   final total = _findTotal(lines);
+  final known = _findKnownPlace(rawText);
 
   return ReceiptGuess(
     total: total,
@@ -535,7 +591,12 @@ ReceiptGuess parseReceipt(String rawText, {DateTime? now}) {
     // Kepala struk dulu; nama layanan cuma dipakai kalau di sana tidak ada
     // yang layak, karena nama warungnya selalu lebih berguna daripada nama
     // aplikasi pengantarnya.
-    merchant: _findMerchant(lines) ?? _findKnownPlace(rawText),
+    merchant: _findMerchant(lines) ?? known?.$1,
+    // Jenis tempatnya tetap dari layanan yang dikenali, meski nama tokonya
+    // datang dari kepala struk: "WARUNG SATE PAK NO" lewat GoFood tetap resto
+    // online.
+    placeKind: known?.$2,
+    product: _findProduct(lines),
     // Kandidat hanya berguna waktu totalnya tidak ketemu. Kalau sudah ketemu,
     // menawarkan angka lain justru membuat ragu pada jawaban yang benar.
     candidates: total == null ? _collectCandidates(lines) : const [],
