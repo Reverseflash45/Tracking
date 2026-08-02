@@ -76,14 +76,21 @@ class AcademicRepository {
   /// Sks dan semester dipisah dari [updateCourse] karena diisi dari halaman
   /// Nilai, dan menumpangkannya ke update biasa akan menimpa nama/dosen dengan
   /// nilai lama yang kebetulan ada di halaman itu.
+  /// [pertahankanSksLama] membedakan "kosongkan sks" dari "sks-nya tidak
+  /// terbaca". Import KHS memakai true: baris yang kolom sks-nya hilang tidak
+  /// boleh menghapus sks yang sudah pernah kamu isi sendiri.
   Future<void> updateCourseAkademik({
     required String id,
     int? sks,
     String? semester,
+    bool pertahankanSksLama = false,
   }) {
     return _client
         .from('courses')
-        .update({'sks': sks, 'semester': semester})
+        .update({
+          if (!(pertahankanSksLama && sks == null)) 'sks': sks,
+          'semester': semester,
+        })
         .eq('id', id);
   }
 

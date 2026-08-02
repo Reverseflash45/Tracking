@@ -85,6 +85,9 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
     });
   }
 
+  /// Baris yang nilainya atau sks-nya belum lengkap.
+  int get _perluDiisi => _entries.where((e) => e.perluDiisi).length;
+
   Future<void> _edit(int index) async {
     final hasil = await showModalBottomSheet<KhsEntry>(
       context: context,
@@ -128,6 +131,9 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
           id: courseId,
           sks: entry.sks,
           semester: semester.isEmpty ? null : semester,
+          // Sks yang tidak terbaca dari foto tidak boleh menghapus sks yang
+          // sudah pernah kamu isi sendiri.
+          pertahankanSksLama: true,
         );
         await repo.setCourseFinalLetter(courseId, huruf);
       }
@@ -332,11 +338,23 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                   const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
-                      Text(
-                        '${_entries.length} nilai terbaca',
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${_entries.length} baris terbaca',
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                            ),
+                            if (_perluDiisi > 0)
+                              Text(
+                                '$_perluDiisi masih perlu kamu isi',
+                                style: TextStyle(fontSize: 11.5, color: colorScheme.error),
+                              ),
+                          ],
+                        ),
                       ),
-                      const Spacer(),
                       TextButton(
                         onPressed: () => setState(() {
                           if (_selected.length == _entries.length) {
@@ -477,9 +495,10 @@ class _EntryTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       [
-                        entry.sks == null ? 'sks belum terbaca' : '${entry.sks} sks',
-                        if (entry.bobot != null)
-                          'bobot ${_angkaRapi(entry.bobot!)}',
+                        entry.sks == null
+                            ? 'sks belum terbaca'
+                            : '${entry.sks} sks${entry.sksDihitung ? ' (dihitung)' : ''}',
+                        if (entry.bobot != null) 'bobot ${_angkaRapi(entry.bobot!)}',
                         if (entry.dariBobot) 'nilai dari bobot',
                       ].join(' · '),
                       style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
@@ -488,6 +507,14 @@ class _EntryTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         'Nilainya tidak terbaca — ketuk untuk mengisi',
+                        style: TextStyle(fontSize: 10.5, color: colorScheme.error),
+                      ),
+                    ] else if (entry.sks == null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        // Nilainya tetap tersimpan; yang tidak bisa cuma ikut
+                        // menghitung IPK, karena IPK ditimbang sks.
+                        'Isi sks-nya supaya ikut menghitung IPK',
                         style: TextStyle(fontSize: 10.5, color: colorScheme.error),
                       ),
                     ] else if (entry.janggal) ...[
@@ -536,10 +563,29 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
   late String? _huruf = widget.entry.huruf;
 
   @override
+  void initState() {
+    super.initState();
+    // Mengisi sks bisa membuka jalan menghitung hurufnya dari kolom bobot.
+    _sksController.addListener(() => setState(() {}));
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _sksController.dispose();
     super.dispose();
+  }
+
+  /// Huruf yang bisa dihitung dari bobot dan sks yang sedang diketik.
+  ///
+  /// Hanya ditawarkan kalau hurufnya memang belum ada — kalau sudah terbaca,
+  /// yang tertulis di KHS lebih berhak daripada hitungan.
+  String? get _saranHuruf {
+    if (_huruf != null) return null;
+    final bobot = widget.entry.bobot;
+    final sks = int.tryParse(_sksController.text.trim());
+    if (bobot == null || sks == null || sks <= 0) return null;
+    return hurufDariKolomBobot(sks: sks, bobot: bobot);
   }
 
   @override
@@ -584,6 +630,18 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
                 style: TextStyle(
                   fontSize: 11.5,
                   color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+            if (_saranHuruf case final saran?) ...[
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: () => setState(() => _huruf = saran),
+                icon: const Icon(Icons.calculate_outlined, size: 17),
+                label: Text(
+                  'Pakai $saran — dari bobot '
+                  '${_angkaRapi(widget.entry.bobot!)} ÷ ${_sksController.text.trim()} sks',
+                  style: const TextStyle(fontSize: 12),
                 ),
               ),
             ],
