@@ -87,6 +87,16 @@ class AcademicRepository {
         .eq('id', id);
   }
 
+  /// Huruf resmi dari KHS. String kosong disimpan sebagai null supaya
+  /// "dikosongkan" benar-benar mengembalikan hitungan ke komponen.
+  Future<void> setCourseFinalLetter(String id, String? huruf) {
+    final bersih = huruf?.trim().toUpperCase();
+    return _client
+        .from('courses')
+        .update({'final_letter': (bersih == null || bersih.isEmpty) ? null : bersih})
+        .eq('id', id);
+  }
+
   Future<List<GradeComponent>> fetchGradeComponents(String userId) async {
     return fetchWithCache(
       cache: _cache,

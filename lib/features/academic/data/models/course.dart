@@ -6,6 +6,7 @@ class Course {
     this.lecturer,
     this.sks,
     this.semester,
+    this.finalLetter,
     required this.createdAt,
   });
 
@@ -22,6 +23,10 @@ class Course {
   /// kampus, jadi tidak ada format yang dipaksakan.
   final String? semester;
 
+  /// Huruf mutu resmi dari KHS. Kalau terisi, dia menang atas hitungan
+  /// komponen — hasil resmi mengalahkan perkiraan sendiri.
+  final String? finalLetter;
+
   final DateTime createdAt;
 
   factory Course.fromMap(Map<String, dynamic> map) => Course(
@@ -31,6 +36,7 @@ class Course {
         lecturer: map['lecturer'] as String?,
         sks: (map['sks'] as num?)?.toInt(),
         semester: map['semester'] as String?,
+        finalLetter: map['final_letter'] as String?,
         createdAt: DateTime.parse(map['created_at'] as String),
       );
 }

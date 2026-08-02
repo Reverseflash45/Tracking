@@ -63,12 +63,36 @@ const List<GradeStep> _setengah = [
 List<GradeStep> stepsFor(GradeScale scale) =>
     scale == GradeScale.plusMinus ? _plusMinus : _setengah;
 
+/// Semua huruf yang dikenal, dari kedua skala.
+List<String> get semuaHuruf => {
+      for (final step in _plusMinus) step.huruf,
+      for (final step in _setengah) step.huruf,
+    }.toList();
+
 /// Huruf untuk sebuah skor 0–100.
 GradeStep letterFor(double skor, GradeScale scale) {
   for (final step in stepsFor(scale)) {
     if (skor >= step.minSkor) return step;
   }
   return stepsFor(scale).last;
+}
+
+/// Tingkat untuk sebuah huruf, mis. "A-" dari KHS.
+///
+/// Skala yang dipilih dicari lebih dulu, lalu skala satunya. "AB" hanya ada di
+/// satu skala dan "A-" hanya di satu lagi, jadi huruf dari KHS tetap terbaca
+/// bobotnya meski skala yang dipilih kebetulan bukan yang dipakai kampusmu —
+/// menolaknya cuma akan membuang nilai yang sebenarnya sudah jelas.
+GradeStep? stepForLetter(String huruf, GradeScale scale) {
+  final cari = huruf.trim().toUpperCase();
+  if (cari.isEmpty) return null;
+
+  for (final daftar in [stepsFor(scale), _plusMinus, _setengah]) {
+    for (final step in daftar) {
+      if (step.huruf == cari) return step;
+    }
+  }
+  return null;
 }
 
 /// Satu komponen penilaian: Tugas 20%, UTS 30%, UAS 50%.
@@ -116,10 +140,15 @@ class CourseGrade {
     required this.sks,
     required this.semester,
     required this.components,
+    this.finalLetter,
   });
 
   final String courseId;
   final String courseName;
+
+  /// Huruf resmi dari KHS. Kalau terisi, dia menang atas hitungan komponen:
+  /// hasil resmi mengalahkan perkiraanmu sendiri.
+  final String? finalLetter;
 
   /// Null kalau belum diisi. Tanpa sks, mata kuliah ini tidak bisa ikut
   /// menghitung IP — dan itu dilaporkan, bukan diam-diam dianggap nol.
@@ -142,8 +171,13 @@ class CourseGrade {
   /// Berapa bagian penilaian yang sudah keluar, 0–1.
   double get porsiTerisi => totalBobot <= 0 ? 0 : bobotTerisi / totalBobot;
 
-  /// Semua komponen sudah dinilai.
-  bool get lengkap => components.isNotEmpty && bobotTerisi >= totalBobot - kToleransiBobot;
+  /// Nilai akhirnya sudah pasti — entah dari KHS, entah semua komponen keluar.
+  bool get lengkap =>
+      resmi ||
+      (components.isNotEmpty && bobotTerisi >= totalBobot - kToleransiBobot);
+
+  /// Nilainya datang dari KHS, bukan dihitung dari komponen.
+  bool get resmi => (finalLetter?.trim().isNotEmpty ?? false);
 
   /// Skor 0–100 dari komponen yang sudah dinilai saja.
   ///
@@ -160,12 +194,18 @@ class CourseGrade {
   }
 
   GradeStep? huruf(GradeScale scale) {
+    // KHS lebih dulu: kalau hasil resminya sudah keluar, hitungan komponen
+    // cuma perkiraan yang sudah tidak relevan.
+    if (resmi) {
+      final resmiStep = stepForLetter(finalLetter!, scale);
+      if (resmiStep != null) return resmiStep;
+    }
     final nilai = skor;
     return nilai == null ? null : letterFor(nilai, scale);
   }
 
   /// Ikut menghitung IP hanya kalau sks-nya diisi dan sudah ada nilainya.
-  bool get bisaDihitung => (sks ?? 0) > 0 && skor != null;
+  bool bisaDihitung(GradeScale scale) => (sks ?? 0) > 0 && huruf(scale) != null;
 }
 
 /// Ringkasan satu semester (atau seluruh riwayat, untuk IPK).
@@ -206,7 +246,7 @@ GradeSummary summarizeGrades(List<CourseGrade> courses, GradeScale scale) {
 
   for (final course in courses) {
     sksTotal += course.sks ?? 0;
-    if (!course.bisaDihitung) continue;
+    if (!course.bisaDihitung(scale)) continue;
 
     final sks = course.sks!;
     totalBobot += course.huruf(scale)!.bobot * sks;

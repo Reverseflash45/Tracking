@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/features/academic/data/models/task.dart';
+import 'package:tracking/features/academic/domain/grade.dart';
 import 'package:tracking/features/assistant/domain/preset_answers.dart';
 import 'package:tracking/features/finance/domain/finance_stats.dart';
 import 'package:tracking/features/finance/domain/transaction.dart';
@@ -81,6 +82,40 @@ Transaction _tx(DateTime date, double amount, {TxCategory category = TxCategory.
       kind: TxKind.pengeluaran,
       category: category,
       amount: amount,
+    );
+
+WaterLog _air(DateTime date, int ml) => WaterLog(
+      id: '${date.toIso8601String()}-$ml',
+      loggedOn: date,
+      loggedAt: date,
+      ml: ml,
+    );
+
+/// Mata kuliah dengan nilai resmi — bentuk paling ringkas untuk pengujian.
+CourseGrade _matkul(String id, String nama, String huruf, {int sks = 3}) => CourseGrade(
+      courseId: id,
+      courseName: nama,
+      sks: sks,
+      semester: null,
+      finalLetter: huruf,
+      components: const [],
+    );
+
+AcademicTask _tugasMatkul(
+  String courseId, {
+  required DateTime deadline,
+  required DateTime selesai,
+}) =>
+    AcademicTask(
+      id: '$courseId-${deadline.toIso8601String()}-${selesai.toIso8601String()}',
+      userId: 'u',
+      courseId: courseId,
+      title: 'Tugas',
+      deadline: deadline,
+      priority: TaskPriority.medium,
+      status: TaskStatus.done,
+      createdAt: deadline.subtract(const Duration(days: 7)),
+      completedAt: selesai,
     );
 
 Answer _jawab(String id, QuestionInput input) =>
@@ -467,6 +502,205 @@ void main() {
         ).headline,
         'Kurang lebih sama',
       );
+    });
+  });
+
+  group('nilai', () {
+    test('IPK ditimbang sks, dan matkul tanpa nilai dilaporkan', () {
+      final jawaban = _jawab(
+        'ipk-sekarang',
+        QuestionInput(
+          now: _now,
+          grades: [
+            _matkul('a', 'Basis Data', 'A', sks: 4),
+            _matkul('b', 'Kalkulus', 'B', sks: 2),
+            const CourseGrade(
+              courseId: 'c',
+              courseName: 'Belum dinilai',
+              sks: 3,
+              semester: null,
+              components: [],
+            ),
+          ],
+        ),
+      );
+
+      // (4.0*4 + 3.0*2) / 6 = 3.67
+      expect(jawaban.headline, '3.67');
+      expect(jawaban.detail, contains('1 mata kuliah lain'));
+    });
+
+    test('tanpa nilai apa pun mengarahkan ke halaman Nilai', () {
+      final jawaban = _jawab('ipk-sekarang', QuestionInput(now: _now));
+      expect(jawaban.kosong, isTrue);
+      expect(jawaban.detail, contains('KHS'));
+    });
+
+    test('matkul terbaik dan terlemah', () {
+      final input = QuestionInput(
+        now: _now,
+        grades: [
+          _matkul('a', 'Basis Data', 'A'),
+          _matkul('b', 'Kalkulus', 'C'),
+          _matkul('c', 'Jaringan', 'B'),
+        ],
+      );
+
+      expect(_jawab('matkul-terbaik', input).headline, 'Basis Data');
+      expect(_jawab('matkul-terlemah', input).headline, 'Kalkulus');
+    });
+
+    test('skala yang dipilih menentukan bobotnya', () {
+      // AB tidak ada di skala plus-minus, tapi bobotnya tetap terbaca 3.50.
+      final jawaban = _jawab(
+        'ipk-sekarang',
+        QuestionInput(
+          now: _now,
+          grades: [_matkul('a', 'Basis Data', 'AB', sks: 2)],
+          gradeScale: GradeScale.setengah,
+        ),
+      );
+      expect(jawaban.headline, '3.50');
+    });
+  });
+
+  group('nilai-vs-telat', () {
+    /// Empat matkul: dua tugasnya selalu telat, dua selalu tepat waktu.
+    QuestionInput susun({required String hurufTelat, required String hurufTepat}) {
+      final tasks = <AcademicTask>[];
+      for (final id in ['telat1', 'telat2']) {
+        for (var i = 0; i < 3; i++) {
+          tasks.add(_tugasMatkul(
+            id,
+            deadline: _daysAgo(20 - i),
+            selesai: _daysAgo(18 - i), // lewat deadline
+          ));
+        }
+      }
+      for (final id in ['tepat1', 'tepat2']) {
+        for (var i = 0; i < 3; i++) {
+          tasks.add(_tugasMatkul(
+            id,
+            deadline: _daysAgo(20 - i),
+            selesai: _daysAgo(22 - i), // sebelum deadline
+          ));
+        }
+      }
+
+      return QuestionInput(
+        now: _now,
+        tasks: tasks,
+        grades: [
+          _matkul('telat1', 'Telat A', hurufTelat),
+          _matkul('telat2', 'Telat B', hurufTelat),
+          _matkul('tepat1', 'Tepat A', hurufTepat),
+          _matkul('tepat2', 'Tepat B', hurufTepat),
+        ],
+      );
+    }
+
+    test('selisih nyata dilaporkan beserta peringatan bukan sebab-akibat', () {
+      final jawaban = _jawab(
+        'nilai-vs-telat',
+        susun(hurufTelat: 'C', hurufTepat: 'A'),
+      );
+
+      expect(jawaban.headline, '2.00 poin lebih rendah');
+      expect(jawaban.detail, contains('bukan sebab-akibat'));
+      expect(jawaban.tone, AnswerTone.perhatian);
+    });
+
+    test('selisih terlalu kecil disebut tidak berbeda', () {
+      final jawaban = _jawab(
+        'nilai-vs-telat',
+        susun(hurufTelat: 'A', hurufTepat: 'A'),
+      );
+      expect(jawaban.headline, 'Tidak berbeda');
+    });
+
+    test('kurang dari dua matkul per kelompok belum bisa dibandingkan', () {
+      final jawaban = _jawab(
+        'nilai-vs-telat',
+        QuestionInput(
+          now: _now,
+          grades: [_matkul('a', 'Basis Data', 'A')],
+          tasks: [
+            _tugasMatkul('a', deadline: _daysAgo(10), selesai: _daysAgo(12)),
+            _tugasMatkul('a', deadline: _daysAgo(9), selesai: _daysAgo(11)),
+          ],
+        ),
+      );
+      expect(jawaban.kosong, isTrue);
+    });
+
+    test('matkul dengan satu tugas saja tidak ikut dinilai kebiasaannya', () {
+      // Satu tugas telat itu satu kejadian, bukan pola.
+      final input = susun(hurufTelat: 'C', hurufTepat: 'A');
+      final hanyaSatu = QuestionInput(
+        now: _now,
+        grades: input.grades,
+        tasks: [input.tasks.first],
+      );
+      expect(_jawab('nilai-vs-telat', hanyaSatu).kosong, isTrue);
+    });
+  });
+
+  group('air', () {
+    test('rata-rata dibagi hari yang tercatat, bukan 30', () {
+      // Dua hari tercatat 2000 ml. Kalau dibagi 30, hasilnya 133 ml.
+      final jawaban = _jawab(
+        'air-harian',
+        QuestionInput(
+          now: _now,
+          waters: [_air(_daysAgo(1), 2000), _air(_daysAgo(2), 2000)],
+        ),
+      );
+      expect(jawaban.headline, '2000 ml');
+      expect(jawaban.detail, contains('2 hari yang tercatat'));
+    });
+
+    test('beberapa catatan di hari yang sama dijumlahkan', () {
+      final jawaban = _jawab(
+        'air-harian',
+        QuestionInput(
+          now: _now,
+          waters: [_air(_daysAgo(1), 750), _air(_daysAgo(1), 1250)],
+        ),
+      );
+      expect(jawaban.headline, '2000 ml');
+    });
+
+    test('catatan di luar 30 hari tidak ikut', () {
+      final jawaban = _jawab(
+        'air-harian',
+        QuestionInput(now: _now, waters: [_air(_daysAgo(40), 3000)]),
+      );
+      expect(jawaban.kosong, isTrue);
+    });
+
+    test('hari kurang minum dihitung dari hari tercatat saja', () {
+      final jawaban = _jawab(
+        'hari-kurang-air',
+        QuestionInput(
+          now: _now,
+          waters: [
+            _air(_daysAgo(1), 2500),
+            _air(_daysAgo(2), 1000),
+            _air(_daysAgo(3), 500),
+          ],
+        ),
+      );
+      expect(jawaban.headline, '2 hari');
+      expect(jawaban.tone, AnswerTone.perhatian);
+    });
+
+    test('semua hari cukup ditandai kabar baik', () {
+      final jawaban = _jawab(
+        'hari-kurang-air',
+        QuestionInput(now: _now, waters: [_air(_daysAgo(1), 2500)]),
+      );
+      expect(jawaban.headline, 'Tidak ada');
+      expect(jawaban.tone, AnswerTone.bagus);
     });
   });
 }

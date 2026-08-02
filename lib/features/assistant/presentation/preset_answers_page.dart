@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../academic/presentation/academic_providers.dart';
+import '../../academic/presentation/grade_providers.dart';
 import '../../finance/data/finance_repository.dart';
 import '../../nutrition/data/nutrition_repository.dart';
 import '../../run/data/run_repository.dart';
@@ -35,6 +36,9 @@ final questionInputProvider = Provider.autoDispose<QuestionInput?>((ref) {
     foods: ref.watch(foodLogsProvider).value ?? const [],
     transactions: ref.watch(transactionsProvider).value ?? const [],
     sleep: ref.watch(sleepLogsProvider).value ?? const [],
+    waters: ref.watch(waterLogsProvider).value ?? const [],
+    grades: ref.watch(courseGradesProvider).value ?? const [],
+    gradeScale: ref.watch(gradeScaleProvider),
     finance: ref.watch(financeSummaryProvider).value,
   );
 });

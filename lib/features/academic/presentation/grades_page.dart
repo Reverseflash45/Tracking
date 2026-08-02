@@ -44,6 +44,11 @@ class GradesPage extends ConsumerWidget {
                 tooltip: 'Kembali',
                 onPressed: () => context.pop(),
               ),
+              trailing: HeroIconButton(
+                icon: Icons.document_scanner_outlined,
+                tooltip: 'Import dari foto KHS',
+                onPressed: () => context.push('/academic/schedule/grades/import'),
+              ),
               stats: [
                 HeroStatData(
                   icon: Icons.workspace_premium_outlined,
@@ -287,11 +292,17 @@ class _CourseTile extends ConsumerWidget {
                     Text(
                       [
                         course.sks == null ? 'sks belum diisi' : '${course.sks} sks',
-                        if (skor != null) 'Skor ${skor.toStringAsFixed(1)}',
-                        if (course.components.isEmpty)
-                          'Belum ada komponen'
-                        else if (!course.lengkap)
-                          'Sementara · ${(course.porsiTerisi * 100).round()}% penilaian',
+                        // Kalau nilainya resmi dari KHS, skor komponen cuma
+                        // perkiraan lama yang sudah tidak menentukan apa pun.
+                        if (course.resmi)
+                          'Nilai akhir dari KHS'
+                        else ...[
+                          if (skor != null) 'Skor ${skor.toStringAsFixed(1)}',
+                          if (course.components.isEmpty)
+                            'Belum ada komponen'
+                          else if (!course.lengkap)
+                            'Sementara · ${(course.porsiTerisi * 100).round()}% penilaian',
+                        ],
                       ].join('  ·  '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -356,6 +367,14 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
           semester: semester.isEmpty ? null : semester,
         );
     _berubah = true;
+  }
+
+  Future<void> _setHuruf(String? huruf) async {
+    await ref
+        .read(academicRepositoryProvider)
+        .setCourseFinalLetter(widget.course.courseId, huruf);
+    _berubah = true;
+    ref.invalidate(coursesProvider);
   }
 
   Future<void> _komponenSheet({GradeComponent? komponen}) async {
@@ -430,6 +449,43 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const Text(
+              'Nilai akhir (dari KHS)',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final huruf in semuaHuruf)
+                  ChoiceChip(
+                    label: Text(huruf),
+                    selected: course.finalLetter == huruf,
+                    // Menekan huruf yang sudah terpilih akan melepasnya —
+                    // hitungannya kembali ke komponen.
+                    onSelected: (pilih) => _setHuruf(pilih ? huruf : null),
+                    selectedColor: _color.withValues(alpha: 0.18),
+                    labelStyle: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: course.finalLetter == huruf
+                          ? _color
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              course.resmi
+                  ? 'Huruf ini yang dipakai menghitung IPK. Komponen di bawah '
+                      'jadi catatan saja.'
+                  : 'Kosongkan kalau nilainya belum keluar — IPK akan memakai '
+                      'hitungan dari komponen di bawah.',
+              style: TextStyle(fontSize: 11.5, height: 1.4, color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.lg),
             Row(
