@@ -110,6 +110,14 @@ class _TasksPageState extends ConsumerState<TasksPage> {
               title: 'Tugas Kuliah',
               subtitle: 'Pantau deadline dan progres pengerjaan',
               color: AppColors.deadline,
+              trailing: HeroIconButton(
+                icon: Icons.event_repeat,
+                tooltip: 'Tugas berulang',
+                onPressed: () async {
+                  await context.push('/academic/tasks/recurring');
+                  ref.invalidate(tasksProvider);
+                },
+              ),
               stats: [
                 HeroStatData(
                   icon: Icons.pending_actions,

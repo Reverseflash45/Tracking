@@ -12,6 +12,7 @@ import '../../../core/widgets/section_header.dart';
 import '../data/academic_repository.dart';
 import '../data/models/class_schedule.dart';
 import '../data/models/course.dart';
+import '../domain/schedule_conflict.dart';
 import 'academic_providers.dart';
 
 const _academicColor = AppColors.academic;
@@ -104,6 +105,74 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
   bool get _isDurationValid =>
       (_endTime.hour * 60 + _endTime.minute) > (_startTime.hour * 60 + _startTime.minute);
 
+  /// Jadwal lain yang jamnya menimpa isian form saat ini.
+  ///
+  /// Dihitung ulang tiap build supaya peringatannya muncul sambil kamu menggeser
+  /// jam, bukan baru setelah menekan Simpan.
+  List<ScheduleConflict> get _conflicts {
+    if (!_isDurationValid) return const [];
+    if (_isPhl && _specificDate == null) return const [];
+
+    final semua = ref.read(classSchedulesProvider).value ?? const <ClassSchedule>[];
+    final slot = JadwalSlot(
+      dayOfWeek: _dayOfWeek,
+      mulai: _startTime.hour * 60 + _startTime.minute,
+      selesai: _endTime.hour * 60 + _endTime.minute,
+      tanggal: _isPhl ? _specificDate : null,
+    );
+
+    return conflictsForSlot(
+      slot,
+      // Jadwal yang sedang diedit tidak boleh bentrok dengan dirinya sendiri.
+      semua.where((s) => s.id != widget.scheduleId).toList(),
+    );
+  }
+
+  /// Bentrok tidak memblokir penyimpanan — kadang dua kelas memang benar-benar
+  /// bertabrakan dan kamu perlu keduanya tercatat untuk memutuskan. Yang tidak
+  /// boleh terjadi cuma tersimpan tanpa kamu sadar.
+  Future<bool> _konfirmasiBentrok(List<ScheduleConflict> conflicts) async {
+    final hasil = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Jadwalnya bentrok'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Jam ini menimpa:'),
+            const SizedBox(height: AppSpacing.sm),
+            for (final conflict in conflicts)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '• ${conflict.lawan.courseName} '
+                  '(${conflict.lawan.timeRangeLabel}) — ${conflict.durasiLabel}',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+            const SizedBox(height: AppSpacing.sm),
+            const Text(
+              'Tetap simpan?',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Perbaiki dulu'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Tetap simpan'),
+          ),
+        ],
+      ),
+    );
+    return hasil ?? false;
+  }
+
   Future<void> _pickTime({required bool isStart}) async {
     final picked = await showTimePicker(
       context: context,
@@ -149,6 +218,10 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
       );
       return;
     }
+
+    final conflicts = _conflicts;
+    if (conflicts.isNotEmpty && !await _konfirmasiBentrok(conflicts)) return;
+    if (!mounted) return;
 
     final userId = ref.read(currentUserProvider)?.id;
     if (userId == null) return;
@@ -219,6 +292,10 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
   @override
   Widget build(BuildContext context) {
     final coursesAsync = ref.watch(coursesProvider);
+    // Diawasi supaya daftar pembanding bentrok ikut segar, dan supaya kartu
+    // peringatan muncul begitu jadwal lain selesai dimuat.
+    ref.watch(classSchedulesProvider);
+    final conflicts = _conflicts;
 
     if (_isEdit) {
       ref.listen(classSchedulesProvider, (previous, next) {
@@ -372,6 +449,10 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                       ),
                     ],
                   ),
+                  if (conflicts.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _ConflictWarning(conflicts: conflicts),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
                   const SectionHeader(
                     title: 'Detail Tambahan',
@@ -451,6 +532,64 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
         color: _academicColor,
         saving: _saving,
         onPressed: () => _submit(courses),
+      ),
+    );
+  }
+}
+
+class _ConflictWarning extends StatelessWidget {
+  const _ConflictWarning({required this.conflicts});
+
+  final List<ScheduleConflict> conflicts;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded, size: 18, color: colorScheme.error),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  conflicts.length == 1
+                      ? 'Bentrok dengan 1 jadwal lain'
+                      : 'Bentrok dengan ${conflicts.length} jadwal lain',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: colorScheme.onErrorContainer,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                for (final conflict in conflicts)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '${conflict.lawan.courseName} · '
+                      '${conflict.lawan.timeRangeLabel} · '
+                      'menimpa ${conflict.durasiLabel}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: colorScheme.onErrorContainer,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

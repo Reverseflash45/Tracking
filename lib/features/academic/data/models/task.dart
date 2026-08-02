@@ -37,6 +37,8 @@ class AcademicTask {
     required this.status,
     required this.createdAt,
     this.completedAt,
+    this.recurringId,
+    this.recurringOn,
   });
 
   final String id;
@@ -51,7 +53,16 @@ class AcademicTask {
   final DateTime createdAt;
   final DateTime? completedAt;
 
+  /// Template tugas berulang yang melahirkan tugas ini, kalau ada.
+  final String? recurringId;
+
+  /// Tanggal kejadian yang diwakili tugas ini. Bersama [recurringId] inilah
+  /// yang membuat pembuatan otomatis aman diulang tanpa menghasilkan kembaran.
+  final DateTime? recurringOn;
+
   bool get isDone => status == TaskStatus.done;
+
+  bool get dariTemplate => recurringId != null;
 
   /// Selesai tepat waktu: statusnya done dan diselesaikan sebelum/sama dengan deadline.
   bool get isOnTime => isDone && completedAt != null && !completedAt!.isAfter(deadline);
@@ -69,5 +80,11 @@ class AcademicTask {
         createdAt: DateTime.parse(map['created_at'] as String),
         completedAt:
             map['completed_at'] == null ? null : DateTime.parse(map['completed_at'] as String),
+        recurringId: map['recurring_id'] as String?,
+        recurringOn: map['recurring_on'] == null
+            ? null
+            // Kolomnya bertipe date, jadi tidak ada zona waktu yang perlu
+            // digeser — toLocal() di sini justru bisa memundurkannya sehari.
+            : DateTime.parse(map['recurring_on'] as String),
       );
 }

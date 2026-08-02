@@ -9,6 +9,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../data/academic_repository.dart';
 import '../data/models/class_schedule.dart';
+import '../domain/schedule_conflict.dart';
 import 'academic_providers.dart';
 
 final _phlDateFormat = DateFormat('d MMM', 'id_ID');
@@ -49,6 +50,12 @@ class SchedulePage extends ConsumerWidget {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  HeroIconButton(
+                    icon: Icons.workspace_premium_outlined,
+                    tooltip: 'Nilai & IPK',
+                    onPressed: () => context.push('/academic/schedule/grades'),
+                  ),
+                  const SizedBox(width: 6),
                   HeroIconButton(
                     icon: Icons.document_scanner_outlined,
                     tooltip: 'Import dari foto KRS',
@@ -115,21 +122,88 @@ class SchedulePage extends ConsumerWidget {
     }
     final days = byDay.keys.toList()..sort();
     final today = DateTime.now().weekday;
+    final bentrok = conflictMap(items);
 
     final widgets = <Widget>[];
+    if (bentrok.isNotEmpty) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: _ConflictBanner(pasangan: totalPasanganBentrok(bentrok)),
+        ),
+      );
+    }
+
     for (final day in days) {
       widgets.add(_DayHeader(day: day, count: byDay[day]!.length, isToday: day == today));
       for (final schedule in byDay[day]!) {
         widgets.add(
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _ScheduleTile(schedule: schedule),
+            child: _ScheduleTile(
+              schedule: schedule,
+              conflicts: bentrok[schedule.id] ?? const [],
+            ),
           ),
         );
       }
       widgets.add(const SizedBox(height: AppSpacing.md));
     }
     return widgets;
+  }
+}
+
+class _ConflictBanner extends StatelessWidget {
+  const _ConflictBanner({required this.pasangan});
+
+  /// Jumlah pasangan yang bertabrakan, bukan jumlah jadwal: dua kelas yang
+  /// saling menimpa itu satu masalah.
+  final int pasangan;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, size: 18, color: colorScheme.error),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  pasangan == 1
+                      ? 'Ada 1 jadwal yang bertabrakan'
+                      : 'Ada $pasangan jadwal yang bertabrakan',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: colorScheme.onErrorContainer,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Kartunya ditandai di bawah. Biasanya ini sisa import KRS '
+                  'yang terlanjur dijalankan dua kali.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.35,
+                    color: colorScheme.onErrorContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -181,9 +255,10 @@ class _DayHeader extends StatelessWidget {
 }
 
 class _ScheduleTile extends ConsumerWidget {
-  const _ScheduleTile({required this.schedule});
+  const _ScheduleTile({required this.schedule, this.conflicts = const []});
 
   final ClassSchedule schedule;
+  final List<ScheduleConflict> conflicts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -278,6 +353,18 @@ class _ScheduleTile extends ConsumerWidget {
                         const SizedBox(height: 2),
                         _MetaLine(icon: Icons.person_outline, text: schedule.lecturer!),
                       ],
+                      if (conflicts.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        _MetaLine(
+                          icon: Icons.warning_amber_rounded,
+                          // Nama lawannya disebut, bukan cuma "bentrok" —
+                          // supaya kamu tahu mana yang harus dihapus tanpa
+                          // membandingkan jam satu per satu.
+                          text: 'Bentrok: '
+                              '${conflicts.map((c) => c.lawan.courseName).join(', ')}',
+                          color: colorScheme.error,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -309,14 +396,15 @@ class _ScheduleTile extends ConsumerWidget {
 }
 
 class _MetaLine extends StatelessWidget {
-  const _MetaLine({required this.icon, required this.text});
+  const _MetaLine({required this.icon, required this.text, this.color});
 
   final IconData icon;
   final String text;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    final color = this.color ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       children: [
         Icon(icon, size: 13, color: color),

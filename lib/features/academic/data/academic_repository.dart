@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/offline/local_cache.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
+import '../domain/grade.dart';
+import '../domain/recurring_task.dart';
 import 'models/class_schedule.dart';
 import 'models/course.dart';
 import 'models/task.dart';
@@ -69,6 +71,61 @@ class AcademicRepository {
         .from('courses')
         .update({'name': name, 'lecturer': lecturer})
         .eq('id', id);
+  }
+
+  /// Sks dan semester dipisah dari [updateCourse] karena diisi dari halaman
+  /// Nilai, dan menumpangkannya ke update biasa akan menimpa nama/dosen dengan
+  /// nilai lama yang kebetulan ada di halaman itu.
+  Future<void> updateCourseAkademik({
+    required String id,
+    int? sks,
+    String? semester,
+  }) {
+    return _client
+        .from('courses')
+        .update({'sks': sks, 'semester': semester})
+        .eq('id', id);
+  }
+
+  Future<List<GradeComponent>> fetchGradeComponents(String userId) async {
+    return fetchWithCache(
+      cache: _cache,
+      key: 'grade_components_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('grade_components')
+                      .select()
+                      .eq('user_id', userId)
+                      .order('created_at'))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: GradeComponent.fromMap,
+    );
+  }
+
+  Future<void> saveGradeComponent({
+    required String userId,
+    String? id,
+    required String courseId,
+    required String name,
+    required double weight,
+    required double? score,
+  }) {
+    final row = {
+      'course_id': courseId,
+      'name': name,
+      'weight': weight,
+      'score': score,
+    };
+
+    if (id != null) {
+      return _client.from('grade_components').update(row).eq('id', id);
+    }
+    return _client.from('grade_components').insert({'user_id': userId, ...row});
+  }
+
+  Future<void> deleteGradeComponent(String id) {
+    return _client.from('grade_components').delete().eq('id', id);
   }
 
   Future<List<ClassSchedule>> fetchSchedules(String userId) async {
@@ -207,6 +264,88 @@ class AcademicRepository {
 
   Future<void> deleteTask(String id) {
     return _client.from('tasks').delete().eq('id', id);
+  }
+
+  Future<List<RecurringTask>> fetchRecurringTasks(String userId) async {
+    return fetchWithCache(
+      cache: _cache,
+      key: 'recurring_tasks_$userId',
+      remote: () async =>
+          ((await _client
+                      .from('recurring_tasks')
+                      .select('*, courses(name)')
+                      .eq('user_id', userId)
+                      .order('weekday'))
+                  as List)
+              .cast<Map<String, dynamic>>(),
+      parse: RecurringTask.fromMap,
+    );
+  }
+
+  Future<void> saveRecurringTask({
+    required String userId,
+    String? id,
+    String? courseId,
+    required String title,
+    String? description,
+    required TaskPriority priority,
+    required int weekday,
+    required int deadlineMinute,
+    required bool active,
+  }) {
+    final row = {
+      'course_id': courseId,
+      'title': title,
+      'description': description,
+      'priority': priority.dbValue,
+      'weekday': weekday,
+      'deadline_minute': deadlineMinute,
+      'active': active,
+    };
+
+    if (id != null) {
+      return _client.from('recurring_tasks').update(row).eq('id', id);
+    }
+    return _client.from('recurring_tasks').insert({'user_id': userId, ...row});
+  }
+
+  /// Menghapus template tidak menghapus tugas yang sudah terlanjur dibuat —
+  /// `recurring_id` di tabel tugas jadi null, isinya tetap ada. Pekerjaan yang
+  /// sudah kamu catat tidak boleh hilang karena template-nya dirapikan.
+  Future<void> deleteRecurringTask(String id) {
+    return _client.from('recurring_tasks').delete().eq('id', id);
+  }
+
+  /// Buat tugas untuk kejadian yang belum ada.
+  ///
+  /// Memakai upsert dengan `ignoreDuplicates`, jadi dua HP yang membuka app
+  /// bersamaan tidak menghasilkan tugas kembar: yang kedua ditolak indeks unik
+  /// di database, bukan sekadar dihindari oleh kode di sini.
+  ///
+  /// Mengembalikan jumlah yang dikirim.
+  Future<int> createOccurrences(String userId, List<TugasTerjadwal> occurrences) async {
+    if (occurrences.isEmpty) return 0;
+
+    await _client.from('tasks').upsert(
+      [
+        for (final item in occurrences)
+          {
+            'user_id': userId,
+            'course_id': item.sumber.courseId,
+            'title': item.sumber.title,
+            'description': item.sumber.description,
+            'deadline': item.deadline.toIso8601String(),
+            'priority': item.sumber.priority.dbValue,
+            'status': TaskStatus.todo.dbValue,
+            'recurring_id': item.sumber.id,
+            'recurring_on': item.tanggal.toIso8601String().substring(0, 10),
+          },
+      ],
+      onConflict: 'recurring_id,recurring_on',
+      ignoreDuplicates: true,
+    );
+
+    return occurrences.length;
   }
 }
 

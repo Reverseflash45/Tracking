@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/academic/data/recurring_task_generator.dart';
 import '../offline/pending_writes.dart';
 import '../theme/app_colors.dart';
 
@@ -52,11 +53,13 @@ const _tabs = [
   ),
 ];
 
-/// Rangka app sekaligus tempat antrean offline dikirim ulang.
+/// Rangka app sekaligus tempat kerja latar dipicu.
 ///
-/// Pengirimannya dipicu saat app dibuka dan saat kembali dari latar belakang —
-/// dua saat yang paling mungkin bersamaan dengan sinyal baru kembali ada,
-/// tanpa perlu mendengarkan status jaringan terus-menerus.
+/// Dua hal berjalan di sini: antrean tulis offline dikirim ulang, dan tugas
+/// berulang dibuat untuk minggu-minggu ke depan. Keduanya dipicu saat app
+/// dibuka dan saat kembali dari latar belakang — dua saat yang paling mungkin
+/// bersamaan dengan sinyal baru kembali ada, tanpa perlu mendengarkan status
+/// jaringan terus-menerus.
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.navigationShell});
 
@@ -71,7 +74,7 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _kirimAntrean());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _kerjaLatar());
   }
 
   @override
@@ -82,7 +85,15 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _kirimAntrean();
+    if (state == AppLifecycleState.resumed) _kerjaLatar();
+  }
+
+  Future<void> _kerjaLatar() async {
+    await _kirimAntrean();
+    if (!mounted) return;
+    // Setelah antrean, bukan sebelum: tugas berulang dibuat lewat jaringan, dan
+    // percuma mencobanya kalau tulisan yang tertunda saja belum bisa terkirim.
+    await ref.read(recurringTaskGeneratorProvider).jalankan();
   }
 
   Future<void> _kirimAntrean() async {

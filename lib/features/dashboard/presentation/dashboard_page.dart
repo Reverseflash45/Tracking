@@ -203,8 +203,14 @@ class _HeroHeader extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Pintasan cari ditaruh di header karena berlaku untuk seluruh
-              // app, bukan milik satu bagian saja.
+              // Cari dan Target ditaruh di header karena keduanya berlaku untuk
+              // seluruh app, bukan milik satu bagian saja.
+              HeroIconButton(
+                icon: Icons.flag_outlined,
+                tooltip: 'Target',
+                onPressed: () => context.push('/goals'),
+              ),
+              const SizedBox(width: 6),
               HeroIconButton(
                 icon: Icons.search,
                 tooltip: 'Cari',
