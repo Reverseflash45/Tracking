@@ -78,16 +78,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   builder: (context, state) => const GoalsPage(),
                 ),
                 GoRoute(
+                  // Sejajar dengan Keuangan, bukan di dalamnya. Wishlist memang
+                  // memakai angka keuangan, tapi yang kamu lakukan di sini
+                  // adalah menginginkan sesuatu — bukan mencatat pengeluaran,
+                  // dan tidak seharusnya lewat halaman itu dulu.
+                  path: 'wishlist',
+                  builder: (context, state) => const WishlistPage(),
+                ),
+                GoRoute(
                   path: 'finance',
                   builder: (context, state) => const FinancePage(),
                   routes: [
                     GoRoute(
                       path: 'recurring',
                       builder: (context, state) => const RecurringPage(),
-                    ),
-                    GoRoute(
-                      path: 'wishlist',
-                      builder: (context, state) => const WishlistPage(),
                     ),
                   ],
                 ),
