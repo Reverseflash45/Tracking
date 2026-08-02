@@ -13,6 +13,13 @@ const double kSleepTargetMax = 9;
 /// Berapa hari terakhir yang dipakai untuk rata-rata.
 const int kSleepWindowDays = 14;
 
+/// Satu malam dihitung cukup kalau mencapai batas bawah.
+///
+/// Sengaja tidak menuntut juga di bawah [kSleepTargetMax]: tidur sembilan
+/// setengah jam bukan malam yang gagal, dan menghitungnya begitu akan membuat
+/// angkanya menghukum hal yang salah.
+bool tidurCukup(double hours) => hours >= kSleepTargetMin;
+
 class SleepSummary {
   const SleepSummary({
     required this.rataJam,
@@ -60,7 +67,7 @@ SleepSummary summarizeSleep(
 
     total += log.hours;
     tercatat++;
-    if (log.hours >= kSleepTargetMin) {
+    if (tidurCukup(log.hours)) {
       cukup++;
     } else {
       kurang++;

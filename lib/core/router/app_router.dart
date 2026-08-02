@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/academic/presentation/grades_page.dart';
 import '../../features/academic/presentation/krs_import_page.dart';
+import '../../features/academic/presentation/recurring_tasks_page.dart';
 import '../../features/academic/presentation/schedule_form_page.dart';
 import '../../features/academic/presentation/schedule_page.dart';
 import '../../features/academic/presentation/task_detail_page.dart';
@@ -17,6 +19,7 @@ import '../../features/body/presentation/progress_photo_page.dart';
 import '../../features/calendar/presentation/calendar_page.dart';
 import '../../features/finance/presentation/finance_page.dart';
 import '../../features/finance/presentation/recurring_page.dart';
+import '../../features/goals/presentation/goals_page.dart';
 import '../../features/insight/presentation/insight_page.dart';
 import '../../features/live/presentation/live_workout_page.dart';
 import '../../features/run/presentation/run_history_page.dart';
@@ -69,6 +72,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   builder: (context, state) => const SearchPage(),
                 ),
                 GoRoute(
+                  path: 'goals',
+                  builder: (context, state) => const GoalsPage(),
+                ),
+                GoRoute(
                   path: 'finance',
                   builder: (context, state) => const FinancePage(),
                   routes: [
@@ -101,6 +108,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   builder: (context, state) => const KrsImportPage(),
                 ),
                 GoRoute(
+                  // Nilai tinggal di cabang Jadwal karena mata kuliahnya lahir
+                  // dari sini — bukan karena keduanya soal jadwal.
+                  path: 'grades',
+                  builder: (context, state) => const GradesPage(),
+                ),
+                GoRoute(
                   path: ':id/edit',
                   builder: (context, state) =>
                       ScheduleFormPage(scheduleId: state.pathParameters['id']),
@@ -113,9 +126,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               path: '/academic/tasks',
               builder: (context, state) => const TasksPage(),
               routes: [
+                // Rute literal harus dideklarasikan sebelum rute berparameter
+                // supaya tidak ikut tertangkap sebagai ':id'.
                 GoRoute(
                   path: 'new',
                   builder: (context, state) => const TaskFormPage(),
+                ),
+                GoRoute(
+                  path: 'recurring',
+                  builder: (context, state) => const RecurringTasksPage(),
                 ),
                 GoRoute(
                   path: ':id/edit',

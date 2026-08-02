@@ -2,31 +2,72 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/academic/data/models/class_schedule.dart';
 import '../../features/academic/presentation/academic_providers.dart';
+import '../../features/finance/data/finance_repository.dart';
+import '../../features/finance/domain/finance_stats.dart';
+import '../../features/nutrition/data/nutrition_repository.dart';
+import '../../features/nutrition/domain/food_log.dart';
+import '../../features/workout/data/rest_day_repository.dart';
+import '../../features/workout/presentation/workout_providers.dart';
 import 'notification_service.dart';
 import 'notification_settings_controller.dart';
+import 'smart_reminders.dart';
 
-/// Menjadwalkan ulang pengingat setiap kali daftar tugas atau setelan berubah.
+/// Berapa hari ke belakang dipakai untuk menilai "orang ini memang mencatat
+/// makanannya". Dua minggu cukup untuk membedakan kebiasaan dari sekali coba.
+const int kJendelaKebiasaanHari = 14;
+
+bool _tanggalSama(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+/// Menjadwalkan ulang seluruh pengingat setiap kali datanya atau setelannya
+/// berubah.
 ///
 /// Dibuat sebagai provider (bukan `ref.listen` di widget) supaya efeknya ikut
 /// berjalan ulang saat dependensinya berubah — mis. user menggeser jam
-/// pengingat, atau menandai sebuah tugas selesai.
+/// pengingat, menandai sebuah tugas selesai, atau mencatat sesi latihan yang
+/// membuat teguran streak malam ini tidak jadi perlu.
 ///
-/// Di web fungsi ini berhenti sebelum menyentuh [tasksProvider], jadi perilaku
-/// caching di Chrome sama sekali tidak berubah.
+/// Di web fungsi ini berhenti sebelum menyentuh provider mana pun, jadi
+/// perilaku caching di Chrome sama sekali tidak berubah.
 final reminderSyncProvider = Provider<void>((ref) {
   final service = ref.watch(notificationServiceProvider);
   if (!service.supported) return;
 
   final settings = ref.watch(notificationSettingsProvider);
+
+  // Tugas jadi syarat minimal: kalau daftar tugas belum termuat, kemungkinan
+  // besar sesi baru dimulai dan menjadwalkan sekarang hanya akan memasang
+  // rencana setengah jadi yang sebentar lagi ditimpa.
   final tasks = ref.watch(tasksProvider).value;
   if (tasks == null) return;
 
+  final now = DateTime.now();
+
+  final schedules = ref.watch(classSchedulesProvider).value ?? const <ClassSchedule>[];
+  final recurring = ref.watch(recurringExpensesProvider).value ?? const <RecurringExpense>[];
+  final foods = ref.watch(foodLogsProvider).value ?? const <FoodLog>[];
+  final restDays = ref.watch(restDaysProvider).value ?? const <RestDay>[];
+  final activeDates = ref.watch(activeDatesProvider);
+  final streak = ref.watch(workoutStreakProvider).value;
+
+  final batasKebiasaan = now.subtract(const Duration(days: kJendelaKebiasaanHari));
+
+  final input = ReminderInput(
+    tasks: tasks,
+    schedules: schedules,
+    recurring: recurring,
+    streakHari: streak?.current ?? 0,
+    bergerakHariIni: activeDates.any((date) => _tanggalSama(date, now)),
+    istirahatHariIni: restDays.any((day) => _tanggalSama(day.restOn, now)),
+    pernahCatatMakan: foods.any((food) => food.loggedOn.isAfter(batasKebiasaan)),
+    sudahCatatMakanHariIni: foods.any((food) => _tanggalSama(food.loggedOn, now)),
+  );
+
   unawaited(
-    service.syncTaskReminders(
-      tasks,
-      aktif: settings.aktif,
-      menitDalamHari: settings.menitDalamHari,
+    service.syncReminders(
+      planReminders(data: input, settings: settings, now: now),
     ),
   );
 });

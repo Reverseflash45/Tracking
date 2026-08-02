@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../assistant/domain/preset_answers.dart' show questionCatalog;
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notification_settings_controller.dart';
+import '../../../core/notifications/smart_reminders.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -416,10 +417,10 @@ class _NotificationSettingsCard extends ConsumerWidget {
               child: const Icon(Icons.alarm, size: 18, color: AppColors.profile),
             ),
             title: const Text(
-              'Pengingat deadline',
+              'Pengingat',
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
-            subtitle: const Text('Diingatkan H-7, H-3, H-1, dan hari-H'),
+            subtitle: const Text('Saklar utama untuk semua jenis di bawah'),
             activeThumbColor: AppColors.profile,
             value: settings.aktif,
             onChanged: (value) async {
@@ -440,6 +441,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
             enabled: settings.aktif,
             leading: const SizedBox(width: 34, child: Icon(Icons.schedule, size: 18)),
             title: const Text('Jam pengingat'),
+            subtitle: const Text('Untuk deadline tugas dan tagihan rutin'),
             trailing: Text(
               settings.jam.format(context),
               style: const TextStyle(fontWeight: FontWeight.w700),
@@ -452,6 +454,50 @@ class _NotificationSettingsCard extends ConsumerWidget {
               if (picked != null) await controller.setJam(picked);
             },
           ),
+          const Divider(height: 1),
+          for (final kind in ReminderKind.values)
+            SwitchListTile(
+              secondary: SizedBox(width: 34, child: Icon(kind.icon, size: 18)),
+              title: Text(kind.label, style: const TextStyle(fontSize: 14)),
+              subtitle: Text(_kapanBerbunyi(kind, settings), style: const TextStyle(fontSize: 11.5)),
+              dense: true,
+              activeThumbColor: AppColors.profile,
+              value: settings.jenisAktif.contains(kind),
+              // Saklar utama mati berarti tidak ada yang akan berbunyi apa pun
+              // pilihannya di sini — jadi jangan biarkan diubah dan menjanjikan
+              // sesuatu yang tidak terjadi.
+              onChanged:
+                  settings.aktif ? (value) => controller.setJenis(kind, value) : null,
+            ),
+          if (settings.jenisAktif.contains(ReminderKind.kelas)) ...[
+            const Divider(height: 1),
+            ListTile(
+              enabled: settings.aktif,
+              leading: const SizedBox(width: 34, child: Icon(Icons.timer_outlined, size: 18)),
+              title: const Text('Jeda sebelum kelas', style: TextStyle(fontSize: 14)),
+              dense: true,
+              trailing: Text(
+                '${settings.menitSebelumKelas} menit',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              onTap: () async {
+                final picked = await showDialog<int>(
+                  context: context,
+                  builder: (context) => SimpleDialog(
+                    title: const Text('Ingatkan berapa menit sebelumnya?'),
+                    children: [
+                      for (final menit in const [10, 15, 30, 45, 60])
+                        SimpleDialogOption(
+                          onPressed: () => Navigator.pop(context, menit),
+                          child: Text('$menit menit'),
+                        ),
+                    ],
+                  ),
+                );
+                if (picked != null) await controller.setMenitSebelumKelas(picked);
+              },
+            ),
+          ],
           const Divider(height: 1),
           ListTile(
             leading: const SizedBox(width: 34, child: Icon(Icons.send_outlined, size: 18)),
@@ -474,4 +520,15 @@ class _NotificationSettingsCard extends ConsumerWidget {
       ),
     );
   }
+
+  /// Kapan tiap jenis benar-benar berbunyi — supaya saklarnya bisa dipilih
+  /// tanpa harus menyalakannya dulu dan menunggu semalam untuk tahu.
+  static String _kapanBerbunyi(ReminderKind kind, NotificationSettings settings) =>
+      switch (kind) {
+        ReminderKind.deadline => 'H-7, H-3, H-1, dan hari-H',
+        ReminderKind.kelas => '${settings.menitSebelumKelas} menit sebelum kelas dimulai',
+        ReminderKind.streak => 'Jam 19.00, kalau hari itu belum ada gerakan',
+        ReminderKind.tagihan => 'Sehari sebelum jatuh tempo',
+        ReminderKind.catatMakan => 'Jam 20.30, kalau belum ada catatan makan',
+      };
 }
