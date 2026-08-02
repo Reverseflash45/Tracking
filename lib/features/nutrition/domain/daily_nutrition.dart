@@ -3,6 +3,14 @@ import 'food_log.dart';
 /// Ukuran satu gelas air, dipakai tombol tambah cepat.
 const int kGlassMl = 250;
 
+/// Patokan minum harian, dipakai untuk menilai "cukup" atau "kurang".
+///
+/// Dua liter itu anjuran umum, bukan hitungan untuk tubuhmu — kebutuhan
+/// sebenarnya bergantung berat badan dan aktivitas. Halaman Kalkulator Kalori
+/// menghitung angka yang lebih pas (35 ml per kg); yang ini dipakai di tempat
+/// yang tidak punya profil tubuh untuk disandarkan.
+const int kTargetAirMl = 2000;
+
 DateTime _dayKey(DateTime date) => DateTime(date.year, date.month, date.day);
 
 /// Total asupan satu hari, sudah dikelompokkan per waktu makan.

@@ -75,6 +75,7 @@ final courseGradesProvider = Provider.autoDispose<AsyncValue<List<CourseGrade>>>
         courseName: course.name,
         sks: course.sks,
         semester: course.semester,
+        finalLetter: course.finalLetter,
         components: perMatkul[course.id] ?? const [],
       ),
   ]);

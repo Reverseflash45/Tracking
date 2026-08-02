@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/academic/presentation/grades_page.dart';
+import '../../features/academic/presentation/khs_import_page.dart';
 import '../../features/academic/presentation/krs_import_page.dart';
 import '../../features/academic/presentation/recurring_tasks_page.dart';
 import '../../features/academic/presentation/schedule_form_page.dart';
@@ -36,6 +37,7 @@ import '../../features/workout/presentation/workout_form_page.dart';
 import '../../features/workout/presentation/workout_history_page.dart';
 import '../../features/workout/presentation/workout_home_page.dart';
 import '../../features/workout/presentation/workout_progress_page.dart';
+import '../../features/wishlist/presentation/wishlist_page.dart';
 import '../../features/wrapped/presentation/wrapped_page.dart';
 import '../supabase/supabase_client_provider.dart';
 import '../widgets/app_shell.dart';
@@ -83,6 +85,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       path: 'recurring',
                       builder: (context, state) => const RecurringPage(),
                     ),
+                    GoRoute(
+                      path: 'wishlist',
+                      builder: (context, state) => const WishlistPage(),
+                    ),
                   ],
                 ),
               ],
@@ -112,6 +118,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   // dari sini — bukan karena keduanya soal jadwal.
                   path: 'grades',
                   builder: (context, state) => const GradesPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'import',
+                      builder: (context, state) => const KhsImportPage(),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: ':id/edit',

@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 
 import '../../academic/data/models/class_schedule.dart' show weekDayName;
 import '../../academic/data/models/task.dart';
+import '../../academic/domain/grade.dart';
 import '../../finance/domain/finance_stats.dart';
 import '../../finance/domain/transaction.dart';
+import '../../nutrition/domain/daily_nutrition.dart' show kGlassMl, kTargetAirMl;
 import '../../nutrition/domain/food_log.dart';
 import '../../run/data/run_repository.dart';
 import '../../run/domain/run_stats.dart';
@@ -63,6 +65,9 @@ class QuestionInput {
     this.foods = const [],
     this.transactions = const [],
     this.sleep = const [],
+    this.waters = const [],
+    this.grades = const [],
+    this.gradeScale = GradeScale.plusMinus,
     this.finance,
   });
 
@@ -73,6 +78,14 @@ class QuestionInput {
   final List<FoodLog> foods;
   final List<Transaction> transactions;
   final List<SleepLog> sleep;
+  final List<WaterLog> waters;
+
+  /// Nilai per mata kuliah, lintas semester.
+  final List<CourseGrade> grades;
+
+  /// Skala huruf yang dipilih user — menentukan bobot IP tiap huruf.
+  final GradeScale gradeScale;
+
   final FinanceSummary? finance;
 
   DateTime get today => DateTime(now.year, now.month, now.day);
@@ -789,7 +802,242 @@ final List<Question> questionCatalog = [
       );
     },
   ),
+
+  // --- Nilai ---
+  //
+  // Semuanya memakai seluruh riwayat, bukan jendela 30 hari: nilai bergerak
+  // dalam hitungan semester, dan memotongnya di sebulan terakhir akan membuat
+  // hampir semua jawabannya kosong.
+  Question(
+    id: 'ipk-sekarang',
+    text: 'Berapa IPK-ku sekarang?',
+    category: QuestionCategory.akademik,
+    answer: (input) {
+      final ringkasan = summarizeGrades(input.grades, input.gradeScale);
+      final ipk = ringkasan.ip;
+
+      if (ipk == null) {
+        return const Answer.kosong(
+          'Belum ada mata kuliah yang punya sks sekaligus nilai. Isi lewat '
+          'halaman Nilai, atau foto KHS-mu.',
+        );
+      }
+
+      final belum = ringkasan.matkulTotal - ringkasan.matkulDinilai;
+      return Answer(
+        ipk.toStringAsFixed(2),
+        'Dari ${ringkasan.sksDinilai} sks di ${ringkasan.matkulDinilai} mata '
+        'kuliah.'
+        '${belum > 0 ? ' $belum mata kuliah lain belum punya sks atau nilai, jadi belum ikut dihitung.' : ''}',
+        tone: ipk >= 3.5 ? AnswerTone.bagus : AnswerTone.netral,
+      );
+    },
+  ),
+  Question(
+    id: 'matkul-terbaik',
+    text: 'Mata kuliah apa yang nilaiku paling bagus?',
+    category: QuestionCategory.akademik,
+    answer: (input) {
+      final dinilai = _matkulDinilai(input);
+      if (dinilai.isEmpty) {
+        return const Answer.kosong('Belum ada nilai yang tercatat.');
+      }
+
+      dinilai.sort((a, b) => b.bobot.compareTo(a.bobot));
+      final juara = dinilai.first;
+      return Answer(
+        juara.nama,
+        '${juara.huruf} — bobot ${juara.bobot.toStringAsFixed(2)}. '
+        'Dari ${dinilai.length} mata kuliah yang sudah ada nilainya.',
+        tone: AnswerTone.bagus,
+      );
+    },
+  ),
+  Question(
+    id: 'matkul-terlemah',
+    text: 'Mata kuliah apa yang nilaiku paling jelek?',
+    category: QuestionCategory.akademik,
+    answer: (input) {
+      final dinilai = _matkulDinilai(input);
+      if (dinilai.isEmpty) {
+        return const Answer.kosong('Belum ada nilai yang tercatat.');
+      }
+
+      dinilai.sort((a, b) => a.bobot.compareTo(b.bobot));
+      final terendah = dinilai.first;
+      final rata = dinilai.fold(0.0, (jumlah, m) => jumlah + m.bobot) / dinilai.length;
+      final selisih = rata - terendah.bobot;
+
+      return Answer(
+        terendah.nama,
+        '${terendah.huruf} — bobot ${terendah.bobot.toStringAsFixed(2)}, '
+        '${selisih.toStringAsFixed(2)} di bawah rata-ratamu '
+        '(${rata.toStringAsFixed(2)}).',
+        tone: terendah.bobot < 2 ? AnswerTone.perhatian : AnswerTone.netral,
+      );
+    },
+  ),
+
+  // --- Air ---
+  Question(
+    id: 'air-harian',
+    text: 'Rata-rata aku minum berapa sehari?',
+    category: QuestionCategory.makan,
+    answer: (input) {
+      final perHari = <DateTime, int>{};
+      for (final log in input.waters) {
+        if (!input.baru(log.loggedOn)) continue;
+        final hari = DateTime(log.loggedOn.year, log.loggedOn.month, log.loggedOn.day);
+        perHari[hari] = (perHari[hari] ?? 0) + log.ml;
+      }
+
+      if (perHari.isEmpty) {
+        return const Answer.kosong(
+          'Belum ada catatan minum dalam $kPresetDays hari terakhir.',
+        );
+      }
+
+      // Dibagi hari yang tercatat, bukan 30. Hari yang lupa dicatat bukan hari
+      // kamu tidak minum, dan menghitungnya nol akan menuduhmu dehidrasi.
+      final total = perHari.values.reduce((a, b) => a + b);
+      final rata = total / perHari.length;
+      final gelas = rata / kGlassMl;
+
+      return Answer(
+        '${rata.round()} ml',
+        'Sekitar ${gelas.toStringAsFixed(1)} gelas per hari, dari '
+        '${perHari.length} hari yang tercatat. Patokan umum $kTargetAirMl ml.',
+        tone: rata >= kTargetAirMl ? AnswerTone.bagus : AnswerTone.perhatian,
+      );
+    },
+  ),
+  Question(
+    id: 'hari-kurang-air',
+    text: 'Berapa hari aku kurang minum?',
+    category: QuestionCategory.makan,
+    answer: (input) {
+      final perHari = <DateTime, int>{};
+      for (final log in input.waters) {
+        if (!input.baru(log.loggedOn)) continue;
+        final hari = DateTime(log.loggedOn.year, log.loggedOn.month, log.loggedOn.day);
+        perHari[hari] = (perHari[hari] ?? 0) + log.ml;
+      }
+
+      if (perHari.isEmpty) {
+        return const Answer.kosong(
+          'Belum ada catatan minum dalam $kPresetDays hari terakhir.',
+        );
+      }
+
+      final kurang = perHari.values.where((ml) => ml < kTargetAirMl).length;
+      if (kurang == 0) {
+        return Answer(
+          'Tidak ada',
+          'Semua ${perHari.length} hari yang tercatat mencapai $kTargetAirMl ml.',
+          tone: AnswerTone.bagus,
+        );
+      }
+
+      return Answer(
+        '$kurang hari',
+        'Dari ${perHari.length} hari yang tercatat, $kurang di bawah '
+        '$kTargetAirMl ml. Hari yang tidak kamu catat tidak ikut dihitung.',
+        tone: kurang > perHari.length / 2 ? AnswerTone.perhatian : AnswerTone.netral,
+      );
+    },
+  ),
+
+  // --- Lintas ---
+  Question(
+    id: 'nilai-vs-telat',
+    text: 'Matkul yang tugasnya sering telat, nilainya lebih jelek?',
+    category: QuestionCategory.lintas,
+    answer: (input) {
+      final bobotPerMatkul = <String, ({String nama, double bobot})>{};
+      for (final course in input.grades) {
+        final step = course.huruf(input.gradeScale);
+        if (step == null) continue;
+        bobotPerMatkul[course.courseId] = (nama: course.courseName, bobot: step.bobot);
+      }
+      if (bobotPerMatkul.isEmpty) {
+        return const Answer.kosong(
+          'Belum ada nilai yang tercatat. Isi lewat halaman Nilai dulu.',
+        );
+      }
+
+      final selesai = <String, int>{};
+      final telat = <String, int>{};
+      for (final task in input.tasks) {
+        final courseId = task.courseId;
+        final done = task.completedAt;
+        if (courseId == null || done == null) continue;
+        if (!bobotPerMatkul.containsKey(courseId)) continue;
+
+        selesai[courseId] = (selesai[courseId] ?? 0) + 1;
+        if (done.isAfter(task.deadline)) telat[courseId] = (telat[courseId] ?? 0) + 1;
+      }
+
+      final seringTelat = <double>[];
+      final jarangTelat = <double>[];
+      for (final entry in bobotPerMatkul.entries) {
+        final jumlah = selesai[entry.key] ?? 0;
+        // Satu tugas tidak cukup untuk menyebut sebuah mata kuliah "sering
+        // telat" — itu satu kejadian, bukan kebiasaan.
+        if (jumlah < 2) continue;
+        final rasio = (telat[entry.key] ?? 0) / jumlah;
+        (rasio >= _ambangSeringTelat ? seringTelat : jarangTelat).add(entry.value.bobot);
+      }
+
+      if (seringTelat.length < 2 || jarangTelat.length < 2) {
+        return const Answer.kosong(
+          'Butuh minimal 2 mata kuliah yang tugasnya sering telat dan 2 yang '
+          'jarang — masing-masing dengan sedikitnya 2 tugas selesai dan nilai '
+          'yang sudah keluar.',
+        );
+      }
+
+      final rataTelat = seringTelat.reduce((a, b) => a + b) / seringTelat.length;
+      final rataTepat = jarangTelat.reduce((a, b) => a + b) / jarangTelat.length;
+      final selisih = rataTepat - rataTelat;
+
+      if (selisih.abs() < 0.25) {
+        return Answer(
+          'Tidak berbeda',
+          'Selisihnya ${selisih.abs().toStringAsFixed(2)} poin bobot — terlalu '
+          'kecil untuk berarti. Dari ${seringTelat.length} matkul sering telat '
+          'dan ${jarangTelat.length} yang jarang.',
+        );
+      }
+
+      return Answer(
+        selisih > 0
+            ? '${selisih.toStringAsFixed(2)} poin lebih rendah'
+            : '${selisih.abs().toStringAsFixed(2)} poin lebih tinggi',
+        'Matkul yang tugasnya sering telat rata-rata bobot '
+        '${rataTelat.toStringAsFixed(2)}, yang jarang '
+        '${rataTepat.toStringAsFixed(2)}. Ini pola, bukan sebab-akibat — matkul '
+        'yang sulit bisa membuat tugasnya telat sekaligus nilainya turun. Dari '
+        '${seringTelat.length} dan ${jarangTelat.length} mata kuliah.',
+        tone: selisih > 0 ? AnswerTone.perhatian : AnswerTone.netral,
+      );
+    },
+  ),
 ];
+
+/// Sebuah mata kuliah disebut "sering telat" kalau sepertiga tugasnya atau
+/// lebih diselesaikan lewat deadline.
+const double _ambangSeringTelat = 1 / 3;
+
+/// Mata kuliah yang sudah punya nilai, beserta bobot IP-nya.
+List<({String nama, String huruf, double bobot})> _matkulDinilai(QuestionInput input) {
+  final hasil = <({String nama, String huruf, double bobot})>[];
+  for (final course in input.grades) {
+    final step = course.huruf(input.gradeScale);
+    if (step == null) continue;
+    hasil.add((nama: course.courseName, huruf: step.huruf, bobot: step.bobot));
+  }
+  return hasil;
+}
 
 /// Pertanyaan dikelompokkan per kategori, urutan kategori mengikuti enum.
 Map<QuestionCategory, List<Question>> get questionsByCategory {
