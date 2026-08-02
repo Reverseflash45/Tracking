@@ -29,6 +29,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
   final Set<int> _selected = {};
 
   final _semesterController = TextEditingController();
+  GradeScale? _skalaTertebak;
   String? _rawText;
   bool _scanning = false;
   bool _saving = false;
@@ -64,16 +65,22 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
       _scanning = false;
       _rawText = hasil.text;
       _entries = entries;
+      _skalaTertebak = tebakSkala(entries);
+      // Baris yang nilainya belum terbaca tidak ikut tercentang: yang tersimpan
+      // harus yang sudah pasti.
       _selected
         ..clear()
-        ..addAll(List.generate(entries.length, (i) => i));
+        ..addAll([
+          for (var i = 0; i < entries.length; i++)
+            if (entries[i].terbaca) i,
+        ]);
       // Semester yang sudah kamu ketik tidak ditimpa tebakan.
       if (semester != null && _semesterController.text.trim().isEmpty) {
         _semesterController.text = semester;
       }
       if (entries.isEmpty) {
-        _error = 'Tidak ada baris nilai yang terbaca. Pastikan kolom huruf '
-            'mutunya terlihat jelas di foto.';
+        _error = 'Tidak ada baris nilai yang terbaca. Pastikan kolom sks, '
+            'nilai, dan bobot terlihat jelas di foto.';
       }
     });
   }
@@ -85,7 +92,13 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
       showDragHandle: true,
       builder: (context) => _EditEntrySheet(entry: _entries[index]),
     );
-    if (hasil != null) setState(() => _entries[index] = hasil);
+    if (hasil == null) return;
+    setState(() {
+      _entries[index] = hasil;
+      // Baru saja diperbaiki tangan, jadi sudah pasti — langsung ikut tersimpan
+      // tanpa perlu dicentang lagi.
+      if (hasil.terbaca) _selected.add(index);
+    });
   }
 
   Future<void> _save() async {
@@ -102,6 +115,10 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
 
       for (final index in dipilih) {
         final entry = _entries[index];
+        final huruf = entry.huruf;
+        // Baris tanpa huruf tidak bisa dicentang, tapi dijaga di sini juga:
+        // menyimpan nilai kosong akan menimpa nilai lama dengan ketiadaan.
+        if (huruf == null) continue;
 
         // ensureCourse mencocokkan nama lebih dulu, jadi mata kuliah yang sudah
         // ada dari jadwal ikut terisi nilainya alih-alih dibuat kembar.
@@ -112,7 +129,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
           sks: entry.sks,
           semester: semester.isEmpty ? null : semester,
         );
-        await repo.setCourseFinalLetter(courseId, entry.huruf);
+        await repo.setCourseFinalLetter(courseId, huruf);
       }
 
       ref.invalidate(coursesProvider);
@@ -264,6 +281,42 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                   ),
                 ],
 
+                if (_entries.isNotEmpty && _skalaTertebak != null && _skalaTertebak != scale) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Card(
+                    color: _color.withValues(alpha: 0.10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'KHS ini memakai skala ${_skalaTertebak!.label}',
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Setelanmu sekarang ${scale.label}. Skala menentukan '
+                            'bobot tiap huruf, jadi IPK-mu akan salah kalau tidak '
+                            'cocok.',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              height: 1.4,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          FilledButton.tonal(
+                            onPressed: () =>
+                                ref.read(gradeScaleProvider.notifier).set(_skalaTertebak!),
+                            child: Text('Ganti ke ${_skalaTertebak!.label}'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
                 if (_entries.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.lg),
                   TextField(
@@ -306,7 +359,6 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                   for (var i = 0; i < _entries.length; i++)
                     _EntryTile(
                       entry: _entries[i],
-                      scale: scale,
                       selected: _selected.contains(i),
                       onToggle: () => setState(() {
                         if (!_selected.remove(i)) _selected.add(i);
@@ -361,14 +413,12 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
 class _EntryTile extends StatelessWidget {
   const _EntryTile({
     required this.entry,
-    required this.scale,
     required this.selected,
     required this.onToggle,
     required this.onEdit,
   });
 
   final KhsEntry entry;
-  final GradeScale scale;
   final bool selected;
   final VoidCallback onToggle;
   final VoidCallback onEdit;
@@ -376,33 +426,40 @@ class _EntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final janggal = entry.janggal(scale);
+    final belumTerbaca = !entry.terbaca;
+    final warna = belumTerbaca ? colorScheme.error : _color;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onToggle,
+        // Baris yang nilainya belum terbaca tidak bisa dicentang — yang bisa
+        // dilakukan cuma memperbaikinya, jadi ketukannya langsung ke sana.
+        onTap: belumTerbaca ? onEdit : onToggle,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
             children: [
-              Checkbox(value: selected, onChanged: (_) => onToggle(), activeColor: _color),
+              Checkbox(
+                value: selected,
+                onChanged: belumTerbaca ? null : (_) => onToggle(),
+                activeColor: _color,
+              ),
               Container(
                 width: 34,
                 height: 34,
                 alignment: Alignment.center,
                 margin: const EdgeInsets.only(right: 10),
                 decoration: BoxDecoration(
-                  color: _color.withValues(alpha: 0.12),
+                  color: warna.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(9),
                 ),
                 child: Text(
-                  entry.huruf,
-                  style: const TextStyle(
+                  entry.huruf ?? '?',
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 13,
-                    color: _color,
+                    color: warna,
                   ),
                 ),
               ),
@@ -421,11 +478,19 @@ class _EntryTile extends StatelessWidget {
                     Text(
                       [
                         entry.sks == null ? 'sks belum terbaca' : '${entry.sks} sks',
-                        if (entry.bobot != null) 'bobot ${entry.bobot!.toStringAsFixed(2)}',
+                        if (entry.bobot != null)
+                          'bobot ${_angkaRapi(entry.bobot!)}',
+                        if (entry.dariBobot) 'nilai dari bobot',
                       ].join(' · '),
                       style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                     ),
-                    if (janggal) ...[
+                    if (belumTerbaca) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Nilainya tidak terbaca — ketuk untuk mengisi',
+                        style: TextStyle(fontSize: 10.5, color: colorScheme.error),
+                      ),
+                    ] else if (entry.janggal) ...[
                       const SizedBox(height: 2),
                       Text(
                         'Huruf dan bobotnya tidak cocok — periksa dulu',
@@ -448,6 +513,11 @@ class _EntryTile extends StatelessWidget {
   }
 }
 
+/// Bobot ditulis tanpa desimal kalau memang bulat: KHS menulis "8", bukan
+/// "8.00", dan menampilkannya berbeda dari sumbernya bikin ragu.
+String _angkaRapi(double nilai) =>
+    nilai == nilai.roundToDouble() ? nilai.round().toString() : nilai.toStringAsFixed(2);
+
 class _EditEntrySheet extends StatefulWidget {
   const _EditEntrySheet({required this.entry});
 
@@ -463,7 +533,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
   late final TextEditingController _sksController =
       TextEditingController(text: widget.entry.sks?.toString() ?? '');
 
-  late String _huruf = widget.entry.huruf;
+  late String? _huruf = widget.entry.huruf;
 
   @override
   void dispose() {
@@ -507,6 +577,16 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
             ),
             const SizedBox(height: AppSpacing.md),
             const Text('Huruf mutu', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+            if (_huruf == null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Tidak terbaca dari foto. Lihat KHS aslinya untuk baris ini.',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: 6,
@@ -533,6 +613,12 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
               onPressed: () {
                 final nama = _nameController.text.trim();
                 if (nama.isEmpty) return;
+                if (_huruf == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Pilih dulu huruf mutunya')),
+                  );
+                  return;
+                }
                 Navigator.pop(
                   context,
                   widget.entry.copyWith(
