@@ -120,7 +120,7 @@ class FinancePage extends ConsumerWidget {
                       margin: EdgeInsets.zero,
                       clipBehavior: Clip.antiAlias,
                       child: ListTile(
-                        onTap: () => context.push('/finance/wishlist'),
+                        onTap: () => context.push('/wishlist'),
                         dense: true,
                         leading: Container(
                           padding: const EdgeInsets.all(8),

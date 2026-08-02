@@ -187,28 +187,46 @@ class _HeroHeader extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Halo, $displayName!',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 20,
+                    // Dikecilkan hanya kalau kurang tempat. Tiga tombol di
+                    // kanan menyisakan ruang tipis di layar 360dp, dan nama
+                    // yang patah jadi dua baris atau tanggal yang terpotong
+                    // di tengah lebih buruk daripada huruf yang sedikit kecil.
+                    _Menyusut(
+                      child: Text(
+                        'Halo, $displayName!',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 20,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      _dayFormat.format(DateTime.now()),
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
+                    _Menyusut(
+                      child: Text(
+                        _dayFormat.format(DateTime.now()),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              // Cari dan Target ditaruh di header karena keduanya berlaku untuk
-              // seluruh app, bukan milik satu bagian saja.
+              // Target, Wishlist, dan Cari ditaruh di header karena ketiganya
+              // berlaku untuk seluruh app, bukan milik satu bagian saja.
+              // Cari tetap paling kanan supaya letaknya tidak berpindah.
               HeroIconButton(
                 icon: Icons.flag_outlined,
                 tooltip: 'Target',
                 onPressed: () => context.push('/goals'),
+              ),
+              const SizedBox(width: 6),
+              HeroIconButton(
+                icon: Icons.favorite_outline,
+                tooltip: 'Wishlist',
+                onPressed: () => context.push('/wishlist'),
               ),
               const SizedBox(width: 6),
               HeroIconButton(
@@ -254,6 +272,23 @@ class _HeroHeader extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Menampilkan isinya seukuran aslinya, dan baru mengecilkannya kalau tidak
+/// muat. Tidak pernah memotong maupun memindahkan teks ke baris berikutnya.
+class _Menyusut extends StatelessWidget {
+  const _Menyusut({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: child,
     );
   }
 }
