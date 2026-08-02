@@ -51,8 +51,142 @@ Dr. ANDI ESTETIONO, S.E.. M.M.
 196807162016123101
 ''';
 
+/// KHS semester Ganjil, OCR-nya jauh lebih rusak: nomor urut menempel dengan
+/// kode dan awal nama ("1AGI101AGAMA"), banyak baris kehilangan kolom sks,
+/// beberapa kehilangan kolom nilai, dan tiga baris kehilangan semuanya.
+const _khsGanjil = '''
+23.10  1:46:33  R 5,82  (76
+KB/S
+G  ahasiswa.unair.ac.id  +
+UNIVERSITAS AIRLANGGA
+FAKULTAS VOKASI
+D4 - TEKNIK INFORMATIKA
+JL. DARMAWANGSA DALAM NO. 28-30 ( KAMPUS B UNAIR )
+SURABAYA 60286, 60286
+Telp. 031-5033869, 031-5053156, Fax. 031-5053156
+http://www.vokasi.unair.ac.id, info
+@vokasi.unair.ac.id
+KARTU HASIL STUDI TAHUN AJARAN 2024/2025 SEMESTER GANJIL
+NIM  :  434241117
+Nama Mahasiswa:  RAFI FERNANDITO SETIAVWAN
+Dosen Wali  ETO WURYANTO, Drs., DEA
+NO. KODE MK  NAMA MATA KULIAH  sks NILAI BOBOT
+1AGI101AGAMA ISLAMI  2  A  8
+2  BAI101BAHASA INDONESIA  2  AB
+MAD111 MATEMATIKA DASAR  AB  7
+4  MAL106 ALJABAR LINIER
+5 MNM106  KOMUNIKASI DAN PENGEMBANGAN DIRI
+6 MNM107  PENGANTAR KOLABORASI KEILMUAN  2
+7  NOP103  PANCASILA  8
+NOP104  KEWARGANEGARAAN  AB
+PHP103| LOGIKA DAN PEMIKIRAN KRITIS  AB  7
+10  SIP107I DATA DAN PUSTAKA
+Total sks dan Bobot  20  72
+Indeks Prestasi Semester  3.
+sks maksimal yang boleh diambil semester depan  24 sks
+Tanpa mata kuliah dengan nilai E, hasil studi sampai
+semester ini adalah:
+JUMLAH sks YANG TELAH DITEMPUH = 20, dengan IPK=3.6
+Keterangan: (") MBKM Outbond
+Surabaya, 02 Agustus 2026
+Wakil Dekan 1,
+Lembar:
+1. untuk mahasiswa
+2. untuk dosen wali
+3. untuk departemen
+Dr. ANDI ESTETIONO. S.E. M.M.
+196807162016123101
+''';
+
 void main() {
-  group('KHS sungguhan — semua sepuluh baris kena', () {
+  group('KHS Ganjil — OCR paling rusak', () {
+    final hasil = parseKhs(_khsGanjil);
+
+    test('sepuluh baris, tidak lebih dan tidak kurang', () {
+      expect(hasil, hasLength(10));
+    });
+
+    test('nomor urut dan kode yang menempel dipisahkan dari nama', () {
+      // OCR menghapus spasinya: "1AGI101AGAMA ISLAMI".
+      expect(hasil[0].courseName, 'AGAMA ISLAMI');
+      expect(hasil[1].courseName, 'BAHASA INDONESIA');
+    });
+
+    test('sisa satu huruf setelah kode dibuang', () {
+      // "SIP107I" — huruf I itu sampah OCR, bukan awal nama.
+      expect(hasil[9].courseName, 'DATA DAN PUSTAKA');
+    });
+
+    test('baris yang kolom sks-nya hilang dihitung dari bobot', () {
+      // "MATEMATIKA DASAR AB 7" → 7 / 3,5 = 2 sks.
+      expect(hasil[2].courseName, 'MATEMATIKA DASAR');
+      expect(hasil[2].huruf, 'AB');
+      expect(hasil[2].sks, 2);
+      expect(hasil[2].sksDihitung, isTrue);
+
+      expect(hasil[8].courseName, 'LOGIKA DAN PEMIKIRAN KRITIS');
+      expect(hasil[8].sks, 2);
+    });
+
+    test('baris yang kehilangan seluruh kolom tetap muncul', () {
+      // Kode mata kuliahnya masih terbaca, jadi barisnya jelas ada. Dibuang
+      // diam-diam membuat kamu tidak tahu setengah KHS-mu hilang.
+      expect(hasil[3].courseName, 'ALJABAR LINIER');
+      expect(hasil[3].huruf, isNull);
+      expect(hasil[3].sks, isNull);
+
+      expect(hasil[4].courseName, 'KOMUNIKASI DAN PENGEMBANGAN DIRI');
+      expect(hasil[4].perluDiisi, isTrue);
+    });
+
+    test('sks tanpa nilai tetap terbaca sks-nya', () {
+      expect(hasil[5].courseName, 'PENGANTAR KOLABORASI KEILMUAN');
+      expect(hasil[5].sks, 2);
+      expect(hasil[5].huruf, isNull);
+    });
+
+    test('angka besar sendirian dibaca sebagai bobot, bukan sks', () {
+      // "PANCASILA 8" — 8 tidak mungkin jumlah sks satu mata kuliah.
+      expect(hasil[6].courseName, 'PANCASILA');
+      expect(hasil[6].sks, isNull);
+      expect(hasil[6].bobot, 8);
+    });
+
+    test('nilai tanpa sks tetap terbaca nilainya', () {
+      expect(hasil[7].courseName, 'KEWARGANEGARAAN');
+      expect(hasil[7].huruf, 'AB');
+      expect(hasil[7].sks, isNull);
+    });
+
+    test('baris ringkasan, identitas, dan alamat tidak ikut', () {
+      final nama = hasil.map((e) => e.courseName).join(' | ').toUpperCase();
+      expect(nama, isNot(contains('DARMAWANGSA')));
+      expect(nama, isNot(contains('TOTAL')));
+      expect(nama, isNot(contains('RAFI')));
+      expect(nama, isNot(contains('ESTETIONO')));
+      expect(nama, isNot(contains('TEKNIK INFORMATIKA')));
+    });
+
+    test('empat baris terisi penuh, sisanya minta diisi', () {
+      final penuh = hasil.where((e) => !e.perluDiisi).toList();
+      expect(penuh.map((e) => e.courseName), [
+        'AGAMA ISLAMI',
+        'BAHASA INDONESIA',
+        'MATEMATIKA DASAR',
+        'LOGIKA DAN PEMIKIRAN KRITIS',
+      ]);
+    });
+
+    test('skala kampus tertebak dari AB', () {
+      expect(tebakSkala(hasil), GradeScale.setengah);
+    });
+
+    test('semester tertebak', () {
+      expect(findSemester(_khsGanjil), '2024/2025 Ganjil');
+    });
+  });
+
+  group('KHS Genap — semua sepuluh baris kena', () {
     final hasil = parseKhs(_khsAsli);
 
     test('sepuluh baris, tidak lebih dan tidak kurang', () {
@@ -202,8 +336,17 @@ void main() {
   });
 
   group('yang harus dilewati', () {
-    test('baris tanpa ekor sks-nilai dilewati', () {
-      expect(parseKhs('TIF3204  Basis Data'), isEmpty);
+    test('baris berkode tanpa ekor apa pun tetap diterima', () {
+      // Sengaja: kode mata kuliahnya sudah cukup membuktikan barisnya baris
+      // nilai. Nilainya dikosongkan supaya kamu isi sendiri.
+      final hasil = parseKhs('TIF3204  Basis Data');
+      expect(hasil.single.courseName, 'Basis Data');
+      expect(hasil.single.perluDiisi, isTrue);
+    });
+
+    test('baris tanpa kode dan tanpa ekor dilewati', () {
+      // Tanpa kode, tidak ada apa pun yang membedakannya dari kalimat biasa.
+      expect(parseKhs('Basis Data Relasional'), isEmpty);
     });
 
     test('sks di luar batas wajar tidak dianggap sks', () {

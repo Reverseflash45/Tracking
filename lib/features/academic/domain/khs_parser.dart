@@ -1,25 +1,29 @@
 /// Menebak baris nilai dari teks hasil OCR foto KHS.
 ///
-/// Dibaca **dari kanan**, bukan dengan mencari angka di sembarang tempat. Tiga
-/// kolom terakhir KHS selalu berurutan `sks | NILAI | BOBOT`, dan urutan itu
-/// jauh lebih bisa diandalkan daripada isi kolomnya — nama mata kuliah panjang
-/// dan penuh angka, tapi ekornya selalu berbentuk sama.
+/// Tiga gagasan yang membuat ini bertahan terhadap OCR yang buruk:
 ///
-/// Kolom BOBOT di KHS adalah **sks × bobot huruf**, bukan bobot per sks: A
-/// dengan 2 sks tertulis 8, A dengan 3 sks tertulis 12. Itu yang membuatnya
-/// berguna: kalau huruf mutunya salah terbaca OCR — "BC" jadi "BO", "AB" jadi
-/// "AR" — hurufnya bisa dihitung balik dari bobot ÷ sks. Itu bukan tebakan,
-/// itu aritmetika dari dokumennya sendiri.
+/// 1. **Dibaca dari kanan.** Ekor baris KHS selalu `sks | NILAI | BOBOT`, dan
+///    urutan itu jauh lebih bisa diandalkan daripada isi kolomnya — nama mata
+///    kuliah panjang dan penuh angka, tapi ekornya selalu berbentuk sama.
+///
+/// 2. **Kolom bobot dipakai untuk menambal.** Di KHS Indonesia, BOBOT adalah
+///    `sks × bobot huruf`: A dengan 2 sks tertulis 8, AB dengan 2 sks tertulis
+///    7. Jadi kalau hurufnya rusak terbaca, dia bisa dihitung dari bobot ÷ sks;
+///    dan kalau justru kolom sks-nya yang hilang, sks bisa dihitung dari
+///    bobot ÷ bobot huruf. Itu bukan tebakan, itu aritmetika dari dokumennya.
+///
+/// 3. **Baris yang punya kode mata kuliah selalu ditampilkan**, walau seluruh
+///    ekornya hilang. Membuangnya diam-diam membuat kamu tidak tahu ada yang
+///    hilang — dan pada KHS yang OCR-nya buruk, itu bisa separuh isinya.
 library;
 
 import 'grade.dart';
 
 /// Baris yang jelas bukan baris nilai.
 ///
-/// "IPS" dan "IPK" ikut ditolak: baris itu berisi angka yang bentuknya persis
-/// seperti bobot sementara nama mata kuliahnya kosong. Alamat kampus juga —
-/// "(KAMPUS B UNAIR)" punya huruf B berdiri sendiri yang tanpa ini terbaca
-/// sebagai nilai B untuk mata kuliah bernama "JL. DARMAWANGSA DALAM NO. 28-30".
+/// Alamat kampus ikut ditolak: "(KAMPUS B UNAIR)" punya huruf B berdiri
+/// sendiri yang tanpa ini terbaca sebagai nilai B untuk mata kuliah bernama
+/// "JL. DARMAWANGSA DALAM NO. 28-30".
 const List<String> _rejectKeywords = [
   'indeks prestasi',
   'kartu hasil studi',
@@ -53,37 +57,37 @@ const List<String> _rejectKeywords = [
 const int kMaxSks = 6;
 
 /// Selisih yang masih dianggap sama saat mencocokkan bobot.
-const double _toleransiBobot = 0.05;
+const double _toleransi = 0.05;
 
-/// Semua bobot huruf yang dikenal, dari kedua skala.
-///
-/// Nilainya tidak pernah bertabrakan antar skala (3.5 hanya AB, 3.3 hanya B+),
-/// jadi sebuah angka bobot selalu menunjuk satu huruf — apa pun skala yang
-/// kebetulan sedang dipilih user.
-Map<double, String> get _bobotKeHuruf {
-  final hasil = <double, String>{};
+/// Tingkat untuk sebuah huruf, dicari di kedua skala.
+GradeStep? _step(String huruf) {
+  final cari = huruf.trim().toUpperCase();
   for (final scale in GradeScale.values) {
     for (final step in stepsFor(scale)) {
-      hasil.putIfAbsent(step.bobot, () => step.huruf);
+      if (step.huruf == cari) return step;
     }
   }
-  return hasil;
+  return null;
 }
 
 /// Huruf untuk sebuah bobot per sks, mis. 2.5 → "BC".
+///
+/// Bobot tidak pernah bertabrakan antar skala (3.5 hanya AB, 3.3 hanya B+),
+/// jadi sebuah angka selalu menunjuk satu huruf — apa pun skala yang kebetulan
+/// sedang dipilih user.
 String? hurufDariBobot(double bobot) {
-  for (final entry in _bobotKeHuruf.entries) {
-    if ((entry.key - bobot).abs() <= _toleransiBobot) return entry.value;
+  for (final scale in GradeScale.values) {
+    for (final step in stepsFor(scale)) {
+      if ((step.bobot - bobot).abs() <= _toleransi) return step.huruf;
+    }
   }
   return null;
 }
 
 /// Hitung huruf dari kolom bobot di KHS.
 ///
-/// Dua kebiasaan penulisan ditangani:
-/// - **Bobot total** (paling umum di KHS Indonesia): `sks × bobot huruf`, mis.
-///   8 untuk A dengan 2 sks. Dicoba lebih dulu.
-/// - **Bobot per sks**: angka 0–4 langsung, mis. 4.00 untuk A.
+/// Dua kebiasaan penulisan ditangani: bobot total (`sks × bobot huruf`, paling
+/// umum) dicoba lebih dulu, lalu bobot per sks (angka 0–4 langsung).
 ///
 /// Null kalau tidak ada yang cocok — lebih baik kosong daripada huruf karangan.
 String? hurufDariKolomBobot({required int sks, required double bobot}) {
@@ -94,6 +98,21 @@ String? hurufDariKolomBobot({required int sks, required double bobot}) {
   return hurufDariBobot(bobot);
 }
 
+/// Hitung sks dari bobot dan hurufnya: bobot ÷ bobot huruf.
+///
+/// Dipakai waktu kolom sks-nya yang hilang. Nilai E tidak bisa dipakai —
+/// bobotnya nol, dan nol dibagi apa pun tidak memberi tahu apa-apa.
+int? sksDariBobot({required double bobot, required String huruf}) {
+  final step = _step(huruf);
+  if (step == null || step.bobot <= 0) return null;
+
+  final hasil = bobot / step.bobot;
+  final bulat = hasil.round();
+  if ((hasil - bulat).abs() > _toleransi) return null;
+  if (bulat < 1 || bulat > kMaxSks) return null;
+  return bulat;
+}
+
 /// Satu baris nilai yang berhasil ditebak.
 class KhsEntry {
   const KhsEntry({
@@ -102,6 +121,7 @@ class KhsEntry {
     this.sks,
     this.bobot,
     this.dariBobot = false,
+    this.sksDihitung = false,
   });
 
   final String courseName;
@@ -112,7 +132,7 @@ class KhsEntry {
   /// tahu barisnya ada.
   final String? huruf;
 
-  /// Null kalau kolom sks tidak terbaca.
+  /// Null kalau kolom sks tidak terbaca dan tidak bisa dihitung.
   final int? sks;
 
   /// Angka mentah di kolom BOBOT, apa adanya.
@@ -121,7 +141,13 @@ class KhsEntry {
   /// Hurufnya dihitung dari bobot ÷ sks, bukan dibaca langsung.
   final bool dariBobot;
 
+  /// Sks-nya dihitung dari bobot ÷ bobot huruf, bukan dibaca langsung.
+  final bool sksDihitung;
+
   bool get terbaca => huruf != null;
+
+  /// Masih perlu kamu isi sesuatu sebelum barisnya berguna.
+  bool get perluDiisi => huruf == null || sks == null;
 
   KhsEntry copyWith({String? courseName, String? huruf, int? sks}) => KhsEntry(
         courseName: courseName ?? this.courseName,
@@ -130,48 +156,66 @@ class KhsEntry {
         bobot: bobot,
         // Sudah dikoreksi tangan, jadi bukan lagi hasil hitungan.
         dariBobot: huruf == null && dariBobot,
+        sksDihitung: sks == null && sksDihitung,
       );
 
   /// Huruf yang terbaca tidak cocok dengan kolom bobotnya.
   ///
   /// Biasanya salah satunya salah baca. Ditandai supaya kamu periksa, bukan
-  /// diperbaiki diam-diam — app tidak tahu mana yang benar.
+  /// diperbaiki diam-diam — app tidak tahu mana yang benar. Angka yang memang
+  /// dipakai untuk menghitung tidak pernah ditandai: membandingkannya balik ke
+  /// dirinya sendiri selalu cocok, jadi tandanya tidak berarti apa-apa.
   bool get janggal {
     final nilai = huruf;
     final angka = bobot;
     final jumlahSks = sks;
-    if (nilai == null || angka == null || jumlahSks == null || dariBobot) return false;
+    if (nilai == null || angka == null || jumlahSks == null) return false;
+    if (dariBobot || sksDihitung) return false;
 
     final seharusnya = hurufDariKolomBobot(sks: jumlahSks, bobot: angka);
     return seharusnya != null && seharusnya != nilai;
   }
 }
 
-/// Kode mata kuliah, mis. "TIF3204" atau "SIl108" (OCR sering menukar I dan l).
-final RegExp _kodePattern = RegExp(r'\b[A-Za-z]{2,5}[-\s]?\d{3,6}\b');
+/// Kode mata kuliah, mungkin menempel dengan nomor urut di depan dan awal nama
+/// di belakang — OCR sering menghapus spasinya: "1AGI101AGAMA ISLAMI".
+final RegExp _kodeGabung = RegExp(r'^(\d{0,2})([A-Za-z]{2,5}\d{3,6})([A-Za-z].*)?$');
 
 final RegExp _angkaUtuh = RegExp(r'^\d{1,3}$');
 final RegExp _angkaDesimal = RegExp(r'^\d{1,3}[.,]\d{1,2}$');
 
-/// Token yang bentuknya seperti huruf mutu tapi bukan huruf yang dikenal.
-///
-/// Inilah bekas OCR yang salah baca: "BC" jadi "BO", "AB" jadi "AR". Diterima
-/// sebagai penanda posisi kolom nilai supaya bobotnya masih bisa dipakai.
-bool _mungkinHurufRusak(String token) =>
-    token.length <= 3 && RegExp(r'^[A-Za-z][A-Za-z+-]{0,2}$').hasMatch(token);
+/// Token pendek berhuruf: entah huruf mutu yang sah, entah bekas salah baca
+/// ("BC" jadi "BO", "AB" jadi "AR").
+final RegExp _tokenPendek = RegExp(r'^[A-Za-z][A-Za-z+-]{0,2}$');
 
-double? _keAngka(String token) {
-  if (_angkaUtuh.hasMatch(token)) return double.parse(token);
-  if (_angkaDesimal.hasMatch(token)) return double.parse(token.replaceAll(',', '.'));
-  return null;
+enum _Jenis { angka, huruf, rusak, kata }
+
+class _Token {
+  const _Token(this.jenis, {this.angka, this.huruf});
+
+  final _Jenis jenis;
+  final double? angka;
+  final String? huruf;
+
+  bool get sksMasukAkal =>
+      angka != null && angka! >= 1 && angka! <= kMaxSks && angka! == angka!.roundToDouble();
 }
 
-String? _keHuruf(String token) {
-  final besar = token.toUpperCase();
-  for (final huruf in semuaHuruf) {
-    if (huruf == besar) return huruf;
+_Token _klasifikasi(String token) {
+  if (_angkaUtuh.hasMatch(token)) return _Token(_Jenis.angka, angka: double.parse(token));
+  if (_angkaDesimal.hasMatch(token)) {
+    return _Token(_Jenis.angka, angka: double.parse(token.replaceAll(',', '.')));
   }
-  return null;
+
+  final besar = token.toUpperCase();
+  for (final scale in GradeScale.values) {
+    for (final step in stepsFor(scale)) {
+      if (step.huruf == besar) return _Token(_Jenis.huruf, huruf: step.huruf);
+    }
+  }
+
+  if (_tokenPendek.hasMatch(token)) return const _Token(_Jenis.rusak);
+  return const _Token(_Jenis.kata);
 }
 
 String _bersihkan(String raw) => raw
@@ -180,90 +224,193 @@ String _bersihkan(String raw) => raw
     .replaceAll(RegExp(r'^[\s.,:;\-–—/]+|[\s.,:;\-–—/]+$'), '')
     .trim();
 
-/// Hasil pembacaan tiga kolom terakhir.
-typedef _Ekor = ({int? sks, String? huruf, double? bobot, int dipakai});
+typedef _Ekor = ({
+  int? sks,
+  String? huruf,
+  double? bobot,
+  bool dariBobot,
+  bool sksDihitung,
+  int dipakai,
+});
 
-/// Baca `sks | NILAI | BOBOT` dari ujung kanan daftar token.
+const _Ekor _ekorKosong =
+    (sks: null, huruf: null, bobot: null, dariBobot: false, sksDihitung: false, dipakai: 0);
+
+/// Baca kolom-kolom di ujung kanan.
 ///
-/// [dipakai] adalah berapa token dari belakang yang habis terpakai, supaya
-/// sisanya bisa dijadikan nama mata kuliah.
-_Ekor? _bacaEkor(List<String> tokens) {
-  if (tokens.length < 2) return null;
+/// Pengumpulan berhenti di kata pertama — nama mata kuliah selalu berupa kata
+/// panjang, sedangkan sks, nilai, dan bobot semuanya pendek. Itu batas yang
+/// tidak perlu tahu ada berapa kolom yang selamat dari OCR.
+_Ekor _bacaEkor(List<String> tokens) {
+  final terkumpul = <_Token>[];
+  var dipakai = 0;
 
-  final terakhir = tokens.last;
-  final angkaTerakhir = _keAngka(terakhir);
-  final hurufTerakhir = _keHuruf(terakhir);
+  for (var i = tokens.length - 1; i >= 0 && terkumpul.length < 3; i--) {
+    final token = _klasifikasi(tokens[i]);
+    if (token.jenis == _Jenis.kata) break;
+    terkumpul.insert(0, token);
+    dipakai++;
+  }
 
-  // Bentuk: ... sks NILAI BOBOT
-  if (angkaTerakhir != null && tokens.length >= 3) {
-    final tengah = tokens[tokens.length - 2];
-    final sks = _keAngka(tokens[tokens.length - 3])?.toInt();
+  if (terkumpul.isEmpty) return _ekorKosong;
 
-    if (sks != null && sks >= 1 && sks <= kMaxSks) {
-      final huruf = _keHuruf(tengah);
-      if (huruf != null) {
-        return (sks: sks, huruf: huruf, bobot: angkaTerakhir, dipakai: 3);
-      }
-      // Kolom nilainya rusak, tapi posisinya benar — hurufnya dihitung dari
-      // bobot ÷ sks.
-      if (_mungkinHurufRusak(tengah)) {
+  // Bentuk lengkap: sks NILAI BOBOT.
+  if (terkumpul.length == 3) {
+    final a = terkumpul[0];
+    final b = terkumpul[1];
+    final c = terkumpul[2];
+
+    if (a.sksMasukAkal && c.jenis == _Jenis.angka) {
+      final sks = a.angka!.toInt();
+      if (b.jenis == _Jenis.huruf) {
         return (
           sks: sks,
-          huruf: hurufDariKolomBobot(sks: sks, bobot: angkaTerakhir),
-          bobot: angkaTerakhir,
+          huruf: b.huruf,
+          bobot: c.angka,
+          dariBobot: false,
+          sksDihitung: false,
+          dipakai: 3,
+        );
+      }
+      if (b.jenis == _Jenis.rusak) {
+        // Kolom nilainya rusak, tapi posisinya benar — hurufnya dihitung.
+        final huruf = hurufDariKolomBobot(sks: sks, bobot: c.angka!);
+        return (
+          sks: sks,
+          huruf: huruf,
+          bobot: c.angka,
+          dariBobot: huruf != null,
+          sksDihitung: false,
           dipakai: 3,
         );
       }
     }
+    // Bentuknya tidak dikenali; coba dua token terakhir saja.
+    terkumpul.removeAt(0);
+    dipakai--;
   }
 
-  // Bentuk: ... sks BOBOT (kolom nilai hilang sama sekali)
-  if (angkaTerakhir != null) {
-    final sks = _keAngka(tokens[tokens.length - 2])?.toInt();
-    if (sks != null && sks >= 1 && sks <= kMaxSks) {
-      final huruf = hurufDariKolomBobot(sks: sks, bobot: angkaTerakhir);
-      if (huruf != null) {
-        return (sks: sks, huruf: huruf, bobot: angkaTerakhir, dipakai: 2);
-      }
+  if (terkumpul.length == 2) {
+    final a = terkumpul[0];
+    final b = terkumpul[1];
+
+    // sks NILAI
+    if (a.sksMasukAkal && b.jenis == _Jenis.huruf) {
+      return (
+        sks: a.angka!.toInt(),
+        huruf: b.huruf,
+        bobot: null,
+        dariBobot: false,
+        sksDihitung: false,
+        dipakai: dipakai,
+      );
     }
-  }
-
-  // Bentuk: ... sks NILAI (kolom bobot hilang)
-  if (hurufTerakhir != null || _mungkinHurufRusak(terakhir)) {
-    final sks = _keAngka(tokens[tokens.length - 2])?.toInt();
-    if (sks != null && sks >= 1 && sks <= kMaxSks) {
-      return (sks: sks, huruf: hurufTerakhir, bobot: null, dipakai: 2);
+    // sks NILAI-rusak, tanpa bobot: tidak ada yang bisa dihitung.
+    if (a.sksMasukAkal && b.jenis == _Jenis.rusak) {
+      return (
+        sks: a.angka!.toInt(),
+        huruf: null,
+        bobot: null,
+        dariBobot: false,
+        sksDihitung: false,
+        dipakai: dipakai,
+      );
     }
+    // NILAI BOBOT — kolom sks-nya yang hilang, dan itu bisa dihitung balik.
+    if (a.jenis == _Jenis.huruf && b.jenis == _Jenis.angka) {
+      final sks = sksDariBobot(bobot: b.angka!, huruf: a.huruf!);
+      return (
+        sks: sks,
+        huruf: a.huruf,
+        bobot: b.angka,
+        dariBobot: false,
+        sksDihitung: sks != null,
+        dipakai: dipakai,
+      );
+    }
+    // sks BOBOT — kolom nilainya hilang sama sekali.
+    if (a.sksMasukAkal && b.jenis == _Jenis.angka) {
+      final sks = a.angka!.toInt();
+      final huruf = hurufDariKolomBobot(sks: sks, bobot: b.angka!);
+      return (
+        sks: sks,
+        huruf: huruf,
+        bobot: b.angka,
+        dariBobot: huruf != null,
+        sksDihitung: false,
+        dipakai: dipakai,
+      );
+    }
+
+    terkumpul.removeAt(0);
+    dipakai--;
   }
 
-  return null;
+  final satu = terkumpul.single;
+  if (satu.jenis == _Jenis.huruf) {
+    return (
+      sks: null,
+      huruf: satu.huruf,
+      bobot: null,
+      dariBobot: false,
+      sksDihitung: false,
+      dipakai: dipakai,
+    );
+  }
+  if (satu.sksMasukAkal) {
+    return (
+      sks: satu.angka!.toInt(),
+      huruf: null,
+      bobot: null,
+      dariBobot: false,
+      sksDihitung: false,
+      dipakai: dipakai,
+    );
+  }
+  if (satu.jenis == _Jenis.angka) {
+    // Angka besar di ujung: itu kolom bobot, bukan sks.
+    return (
+      sks: null,
+      huruf: null,
+      bobot: satu.angka,
+      dariBobot: false,
+      sksDihitung: false,
+      dipakai: dipakai,
+    );
+  }
+
+  return _ekorKosong;
 }
+
+typedef _Nama = ({String nama, bool punyaKode});
 
 /// Buang nomor urut dan kode mata kuliah, sisanya nama.
 ///
-/// Kodenya dicari di mana pun, bukan cuma di posisi kedua: OCR kadang
-/// menyelipkan sampah dari watermark di depan baris, dan itu tidak boleh
-/// membuat kode dan nomor urut ikut lolos ke dalam nama.
-String _namaDari(List<String> tokens) {
-  var indexKode = -1;
-  for (var i = 0; i < tokens.length; i++) {
-    if (_kodePattern.hasMatch(tokens[i])) {
-      indexKode = i;
-      break;
+/// Kodenya dicari di dalam token juga, bukan cuma sebagai token utuh: OCR
+/// sering menghapus spasi sehingga nomor urut, kode, dan awal nama menempel
+/// jadi satu — "1AGI101AGAMA ISLAMI".
+_Nama _bacaNama(List<String> tokens) {
+  final hasil = <String>[];
+  var punyaKode = false;
+
+  for (final token in tokens) {
+    final cocok = _kodeGabung.firstMatch(token);
+    if (cocok != null) {
+      punyaKode = true;
+      final ekor = cocok.group(3);
+      // Sisa satu huruf setelah kode hampir selalu sampah OCR ("SIP107I"),
+      // bukan awal nama — tidak ada mata kuliah yang namanya dimulai satu
+      // huruf berdiri sendiri.
+      if (ekor != null && ekor.length > 1) hasil.add(ekor);
+      continue;
     }
+
+    // Angka sebelum kode itu nomor urut baris.
+    if (!punyaKode && _angkaUtuh.hasMatch(token)) continue;
+    hasil.add(token);
   }
 
-  final sisa = <String>[];
-  for (var i = 0; i < tokens.length; i++) {
-    if (i == indexKode) continue;
-    // Angka sebelum kode mata kuliah itu nomor urut baris.
-    if (indexKode >= 0 && i < indexKode && _angkaUtuh.hasMatch(tokens[i])) continue;
-    // Tanpa kode sama sekali, angka di depan tetap nomor urut.
-    if (indexKode < 0 && sisa.isEmpty && _angkaUtuh.hasMatch(tokens[i])) continue;
-    sisa.add(tokens[i]);
-  }
-
-  return _bersihkan(sisa.join(' '));
+  return (nama: _bersihkan(hasil.join(' ')), punyaKode: punyaKode);
 }
 
 /// Baca teks OCR jadi daftar nilai.
@@ -282,24 +429,27 @@ List<KhsEntry> parseKhs(String rawText) {
         .split(RegExp(r'\s+'))
         .where((t) => t.isNotEmpty)
         .toList();
+    if (tokens.isEmpty) continue;
 
     final ekor = _bacaEkor(tokens);
-    if (ekor == null) continue;
+    final nama = _bacaNama(tokens.sublist(0, tokens.length - ekor.dipakai));
 
-    final nama = _namaDari(tokens.sublist(0, tokens.length - ekor.dipakai));
     // Nama sependek dua huruf hampir pasti sisa kolom yang salah potong.
-    if (nama.length < 3) continue;
+    if (nama.nama.length < 3) continue;
+
+    // Sebuah baris diterima kalau ekornya memberi sesuatu, atau kalau dia punya
+    // kode mata kuliah. Yang kedua penting: pada KHS yang OCR-nya buruk, baris
+    // bisa kehilangan seluruh kolom angkanya dan tetap jelas baris mata kuliah.
+    final adaIsi = ekor.huruf != null || ekor.sks != null || ekor.bobot != null;
+    if (!adaIsi && !nama.punyaKode) continue;
 
     entries.add(KhsEntry(
-      courseName: nama,
+      courseName: nama.nama,
       huruf: ekor.huruf,
       sks: ekor.sks,
       bobot: ekor.bobot,
-      // Hurufnya dihitung kalau kolom nilainya sendiri tidak menghasilkan huruf
-      // yang sah, tapi ekornya tetap terbaca.
-      dariBobot: ekor.huruf != null &&
-          ekor.bobot != null &&
-          _keHuruf(tokens[tokens.length - (ekor.dipakai == 3 ? 2 : 1)]) == null,
+      dariBobot: ekor.dariBobot,
+      sksDihitung: ekor.sksDihitung,
     ));
   }
 
@@ -312,8 +462,8 @@ List<KhsEntry> parseKhs(String rawText) {
 /// plus-minus. Null kalau semua hurufnya ada di kedua skala (A, B, C, D, E) —
 /// KHS seperti itu memang tidak memberi petunjuk apa pun.
 GradeScale? tebakSkala(List<KhsEntry> entries) {
-  final khasSetengah = {'AB', 'BC'};
-  final khasPlusMinus = {'A-', 'B+', 'B-', 'C+'};
+  const khasSetengah = {'AB', 'BC'};
+  const khasPlusMinus = {'A-', 'B+', 'B-', 'C+'};
 
   var setengah = 0;
   var plusMinus = 0;
