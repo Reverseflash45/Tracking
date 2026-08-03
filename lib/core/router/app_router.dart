@@ -85,16 +85,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   path: 'wishlist',
                   builder: (context, state) => const WishlistPage(),
                 ),
-                GoRoute(
-                  path: 'finance',
-                  builder: (context, state) => const FinancePage(),
-                  routes: [
-                    GoRoute(
-                      path: 'recurring',
-                      builder: (context, state) => const RecurringPage(),
-                    ),
-                  ],
-                ),
               ],
             ),
           ]),
@@ -246,6 +236,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   path: ':id/edit',
                   builder: (context, state) =>
                       WorkoutFormPage(sessionId: state.pathParameters['id']),
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            // Keuangan punya cabang sendiri, bukan menumpang di bawah Dashboard.
+            // Sebelumnya satu-satunya jalan masuk adalah menekan kartu di
+            // Dashboard — jalan yang tidak dimiliki bagian utama mana pun.
+            GoRoute(
+              path: '/finance',
+              builder: (context, state) => const FinancePage(),
+              routes: [
+                GoRoute(
+                  path: 'recurring',
+                  builder: (context, state) => const RecurringPage(),
                 ),
               ],
             ),

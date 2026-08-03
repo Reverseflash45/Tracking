@@ -20,11 +20,23 @@ class _TabData {
   final Color color;
 }
 
+/// Urutan tab, dipakai kartu ringkasan di Dashboard untuk pindah ke bagiannya.
+///
+/// Angkanya harus sama persis dengan urutan `branches` di app_router.dart.
+const int kTabBeranda = 0;
+const int kTabJadwal = 1;
+const int kTabTugas = 2;
+const int kTabWorkout = 3;
+const int kTabKeuangan = 4;
+const int kTabProfil = 5;
+
 const _tabs = [
   _TabData(
     icon: Icons.dashboard_outlined,
     selectedIcon: Icons.dashboard,
-    label: 'Dashboard',
+    // "Beranda", bukan "Dashboard": dengan enam tab, label terpanjang yang
+    // menentukan apakah semuanya masih terbaca di layar 360dp.
+    label: 'Beranda',
     color: AppColors.dashboard,
   ),
   _TabData(
@@ -44,6 +56,12 @@ const _tabs = [
     selectedIcon: Icons.fitness_center,
     label: 'Workout',
     color: AppColors.workout,
+  ),
+  _TabData(
+    icon: Icons.account_balance_wallet_outlined,
+    selectedIcon: Icons.account_balance_wallet,
+    label: 'Uang',
+    color: AppColors.finance,
   ),
   _TabData(
     icon: Icons.person_outline,
