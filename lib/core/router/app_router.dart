@@ -37,6 +37,8 @@ import '../../features/workout/presentation/workout_form_page.dart';
 import '../../features/workout/presentation/workout_history_page.dart';
 import '../../features/workout/presentation/workout_home_page.dart';
 import '../../features/workout/presentation/workout_progress_page.dart';
+import '../../features/vehicle/presentation/vehicle_detail_page.dart';
+import '../../features/vehicle/presentation/vehicle_page.dart';
 import '../../features/watchlist/presentation/watchlist_page.dart';
 import '../../features/wishlist/presentation/wishlist_page.dart';
 import '../../features/wrapped/presentation/wrapped_page.dart';
@@ -89,6 +91,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'watchlist',
                   builder: (context, state) => const WatchlistPage(),
+                ),
+                GoRoute(
+                  path: 'vehicle',
+                  builder: (context, state) => const VehiclePage(),
+                  routes: [
+                    GoRoute(
+                      path: ':id',
+                      builder: (context, state) =>
+                          VehicleDetailPage(vehicleId: state.pathParameters['id']!),
+                    ),
+                  ],
                 ),
               ],
             ),
