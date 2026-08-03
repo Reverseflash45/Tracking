@@ -236,6 +236,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   subtitle: 'Film, series, anime, buku, dan komik',
                   onTap: () => context.push('/watchlist'),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                _MenuTile(
+                  icon: Icons.two_wheeler,
+                  color: AppColors.vehicle,
+                  title: 'Kendaraan',
+                  subtitle: 'Servis, oli, dan jatuh tempo pajak',
+                  onTap: () => context.push('/vehicle'),
+                ),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
                   title: 'Rekap',
