@@ -18,6 +18,7 @@ import '../../features/body/presentation/body_profile_form_page.dart';
 import '../../features/body/presentation/calorie_page.dart';
 import '../../features/body/presentation/progress_photo_page.dart';
 import '../../features/calendar/presentation/calendar_page.dart';
+import '../../features/document/presentation/document_page.dart';
 import '../../features/finance/presentation/finance_page.dart';
 import '../../features/finance/presentation/recurring_page.dart';
 import '../../features/goals/presentation/goals_page.dart';
@@ -91,6 +92,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'watchlist',
                   builder: (context, state) => const WatchlistPage(),
+                ),
+                GoRoute(
+                  path: 'documents',
+                  builder: (context, state) => const DocumentPage(),
                 ),
                 GoRoute(
                   path: 'vehicle',
