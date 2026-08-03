@@ -4,6 +4,7 @@ import 'package:tracking/core/theme/app_colors.dart';
 import 'package:tracking/core/theme/app_theme.dart';
 import 'package:tracking/core/widgets/empty_state.dart';
 import 'package:tracking/core/widgets/hero_header.dart';
+import 'package:tracking/core/widgets/menu_list.dart';
 import 'package:tracking/core/widgets/section_header.dart';
 
 /// Uji tampilan untuk widget yang dipakai bersama seluruh halaman.
@@ -241,6 +242,63 @@ void main() {
         ),
         isNull,
       );
+    });
+  });
+
+  group('MenuList', () {
+    testWidgets('label dan keterangan panjang tidak meluber', (tester) async {
+      expect(
+        await gambar(
+          tester,
+          const MenuList(
+            items: [
+              MenuItemData(
+                icon: Icons.local_fire_department,
+                label: 'Kalkulator Kalori dan Kebutuhan Makro',
+                rute: '/workout/calories',
+                warna: AppColors.dashboard,
+                keterangan: keteranganPanjang,
+              ),
+              MenuItemData(
+                icon: Icons.badge_outlined,
+                label: 'Dokumen',
+                rute: '/documents',
+                warna: AppColors.document,
+              ),
+            ],
+          ),
+          skalaTeks: skalaBesar,
+        ),
+        isNull,
+      );
+    });
+
+    testWidgets('satu baris saja tidak menggambar garis pemisah', (tester) async {
+      await gambar(
+        tester,
+        const MenuList(
+          items: [
+            MenuItemData(icon: Icons.flag_outlined, label: 'Target', rute: '/goals'),
+          ],
+        ),
+      );
+      expect(find.byType(Divider), findsNothing);
+    });
+
+    testWidgets('garis pemisah muncul di antara baris, bukan di ujung', (tester) async {
+      await gambar(
+        tester,
+        const MenuList(
+          items: [
+            MenuItemData(icon: Icons.flag_outlined, label: 'Target', rute: '/goals'),
+            MenuItemData(icon: Icons.movie_outlined, label: 'Watchlist', rute: '/watchlist'),
+            MenuItemData(icon: Icons.two_wheeler, label: 'Kendaraan', rute: '/vehicle'),
+          ],
+        ),
+      );
+      // Tiga baris berarti dua pemisah. Kalau jadi tiga, berarti ada garis
+      // menggantung di bawah baris terakhir.
+      expect(find.byType(Divider), findsNWidgets(2));
     });
   });
 
