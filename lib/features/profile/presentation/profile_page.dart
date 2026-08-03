@@ -558,6 +558,8 @@ class _NotificationSettingsCard extends ConsumerWidget {
         ReminderKind.kelas => '${settings.menitSebelumKelas} menit sebelum kelas dimulai',
         ReminderKind.streak => 'Jam 19.00, kalau hari itu belum ada gerakan',
         ReminderKind.tagihan => 'Sehari sebelum jatuh tempo',
+        ReminderKind.dokumen => 'H-60, H-14, dan hari-H sebelum masa berlaku habis',
+        ReminderKind.kendaraan => 'Pajak H-30, plat H-60, servis H-7',
         ReminderKind.catatMakan => 'Jam 20.30, kalau belum ada catatan makan',
       };
 }

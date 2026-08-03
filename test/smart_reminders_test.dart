@@ -2,8 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/core/notifications/smart_reminders.dart';
 import 'package:tracking/features/academic/data/models/class_schedule.dart';
 import 'package:tracking/features/academic/data/models/task.dart';
+import 'package:tracking/features/document/domain/document.dart';
 import 'package:tracking/features/finance/domain/finance_stats.dart';
 import 'package:tracking/features/finance/domain/transaction.dart';
+import 'package:tracking/features/vehicle/domain/vehicle.dart';
 
 /// Rabu, 5 Agustus 2026, jam 10 pagi.
 final _now = DateTime(2026, 8, 5, 10);
@@ -16,6 +18,8 @@ const _semua = NotificationSettings(
     ReminderKind.kelas,
     ReminderKind.streak,
     ReminderKind.tagihan,
+    ReminderKind.dokumen,
+    ReminderKind.kendaraan,
     ReminderKind.catatMakan,
   },
 );
@@ -67,8 +71,51 @@ RecurringExpense _tagihan(String nama, int dueDay, {double amount = 800000, bool
       active: active,
     );
 
+Document _dokumen({
+  String nama = 'SIM C',
+  DocKind kind = DocKind.sim,
+  DateTime? tempo,
+  bool seumurHidup = false,
+}) =>
+    Document(
+      id: nama,
+      name: nama,
+      kind: kind,
+      expiresOn: tempo,
+      noExpiry: seumurHidup,
+      createdAt: _now,
+    );
+
+Vehicle _kendaraan({DateTime? pajak, DateTime? plat, int? odometer, DateTime? odometerOn}) =>
+    Vehicle(
+      id: 'v1',
+      name: 'Beat',
+      taxDueOn: pajak,
+      plateDueOn: plat,
+      odometerKm: odometer,
+      odometerOn: odometerOn,
+      createdAt: _now,
+    );
+
+ServiceLog _servis({
+  String id = 's1',
+  ServiceKind kind = ServiceKind.oli,
+  required DateTime tanggal,
+  int? odometer,
+}) =>
+    ServiceLog(
+      id: id,
+      vehicleId: 'v1',
+      kind: kind,
+      doneOn: tanggal,
+      odometerKm: odometer,
+    );
+
 List<PlannedReminder> _rencana(ReminderInput data, {NotificationSettings? settings}) =>
     planReminders(data: data, settings: settings ?? _semua, now: _now);
+
+List<PlannedReminder> _hanyaJenis(List<PlannedReminder> semua, ReminderKind kind) =>
+    semua.where((r) => r.kind == kind).toList();
 
 void main() {
   group('saklar', () {
@@ -344,6 +391,227 @@ void main() {
       );
       expect(hasil, hasLength(kLookaheadHari + 1));
       expect(hasil.first.waktu, DateTime(2026, 8, 5, 20, 30));
+    });
+  });
+
+  group('dokumen', () {
+    test('yang seumur hidup tidak pernah menghasilkan pengingat', () {
+      final hasil = _rencana(
+        ReminderInput(documents: [_dokumen(kind: DocKind.ktp, seumurHidup: true)]),
+        settings: _hanya({ReminderKind.dokumen}),
+      );
+      expect(hasil, isEmpty);
+    });
+
+    test('yang masa berlakunya belum diisi juga tidak ditegur', () {
+      final hasil = _rencana(
+        ReminderInput(documents: [_dokumen()]),
+        settings: _hanya({ReminderKind.dokumen}),
+      );
+      expect(hasil, isEmpty);
+    });
+
+    test('dipasang H-60, H-14, dan hari-H', () {
+      final hasil = _rencana(
+        ReminderInput(documents: [_dokumen(tempo: DateTime(2026, 12, 1))]),
+        settings: _hanya({ReminderKind.dokumen}),
+      );
+
+      expect(hasil.map((r) => r.waktu.toIso8601String().substring(0, 10)), [
+        '2026-10-02',
+        '2026-11-17',
+        '2026-12-01',
+      ]);
+    });
+
+    test('offset yang sudah lewat tidak ikut dipasang', () {
+      // Habis 10 hari lagi, jadi H-60 dan H-14 sudah lewat.
+      final hasil = _rencana(
+        ReminderInput(documents: [_dokumen(tempo: DateTime(2026, 8, 15))]),
+        settings: _hanya({ReminderKind.dokumen}),
+      );
+
+      expect(hasil.length, 1);
+      expect(hasil.single.judul, contains('habis hari ini'));
+    });
+
+    test('yang sudah telat ditegur sekali, bukan diberi jadwal yang mustahil', () {
+      final hasil = _rencana(
+        ReminderInput(documents: [_dokumen(tempo: DateTime(2026, 7, 20))]),
+        settings: _hanya({ReminderKind.dokumen}),
+      );
+
+      expect(hasil.length, 1);
+      expect(hasil.single.judul, contains('sudah kedaluwarsa'));
+      expect(hasil.single.isi, contains('16 hari lalu'));
+      // Jam pengingatnya sudah lewat hari ini, jadi jatuh ke besok.
+      expect(hasil.single.waktu, DateTime(2026, 8, 6, 8));
+    });
+
+    test('yang telat terlalu lama berhenti ditegur', () {
+      final hasil = _rencana(
+        ReminderInput(documents: [_dokumen(tempo: DateTime(2025, 1, 1))]),
+        settings: _hanya({ReminderKind.dokumen}),
+      );
+      expect(hasil, isEmpty);
+    });
+
+    test('paspor dapat pengingat tambahan enam bulan sebelum habis', () {
+      final hasil = _rencana(
+        ReminderInput(
+          documents: [_dokumen(nama: 'Paspor', kind: DocKind.paspor, tempo: DateTime(2027, 6, 1))],
+        ),
+        settings: _hanya({ReminderKind.dokumen}),
+      );
+
+      expect(hasil.first.judul, contains('tinggal 6 bulan'));
+      expect(hasil.first.isi, contains('menolak paspor'));
+    });
+
+    test('jenis lain tidak dapat pengingat enam bulan itu', () {
+      final hasil = _rencana(
+        ReminderInput(documents: [_dokumen(tempo: DateTime(2027, 6, 1))]),
+        settings: _hanya({ReminderKind.dokumen}),
+      );
+
+      expect(hasil.length, 3);
+      expect(hasil.any((r) => r.judul.contains('6 bulan')), isFalse);
+    });
+  });
+
+  group('kendaraan', () {
+    test('kendaraan tanpa tanggal apa pun tidak menghasilkan pengingat', () {
+      final hasil = _rencana(
+        ReminderInput(vehicles: [_kendaraan()]),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+      expect(hasil, isEmpty);
+    });
+
+    test('pajak dipasang H-30, H-7, dan hari-H', () {
+      final hasil = _rencana(
+        ReminderInput(vehicles: [_kendaraan(pajak: DateTime(2026, 11, 10))]),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      expect(hasil.length, 3);
+      expect(hasil.first.waktu, DateTime(2026, 10, 11, 8));
+      expect(hasil.first.isi, contains('denda'));
+    });
+
+    test('ganti plat dapat jarak lebih panjang daripada pajak', () {
+      final hasil = _rencana(
+        ReminderInput(vehicles: [_kendaraan(plat: DateTime(2026, 11, 10))]),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      expect(hasil.first.waktu, DateTime(2026, 9, 11, 8));
+    });
+
+    test('servis berbasis waktu dipasang H-7 dan hari-H', () {
+      final hasil = _rencana(
+        ReminderInput(
+          vehicles: [_kendaraan()],
+          services: [_servis(tanggal: DateTime(2026, 8, 1))],
+        ),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      // Oli motor: 2 bulan dari 1 Agustus.
+      expect(hasil.map((r) => r.waktu), [
+        DateTime(2026, 9, 24, 8),
+        DateTime(2026, 10, 1, 8),
+      ]);
+    });
+
+    test('judulnya menyebut nama kendaraannya', () {
+      final hasil = _rencana(
+        ReminderInput(vehicles: [_kendaraan(pajak: DateTime(2026, 11, 10))]),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      expect(hasil.first.judul, contains('Beat'));
+    });
+
+    test('catatan servis kendaraan lain tidak ikut terhitung', () {
+      final hasil = _rencana(
+        ReminderInput(
+          vehicles: [_kendaraan()],
+          services: [
+            ServiceLog(
+              id: 'lain',
+              vehicleId: 'v2',
+              kind: ServiceKind.oli,
+              doneOn: DateTime(2026, 8, 1),
+            ),
+          ],
+        ),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      expect(hasil, isEmpty);
+    });
+  });
+
+  group('ajakan catat odometer', () {
+    test('tidak muncul kalau tidak ada jadwal berbasis km', () {
+      // Servis tanpa odometer: jadwalnya cuma berbasis waktu, jadi angka
+      // odometer tidak menentukan apa pun.
+      final hasil = _rencana(
+        ReminderInput(
+          vehicles: [_kendaraan()],
+          services: [_servis(tanggal: DateTime(2026, 1, 1))],
+        ),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      expect(hasil.any((r) => r.judul.contains('Odometer')), isFalse);
+    });
+
+    test('tidak muncul kalau odometernya masih baru', () {
+      final hasil = _rencana(
+        ReminderInput(
+          vehicles: [_kendaraan()],
+          services: [_servis(tanggal: DateTime(2026, 7, 25), odometer: 12000)],
+        ),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      expect(hasil.any((r) => r.judul.contains('Odometer')), isFalse);
+    });
+
+    test('muncul kalau catatan odometer sudah menua', () {
+      final hasil = _rencana(
+        ReminderInput(
+          vehicles: [_kendaraan()],
+          services: [_servis(tanggal: DateTime(2026, 6, 1), odometer: 12000)],
+        ),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      final ajakan = hasil.where((r) => r.judul.contains('Odometer')).toList();
+      expect(ajakan.length, kJumlahAjakanOdometer);
+      expect(ajakan.first.isi, contains('65 hari lalu'));
+      expect(ajakan.first.waktu, DateTime(2026, 8, 6, 8));
+    });
+
+    test('ajakan berikutnya berjarak sebulan', () {
+      final hasil = _rencana(
+        ReminderInput(
+          vehicles: [_kendaraan()],
+          services: [_servis(tanggal: DateTime(2026, 6, 1), odometer: 12000)],
+        ),
+        settings: _hanya({ReminderKind.kendaraan}),
+      );
+
+      final ajakan = _hanyaJenis(hasil, ReminderKind.kendaraan)
+          .where((r) => r.judul.contains('Odometer'))
+          .toList();
+
+      expect(
+        ajakan[1].waktu.difference(ajakan[0].waktu).inDays,
+        kJarakAjakanOdometerHari,
+      );
     });
   });
 

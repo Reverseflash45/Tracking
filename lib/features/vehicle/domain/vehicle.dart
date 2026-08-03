@@ -193,11 +193,17 @@ enum StatusTempo {
   final String label;
 }
 
+/// Golongan tenggat. Dipakai penjadwal notifikasi untuk memilih jarak
+/// pengingatnya: mengurus pajak butuh persiapan lebih panjang daripada mampir
+/// ganti oli, dan ganti plat lebih panjang lagi.
+enum JenisTempo { pajak, plat, servis }
+
 /// Satu baris pengingat: servis berikutnya, pajak, atau ganti plat.
 class Pengingat {
   const Pengingat({
     required this.judul,
     required this.icon,
+    required this.jenis,
     this.tanggal,
     this.sisaHari,
     this.sisaKm,
@@ -207,6 +213,7 @@ class Pengingat {
 
   final String judul;
   final IconData icon;
+  final JenisTempo jenis;
 
   /// Perkiraan tanggalnya. Null kalau cuma bisa dihitung lewat jarak.
   final DateTime? tanggal;
@@ -285,6 +292,57 @@ int? perkiraanOdometer(Vehicle vehicle, List<ServiceLog> logs, {required DateTim
   return terakhir.km + (laju * selisihHari).round();
 }
 
+/// Berapa lama sebuah catatan odometer boleh menua sebelum jadwal berbasis km
+/// tidak bisa dipercaya lagi.
+///
+/// Sebulan: dengan pemakaian harian biasa, sebulan itu ribuan kilometer —
+/// lebih dari satu siklus ganti oli motor.
+const int kUmurOdometerHari = 30;
+
+/// Kapan odometer terakhir kali dicatat, dari catatan servis maupun dari
+/// kolom di kendaraannya. Null kalau belum pernah sama sekali.
+DateTime? odometerTerakhirPada(Vehicle vehicle, List<ServiceLog> logs) {
+  DateTime? terakhir;
+
+  void pertimbangkan(DateTime tanggal) {
+    if (terakhir == null || tanggal.isAfter(terakhir!)) terakhir = _hari(tanggal);
+  }
+
+  for (final log in logs) {
+    if (log.odometerKm != null) pertimbangkan(log.doneOn);
+  }
+  if (vehicle.odometerKm != null && vehicle.odometerOn != null) {
+    pertimbangkan(vehicle.odometerOn!);
+  }
+
+  return terakhir;
+}
+
+/// Kendaraan ini punya jadwal berbasis km yang akan meleset kalau odometernya
+/// tidak diperbarui.
+///
+/// Dua syarat, dan keduanya perlu: harus ada jadwal yang memang memakai km
+/// (percuma menagih odometer kalau semua jadwalmu berbasis waktu), dan
+/// catatan terakhirnya harus sudah menua. Tanpa syarat pertama ini cuma jadi
+/// teguran soal kebiasaan mencatat — jenis pengingat yang paling cepat
+/// dimatikan orang.
+bool perluCatatOdometer(
+  Vehicle vehicle,
+  List<ServiceLog> logs, {
+  required DateTime now,
+  int ambangHari = kUmurOdometerHari,
+}) {
+  final adaJadwalKm = logs.any(
+    (log) => log.odometerKm != null && log.kind.intervalKm(vehicle.type) != null,
+  );
+  if (!adaJadwalKm) return false;
+
+  final terakhir = odometerTerakhirPada(vehicle, logs);
+  if (terakhir == null) return false;
+
+  return _hari(now).difference(terakhir).inDays >= ambangHari;
+}
+
 DateTime _tambahBulan(DateTime dari, int bulan) =>
     DateTime(dari.year, dari.month + bulan, dari.day);
 
@@ -336,6 +394,7 @@ Pengingat? pengingatServis({
   return Pengingat(
     judul: kind.label,
     icon: kind.icon,
+    jenis: JenisTempo.servis,
     tanggal: jatuhTempo,
     sisaHari: sisaHari,
     sisaKm: sisaKm,
@@ -359,6 +418,7 @@ List<Pengingat> daftarPengingat({
       Pengingat(
         judul: 'Pajak tahunan',
         icon: Icons.receipt_long_outlined,
+        jenis: JenisTempo.pajak,
         tanggal: _hari(tempo),
         sisaHari: sisa,
         status: _status(sisaHari: sisa),
@@ -373,6 +433,7 @@ List<Pengingat> daftarPengingat({
       Pengingat(
         judul: 'Ganti plat 5 tahunan',
         icon: Icons.badge_outlined,
+        jenis: JenisTempo.plat,
         tanggal: _hari(tempo),
         sisaHari: sisa,
         status: _status(sisaHari: sisa),

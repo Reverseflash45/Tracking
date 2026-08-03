@@ -22,6 +22,8 @@ const Set<ReminderKind> kDefaultReminderKinds = {
   ReminderKind.kelas,
   ReminderKind.streak,
   ReminderKind.tagihan,
+  ReminderKind.dokumen,
+  ReminderKind.kendaraan,
 };
 
 class NotificationSettingsController extends Notifier<NotificationSettings> {
