@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/academic/data/models/class_schedule.dart';
 import '../../features/academic/presentation/academic_providers.dart';
+import '../../features/document/data/document_repository.dart';
+import '../../features/document/domain/document.dart';
 import '../../features/finance/data/finance_repository.dart';
 import '../../features/finance/domain/finance_stats.dart';
+import '../../features/vehicle/data/vehicle_repository.dart';
+import '../../features/vehicle/domain/vehicle.dart';
 import '../../features/nutrition/data/nutrition_repository.dart';
 import '../../features/nutrition/domain/food_log.dart';
 import '../../features/workout/data/rest_day_repository.dart';
@@ -54,10 +58,20 @@ final reminderSyncProvider = Provider<void>((ref) {
 
   final batasKebiasaan = now.subtract(const Duration(days: kJendelaKebiasaanHari));
 
+  // Dokumen dan kendaraan tidak dijadikan syarat seperti tugas: keduanya boleh
+  // kosong selamanya kalau kamu memang tidak memakainya, dan menunggu keduanya
+  // termuat akan menahan seluruh penjadwalan.
+  final documents = ref.watch(documentsProvider).value ?? const <Document>[];
+  final vehicles = ref.watch(vehiclesProvider).value ?? const <Vehicle>[];
+  final services = ref.watch(vehicleServicesProvider).value ?? const <ServiceLog>[];
+
   final input = ReminderInput(
     tasks: tasks,
     schedules: schedules,
     recurring: recurring,
+    documents: documents,
+    vehicles: vehicles,
+    services: services,
     streakHari: streak?.current ?? 0,
     bergerakHariIni: activeDates.any((date) => _tanggalSama(date, now)),
     istirahatHariIni: restDays.any((day) => _tanggalSama(day.restOn, now)),

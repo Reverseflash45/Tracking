@@ -19,6 +19,10 @@ String _channelDescription(ReminderKind kind) => switch (kind) {
       ReminderKind.kelas => 'Pengingat beberapa menit sebelum kelas dimulai',
       ReminderKind.streak => 'Pengingat malam hari kalau belum ada catatan olahraga',
       ReminderKind.tagihan => 'Pengingat sehari sebelum pengeluaran rutin jatuh tempo',
+      ReminderKind.dokumen =>
+        'Pengingat H-60, H-14, dan hari-H sebelum masa berlaku dokumen habis',
+      ReminderKind.kendaraan =>
+        'Pengingat jadwal servis, pajak tahunan, dan ganti plat kendaraan',
       ReminderKind.catatMakan => 'Pengingat mencatat makanan di penghujung hari',
     };
 

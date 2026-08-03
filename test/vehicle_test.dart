@@ -257,6 +257,61 @@ void main() {
     });
   });
 
+  group('umur catatan odometer', () {
+    test('tanggal terakhir diambil dari catatan servis maupun kolom kendaraan', () {
+      final terakhir = odometerTerakhirPada(
+        _motor(odometerKm: 13000, odometerOn: DateTime(2026, 7, 1)),
+        [_servis(doneOn: DateTime(2026, 6, 1), odometerKm: 12000)],
+      );
+
+      expect(terakhir, DateTime(2026, 7, 1));
+    });
+
+    test('servis tanpa angka odometer tidak dianggap sebagai catatan', () {
+      final terakhir = odometerTerakhirPada(
+        _motor(),
+        [_servis(doneOn: DateTime(2026, 8, 1))],
+      );
+
+      expect(terakhir, isNull);
+    });
+
+    test('tidak menagih odometer kalau tidak ada jadwal yang memakainya', () {
+      // Aki: patokannya umur, bukan jarak.
+      final perlu = perluCatatOdometer(
+        _motor(),
+        [_servis(kind: ServiceKind.aki, doneOn: DateTime(2026, 1, 1), odometerKm: 9000)],
+        now: now,
+      );
+
+      expect(perlu, isFalse);
+    });
+
+    test('menagih kalau catatan terakhirnya sudah lewat sebulan', () {
+      final perlu = perluCatatOdometer(
+        _motor(),
+        [_servis(doneOn: DateTime(2026, 6, 1), odometerKm: 12000)],
+        now: now,
+      );
+
+      expect(perlu, isTrue);
+    });
+
+    test('tidak menagih kalau catatannya masih baru', () {
+      final perlu = perluCatatOdometer(
+        _motor(),
+        [_servis(doneOn: DateTime(2026, 7, 25), odometerKm: 12000)],
+        now: now,
+      );
+
+      expect(perlu, isFalse);
+    });
+
+    test('belum pernah mencatat sama sekali bukan urusan pengingat ini', () {
+      expect(perluCatatOdometer(_motor(), const [], now: now), isFalse);
+    });
+  });
+
   group('biaya', () {
     test('servis tanpa biaya tidak dianggap gratis, tapi dilaporkan terpisah', () {
       final hasil = biayaKendaraan(

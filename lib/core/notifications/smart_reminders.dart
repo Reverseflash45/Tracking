@@ -14,7 +14,9 @@ import 'package:flutter/material.dart';
 import '../../features/academic/data/models/class_schedule.dart';
 import '../../features/academic/data/models/task.dart';
 import '../../features/academic/domain/schedule_conflict.dart' show menitDariJam;
+import '../../features/document/domain/document.dart';
 import '../../features/finance/domain/finance_stats.dart';
+import '../../features/vehicle/domain/vehicle.dart';
 
 /// Berapa hari sebelum deadline pengingat dikirim. H-0 = hari-H.
 const List<int> kReminderOffsetDays = [7, 3, 1, 0];
@@ -44,11 +46,39 @@ const int kJamStreak = 19 * 60;
 /// Jam 20.30 — makan malam sudah lewat, jadi catatannya bisa lengkap sehari.
 const int kJamCatatMakan = 20 * 60 + 30;
 
+/// Berapa hari sebelum masa berlaku dokumen habis pengingat dikirim.
+///
+/// Jauh lebih panjang daripada deadline tugas: mengurus dokumen berarti antre,
+/// melengkapi berkas, dan kadang datang dua kali. H-14 sudah mepet, bukan awal.
+const List<int> kOffsetDokumen = [60, 14, 0];
+
+/// Paspor dapat satu pengingat tambahan enam bulan sebelum habis. Bukan karena
+/// aturan Indonesia — paspornya masih sah — melainkan karena banyak negara
+/// menolak paspor yang sisa berlakunya di bawah itu.
+const int kOffsetPasporHari = 180;
+
+/// Dokumen yang sudah telat masih ditegur sampai sekian hari sesudahnya.
+/// Lewat dari itu kamu jelas sudah tahu, dan pengingatnya cuma jadi omelan.
+const int kMaxHariTelatDokumen = 90;
+
+/// Jarak pengingat per golongan tenggat kendaraan.
+const List<int> kOffsetPajak = [30, 7, 0];
+const List<int> kOffsetPlat = [60, 14, 0];
+const List<int> kOffsetServis = [7, 0];
+
+/// Berapa kali ajakan mencatat odometer dipasang ke depan, dan berapa hari
+/// jaraknya. App menjadwalkan ulang tiap kali dibuka, jadi ini cuma jaring
+/// pengaman untuk minggu-minggu kamu tidak membukanya sama sekali.
+const int kJumlahAjakanOdometer = 3;
+const int kJarakAjakanOdometerHari = 30;
+
 enum ReminderKind {
   deadline('Deadline tugas', Icons.assignment_late_outlined),
   kelas('Jadwal kuliah', Icons.school_outlined),
   streak('Streak olahraga', Icons.local_fire_department_outlined),
   tagihan('Tagihan rutin', Icons.receipt_long_outlined),
+  dokumen('Masa berlaku dokumen', Icons.badge_outlined),
+  kendaraan('Servis & pajak kendaraan', Icons.two_wheeler),
   catatMakan('Catat makan', Icons.restaurant_outlined);
 
   const ReminderKind(this.label, this.icon);
@@ -67,6 +97,8 @@ class NotificationSettings {
       ReminderKind.kelas,
       ReminderKind.streak,
       ReminderKind.tagihan,
+      ReminderKind.dokumen,
+      ReminderKind.kendaraan,
     },
     this.menitSebelumKelas = kMenitSebelumKelasDefault,
   });
@@ -147,6 +179,9 @@ class ReminderInput {
     this.tasks = const [],
     this.schedules = const [],
     this.recurring = const [],
+    this.documents = const [],
+    this.vehicles = const [],
+    this.services = const [],
     this.streakHari = 0,
     this.bergerakHariIni = false,
     this.istirahatHariIni = false,
@@ -157,6 +192,11 @@ class ReminderInput {
   final List<AcademicTask> tasks;
   final List<ClassSchedule> schedules;
   final List<RecurringExpense> recurring;
+  final List<Document> documents;
+  final List<Vehicle> vehicles;
+
+  /// Seluruh catatan servis, belum dipilah per kendaraan.
+  final List<ServiceLog> services;
 
   /// Panjang streak berjalan. 0 berarti tidak ada yang bisa hilang malam ini.
   final int streakHari;
@@ -180,6 +220,17 @@ DateTime _padaJam(DateTime hari, int menitDalamHari) =>
 
 bool _tanggalSama(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
+
+/// Kemunculan [menitDalamHari] berikutnya yang masih di depan: hari ini kalau
+/// jamnya belum lewat, kalau sudah besok.
+///
+/// Dipakai pengingat yang tidak punya tanggal sendiri — dokumen yang sudah
+/// telat, dan ajakan mencatat odometer. Tanpa ini keduanya akan dijadwalkan di
+/// masa lalu dan tidak pernah berbunyi.
+DateTime _pertamaSetelah(DateTime now, int menitDalamHari) {
+  final hariIni = _padaJam(_hari(now), menitDalamHari);
+  return hariIni.isAfter(now) ? hariIni : hariIni.add(const Duration(days: 1));
+}
 
 String _rupiah(double amount) {
   final bulat = amount.round().toString();
@@ -207,6 +258,8 @@ List<PlannedReminder> planReminders({
     if (settings.nyala(ReminderKind.kelas)) ..._kelasReminders(data, settings, now),
     if (settings.nyala(ReminderKind.streak)) ..._streakReminders(data, now),
     if (settings.nyala(ReminderKind.tagihan)) ..._tagihanReminders(data, settings, now),
+    if (settings.nyala(ReminderKind.dokumen)) ..._dokumenReminders(data, settings, now),
+    if (settings.nyala(ReminderKind.kendaraan)) ..._kendaraanReminders(data, settings, now),
     if (settings.nyala(ReminderKind.catatMakan)) ..._catatMakanReminders(data, now),
   ]..sort((a, b) => a.waktu.compareTo(b.waktu));
 
@@ -349,6 +402,152 @@ List<PlannedReminder> _tagihanReminders(
       isi: '${_rupiah(expense.amount)} — siapkan dari sekarang.',
     ));
   }
+  return hasil;
+}
+
+/// Pengingat masa berlaku dokumen.
+///
+/// Dokumen tanpa tanggal kedaluwarsa dilewati sepenuhnya — termasuk yang
+/// ditandai seumur hidup maupun yang tanggalnya memang belum kamu isi. Yang
+/// kedua memang perlu ditagih, tapi bukan lewat notifikasi: menegur soal kolom
+/// kosong tiap hari itu gangguan, dan halaman Dokumen sudah menghitungnya di
+/// header.
+List<PlannedReminder> _dokumenReminders(
+  ReminderInput data,
+  NotificationSettings settings,
+  DateTime now,
+) {
+  final hasil = <PlannedReminder>[];
+
+  for (final doc in data.documents) {
+    final tempo = doc.expiresOn;
+    if (doc.noExpiry || tempo == null) continue;
+
+    final sisa = doc.sisaHari(now)!;
+
+    // Yang sudah telat ditegur sekali, bukan diberi jadwal H-minus yang
+    // seluruhnya sudah lewat dan karena itu tidak akan pernah berbunyi.
+    if (sisa < 0) {
+      if (sisa < -kMaxHariTelatDokumen) continue;
+
+      final waktu = _pertamaSetelah(now, settings.menitDalamHari);
+      hasil.add(PlannedReminder(
+        kind: ReminderKind.dokumen,
+        waktu: waktu,
+        judul: '${doc.name} sudah kedaluwarsa',
+        isi: 'Habis ${-sisa} hari lalu. Makin lama diurus, makin panjang '
+            'antreannya.',
+      ));
+      continue;
+    }
+
+    final offsets = <int>[
+      ...kOffsetDokumen,
+      if (doc.kind == DocKind.paspor) kOffsetPasporHari,
+    ];
+
+    for (final offset in offsets) {
+      final waktu = _padaJam(
+        _hari(tempo).subtract(Duration(days: offset)),
+        settings.menitDalamHari,
+      );
+      if (!waktu.isAfter(now)) continue;
+
+      hasil.add(PlannedReminder(
+        kind: ReminderKind.dokumen,
+        waktu: waktu,
+        judul: switch (offset) {
+          0 => '${doc.name} habis hari ini',
+          kOffsetPasporHari => '${doc.name} tinggal 6 bulan',
+          _ => '${doc.name} habis $offset hari lagi',
+        },
+        isi: switch (offset) {
+          kOffsetPasporHari => 'Masih sah, tapi banyak negara menolak paspor '
+              'dengan sisa berlaku di bawah $kBulanPasporAman bulan.',
+          0 => 'Masa berlakunya habis hari ini.',
+          _ => 'Siapkan berkas perpanjangannya dari sekarang.',
+        },
+      ));
+    }
+  }
+
+  return hasil;
+}
+
+/// Pengingat servis, pajak, dan plat — plus ajakan mencatat odometer.
+///
+/// Jadwalnya tidak dihitung ulang di sini: yang dipakai [daftarPengingat] yang
+/// sama persis dengan yang kamu lihat di halaman Kendaraan. Kalau notifikasi
+/// dan layar bisa berbeda pendapat soal kapan oli harus diganti, keduanya
+/// berhenti dipercaya.
+List<PlannedReminder> _kendaraanReminders(
+  ReminderInput data,
+  NotificationSettings settings,
+  DateTime now,
+) {
+  final hasil = <PlannedReminder>[];
+
+  for (final vehicle in data.vehicles) {
+    final logs = [
+      for (final log in data.services)
+        if (log.vehicleId == vehicle.id) log,
+    ];
+
+    for (final pengingat in daftarPengingat(vehicle: vehicle, logs: logs, now: now)) {
+      final tanggal = pengingat.tanggal;
+
+      // Jadwal yang cuma berbasis km tidak punya tanggal, jadi tidak bisa
+      // dipasang sebagai alarm. Itulah yang ditutup ajakan odometer di bawah.
+      if (tanggal == null) continue;
+
+      final offsets = switch (pengingat.jenis) {
+        JenisTempo.pajak => kOffsetPajak,
+        JenisTempo.plat => kOffsetPlat,
+        JenisTempo.servis => kOffsetServis,
+      };
+
+      for (final offset in offsets) {
+        final waktu = _padaJam(
+          tanggal.subtract(Duration(days: offset)),
+          settings.menitDalamHari,
+        );
+        if (!waktu.isAfter(now)) continue;
+
+        hasil.add(PlannedReminder(
+          kind: ReminderKind.kendaraan,
+          waktu: waktu,
+          judul: offset == 0
+              ? '${pengingat.judul} ${vehicle.name} hari ini'
+              : '${pengingat.judul} ${vehicle.name} $offset hari lagi',
+          isi: pengingat.jenis == JenisTempo.pajak
+              ? 'Telat bayar pajak kena denda, dan dendanya menumpuk per bulan.'
+              : pengingat.dasar,
+        ));
+      }
+    }
+
+    if (perluCatatOdometer(vehicle, logs, now: now)) {
+      final terakhir = odometerTerakhirPada(vehicle, logs)!;
+      final umur = _hari(now).difference(terakhir).inDays;
+
+      for (var i = 0; i < kJumlahAjakanOdometer; i++) {
+        final waktu = _pertamaSetelah(now, settings.menitDalamHari)
+            .add(Duration(days: i * kJarakAjakanOdometerHari));
+
+        hasil.add(PlannedReminder(
+          kind: ReminderKind.kendaraan,
+          waktu: waktu,
+          judul: 'Odometer ${vehicle.name} sudah lama tidak dicatat',
+          isi: i == 0
+              ? 'Terakhir $umur hari lalu. Jadwal servis berbasis km dihitung '
+                  'dari angka itu, jadi sekarang perkiraannya sudah melenceng.'
+              : 'Perbarui angkanya sebentar supaya jadwal servisnya tetap '
+                  'benar.',
+        ));
+      }
+    }
+  }
+
   return hasil;
 }
 
