@@ -189,7 +189,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 const SizedBox(height: 2),
                 Text(
                   user?.email ?? '-',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 14),
                 ),
               ],
             ),
@@ -373,7 +373,7 @@ class _MenuTile extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                        fontSize: 16,
                         height: 1.2,
                       ),
                     ),
@@ -381,7 +381,7 @@ class _MenuTile extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 13,
                         height: 1.35,
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -478,7 +478,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
             SwitchListTile(
               secondary: SizedBox(width: 34, child: Icon(kind.icon, size: 18)),
               title: Text(kind.label, style: const TextStyle(fontSize: 14)),
-              subtitle: Text(_kapanBerbunyi(kind, settings), style: const TextStyle(fontSize: 11.5)),
+              subtitle: Text(_kapanBerbunyi(kind, settings), style: const TextStyle(fontSize: 12)),
               dense: true,
               activeThumbColor: AppColors.profile,
               value: settings.jenisAktif.contains(kind),

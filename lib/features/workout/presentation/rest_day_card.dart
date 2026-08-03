@@ -112,14 +112,14 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
                         judul,
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
-                          fontSize: 13.5,
+                          fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         pesan,
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 12,
                           height: 1.4,
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -137,7 +137,7 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
                 'Streak ${streak.current} hari — ${streak.activeInCurrent} hari '
                 'latihan, ${streak.restInCurrent} hari istirahat.',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   height: 1.4,
                   fontStyle: FontStyle.italic,
                   color: colorScheme.onSurfaceVariant,

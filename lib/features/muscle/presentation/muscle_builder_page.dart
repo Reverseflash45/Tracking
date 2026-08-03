@@ -117,14 +117,14 @@ class _MuscleCard extends StatelessWidget {
                     group.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${group.exercises.length} latihan - ${group.frequencyPerWeek}x/minggu',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -153,7 +153,7 @@ class _NutritionCard extends StatelessWidget {
               'tertentu — latihanmu yang menentukan otot mana yang tumbuh, makanan menyediakan '
               'bahan bakunya.',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 height: 1.5,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -171,7 +171,7 @@ class _NutritionCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(tip, style: const TextStyle(fontSize: 12, height: 1.45)),
+                      child: Text(tip, style: const TextStyle(fontSize: 13, height: 1.45)),
                     ),
                   ],
                 ),

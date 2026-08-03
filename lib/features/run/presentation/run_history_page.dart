@@ -185,7 +185,7 @@ class _RunCard extends ConsumerWidget {
               children: [
                 Text(
                   _dateFormat.format(run.startedAt),
-                  style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -235,7 +235,7 @@ class _Pill extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: color)),
+        Text(label, style: TextStyle(fontSize: 13, color: color)),
       ],
     );
   }
@@ -280,7 +280,7 @@ class _RunDetailPage extends StatelessWidget {
           Text(
             _dateFormat.format(run.startedAt),
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
@@ -348,7 +348,7 @@ class _DetailStat extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -383,7 +383,7 @@ class _SplitRow extends StatelessWidget {
             width: 28,
             child: Text(
               '${split.km}',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
             ),
           ),
           Expanded(
@@ -406,7 +406,7 @@ class _SplitRow extends StatelessWidget {
               split.label,
               textAlign: TextAlign.right,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 fontFeatures: [FontFeature.tabularFigures()],
               ),

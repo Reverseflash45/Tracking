@@ -76,7 +76,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                           '${antrean.length} catatan belum terkirim',
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
-                            fontSize: 13,
+                            fontSize: 14,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -84,7 +84,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                           'Tersimpan di HP dan aman. Akan terkirim sendiri '
                           'begitu sinyalnya ada.',
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             height: 1.4,
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -109,7 +109,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
@@ -133,7 +133,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
               if (antrean.length > 4)
                 Text(
                   'dan ${antrean.length - 4} lainnya',
-                  style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
               const SizedBox(height: 4),
               Align(

@@ -138,7 +138,7 @@ class _Catatan extends StatelessWidget {
               child: Text(
                 teks,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   height: 1.45,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -257,7 +257,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                           Text(
                             doc.kind.label,
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 12,
                               color: colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -273,7 +273,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                         StatusDokumen.belumDiisi => 'belum diisi',
                       },
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w800,
                         color: warna,
                       ),
@@ -288,7 +288,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                         child: Text(
                           _terbuka ? nomor : nomorTersamar(nomor),
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.1,
                             fontFamily: 'monospace',
@@ -326,7 +326,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                     'Masih sah di sini, tapi banyak negara menolak paspor '
                     'sependek itu di konter check-in.',
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       height: 1.4,
                       color: AppColors.priorityMedium,
                     ),
@@ -338,7 +338,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                     catatan,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ],
@@ -484,7 +484,7 @@ class _SheetDokumenState extends ConsumerState<_SheetDokumen> {
             children: [
               Text(
                 _isEdit ? 'Edit Dokumen' : 'Dokumen Baru',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
               ),
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<DocKind>(
@@ -515,7 +515,7 @@ class _SheetDokumenState extends ConsumerState<_SheetDokumen> {
                   'otomatis begitu kamu memilih tanggal terbit, dan tetap bisa '
                   'kamu ubah.',
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     height: 1.4,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -571,11 +571,11 @@ class _SheetDokumenState extends ConsumerState<_SheetDokumen> {
                 controlAffinity: ListTileControlAffinity.leading,
                 title: const Text(
                   'Tidak punya masa berlaku',
-                  style: TextStyle(fontSize: 13),
+                  style: TextStyle(fontSize: 14),
                 ),
                 subtitle: const Text(
                   'KTP dan NPWP, misalnya. Beda dari sekadar belum diisi.',
-                  style: TextStyle(fontSize: 11),
+                  style: TextStyle(fontSize: 12),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),

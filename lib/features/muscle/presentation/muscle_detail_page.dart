@@ -145,7 +145,7 @@ class _ExerciseCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     exercise.name,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                   ),
                 ),
                 Container(
@@ -157,7 +157,7 @@ class _ExerciseCard extends StatelessWidget {
                   child: Text(
                     exercise.type.label,
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: _color,
                     ),
@@ -183,7 +183,7 @@ class _ExerciseCard extends StatelessWidget {
                   child: Text(
                     exercise.cue,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       height: 1.4,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -203,7 +203,7 @@ class _ExerciseCard extends StatelessWidget {
                 icon: const Icon(Icons.play_circle_outline, size: 16),
                 label: const Text(
                   'Lihat contoh gerakan',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -227,13 +227,13 @@ class _Spec extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant)),
+          Text(label, style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant)),
           const SizedBox(height: 2),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
           ),
         ],
       ),
@@ -266,7 +266,7 @@ class _BulletCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         items[i],
-                        style: const TextStyle(fontSize: 12, height: 1.45),
+                        style: const TextStyle(fontSize: 13, height: 1.45),
                       ),
                     ),
                   ],

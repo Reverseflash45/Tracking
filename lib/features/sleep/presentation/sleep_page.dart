@@ -163,7 +163,7 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                     hariIni == null
                         ? 'Semalam tidur berapa jam?'
                         : 'Semalam: ${formatJamTidur(hariIni.hours)}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                   ),
                 ),
               ],
@@ -175,7 +175,7 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                       'tetap masuk hari ini.'
                   : 'Ketuk angka lain kalau mau dibetulkan.',
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 height: 1.4,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -193,7 +193,7 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                     visualDensity: VisualDensity.compact,
                     selectedColor: _color.withValues(alpha: 0.18),
                     labelStyle: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: hariIni?.hours == jam ? _color : colorScheme.onSurfaceVariant,
                     ),
@@ -227,7 +227,7 @@ class _RingkasanCard extends StatelessWidget {
             Text(
               formatJamTidur(ringkasan.rataJam),
               style: TextStyle(
-                fontSize: 30,
+                fontSize: 32,
                 fontWeight: FontWeight.w900,
                 height: 1.1,
                 color: cukup ? AppColors.statusDone : AppColors.priorityMedium,
@@ -239,7 +239,7 @@ class _RingkasanCard extends StatelessWidget {
               '(anjuran umum ${kSleepTargetMin.round()}–${kSleepTargetMax.round()} jam). '
               '${ringkasan.persenCukup.round()}% di antaranya cukup.',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 height: 1.45,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -249,7 +249,7 @@ class _RingkasanCard extends StatelessWidget {
               'Dihitung dari hari yang tercatat saja — hari yang lupa dicatat '
               'bukan hari kurang tidur.',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 height: 1.4,
                 fontStyle: FontStyle.italic,
                 color: colorScheme.onSurfaceVariant,
@@ -307,11 +307,11 @@ class _SleepTile extends ConsumerWidget {
           ),
           title: Text(
             formatJamTidur(log.hours),
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
           ),
           subtitle: Text(
             _dayFormat.format(log.loggedOn),
-            style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
           ),
         ),
       ),

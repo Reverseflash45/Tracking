@@ -78,14 +78,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
-                        fontSize: 22,
+                        fontSize: 20,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Kuliah, workout, dan produktivitasmu di satu tempat',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 14),
                       textAlign: TextAlign.center,
                     ),
                   ],

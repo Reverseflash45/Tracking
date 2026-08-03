@@ -103,11 +103,11 @@ class FinancePage extends ConsumerWidget {
                         ),
                         title: const Text(
                           'Pengeluaran Rutin',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                         ),
                         subtitle: const Text(
                           'Kos, internet, langganan — disisihkan dari jatah harian',
-                          style: TextStyle(fontSize: 11),
+                          style: TextStyle(fontSize: 12),
                         ),
                         trailing: const Icon(Icons.chevron_right, size: 20),
                       ),
@@ -248,7 +248,7 @@ class FinancePage extends ConsumerWidget {
               Text(
                 'Tanggal uang bulanan datang',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -258,7 +258,7 @@ class FinancePage extends ConsumerWidget {
                 'Kalau kirimanmu datang tanggal 5, periode anggaranmu dihitung '
                 'dari tanggal 5 ke tanggal 4 — bukan per tanggal 1.',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   height: 1.4,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -273,7 +273,7 @@ class FinancePage extends ConsumerWidget {
                     selected: payday == null,
                     onSelected: (_) => setSheetState(() => payday = null),
                     selectedColor: _color.withValues(alpha: 0.18),
-                    labelStyle: const TextStyle(fontSize: 11.5),
+                    labelStyle: const TextStyle(fontSize: 12),
                   ),
                   for (final day in [5, 10, 15, 20, 25])
                     ChoiceChip(
@@ -281,7 +281,7 @@ class FinancePage extends ConsumerWidget {
                       selected: payday == day,
                       onSelected: (_) => setSheetState(() => payday = day),
                       selectedColor: _color.withValues(alpha: 0.18),
-                      labelStyle: const TextStyle(fontSize: 11.5),
+                      labelStyle: const TextStyle(fontSize: 12),
                     ),
                 ],
               ),
@@ -379,7 +379,7 @@ class _BudgetCard extends StatelessWidget {
           ),
           subtitle: const Text(
             'Supaya app bisa hitung jatah harianmu',
-            style: TextStyle(fontSize: 12),
+            style: TextStyle(fontSize: 13),
           ),
           trailing: const Icon(Icons.chevron_right),
         ),
@@ -408,7 +408,7 @@ class _BudgetCard extends StatelessWidget {
                   children: [
                     Text(
                       kebobolan ? 'Anggaran habis' : 'Jatah per hari',
-                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -416,7 +416,7 @@ class _BudgetCard extends StatelessWidget {
                           ? formatRupiah(summary.sisaBudget!.abs())
                           : formatRupiah(jatah),
                       style: TextStyle(
-                        fontSize: 26,
+                        fontSize: 24,
                         fontWeight: FontWeight.w900,
                         color: warna,
                         height: 1,
@@ -431,12 +431,12 @@ class _BudgetCard extends StatelessWidget {
                   children: [
                     Text(
                       kebobolan ? 'lebih dari anggaran' : '${summary.sisaHari} hari lagi',
-                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Sisa ${formatRupiahRingkas(summary.sisaBudget ?? 0)}',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -456,7 +456,7 @@ class _BudgetCard extends StatelessWidget {
             Text(
               '${formatRupiah(summary.pengeluaran)} dari '
               '${formatRupiah(summary.budget!)} terpakai (${persen.round()}%)',
-              style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
             ),
             // Uang yang sudah dipesan harus disebut, bukan cuma diam-diam
             // dipotong dari jatah harian — kalau tidak, angkanya terlihat
@@ -472,7 +472,7 @@ class _BudgetCard extends StatelessWidget {
                       '${formatRupiah(summary.rutinBelumJatuhTempo)} disisihkan '
                       'untuk tagihan rutin yang belum jatuh tempo',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         height: 1.35,
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -520,7 +520,7 @@ class _CategoryBreakdown extends StatelessWidget {
                         item.category.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ),
                     Expanded(
@@ -537,7 +537,7 @@ class _CategoryBreakdown extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       formatRupiahRingkas(item.total),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -619,7 +619,7 @@ class _TxTile extends ConsumerWidget {
                           : tx.category.label),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
               ),
               if (tx.placeKind != null) ...[
@@ -649,13 +649,13 @@ class _TxTile extends ConsumerWidget {
             ].join(' · '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
           ),
           trailing: Text(
             '${masuk ? '+' : '-'}${formatRupiahRingkas(tx.amount)}',
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 13,
+              fontSize: 14,
               color: masuk ? AppColors.statusDone : colorScheme.onSurface,
             ),
           ),

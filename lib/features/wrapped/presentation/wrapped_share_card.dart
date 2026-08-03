@@ -70,7 +70,7 @@ class WrappedShareCard extends StatelessWidget {
             'REKAP ${stats.period.label.toUpperCase()}',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w800,
               letterSpacing: 2,
             ),
@@ -81,7 +81,7 @@ class WrappedShareCard extends StatelessWidget {
             '${_rangeFormat.format(stats.range.end)}',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 11,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 18),
@@ -89,7 +89,7 @@ class WrappedShareCard extends StatelessWidget {
             stats.persona,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 34,
+              fontSize: 32,
               fontWeight: FontWeight.w900,
               height: 1.05,
             ),
@@ -107,7 +107,7 @@ class WrappedShareCard extends StatelessWidget {
                       item.label,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 13,
+                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -115,7 +115,7 @@ class WrappedShareCard extends StatelessWidget {
                     item.value,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 17,
+                      fontSize: 20,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -128,7 +128,7 @@ class WrappedShareCard extends StatelessWidget {
               '${stats.persenTepatWaktu}% tugas selesai tepat waktu',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 12,
+                fontSize: 13,
               ),
             ),
           ],

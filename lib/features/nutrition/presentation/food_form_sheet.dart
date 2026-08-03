@@ -296,7 +296,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                       : const Icon(Icons.qr_code_scanner, size: 18),
                   label: Text(
                     _memindai ? 'Mencari...' : 'Scan barcode kemasan',
-                    style: const TextStyle(fontSize: 13),
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ),
               ],
@@ -309,7 +309,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                   child: Text(
                     'Sering dicatat',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -326,7 +326,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                       final food = frequent[index];
                       return ActionChip(
                         label: Text('${food.name} · ${food.calories.round()} kkal'),
-                        labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                         onPressed: () => _applyFrequent(food),
                       );
                     },
@@ -357,7 +357,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                       onSelected: (_) => setState(() => _meal = meal),
                       selectedColor: _color.withValues(alpha: 0.18),
                       labelStyle: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: _meal == meal
                             ? _color
@@ -403,7 +403,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                   icon: Icon(_showDetail ? Icons.expand_less : Icons.expand_more, size: 18),
                   label: Text(
                     _showDetail ? 'Sembunyikan detail' : 'Detail lain (opsional)',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

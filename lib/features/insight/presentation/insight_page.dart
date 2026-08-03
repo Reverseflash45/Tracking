@@ -111,7 +111,7 @@ class _Pengantar extends StatelessWidget {
       'Aplikasi lain tidak bisa menghitung ini: Strava tidak tahu nilaimu, '
       'aplikasi tugas tidak tahu kamu olahraga. Di sini keduanya ada.',
       style: TextStyle(
-        fontSize: 13,
+        fontSize: 14,
         height: 1.5,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
@@ -169,7 +169,7 @@ class _InsightCard extends StatelessWidget {
             Text(
               insight.detail,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 height: 1.5,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -184,7 +184,7 @@ class _InsightCard extends StatelessWidget {
                   : 'Dibanding dari ${insight.weeksHigh} minggu aktif dan '
                       '${insight.weeksLow} minggu jarang olahraga',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontStyle: FontStyle.italic,
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
               ),
@@ -220,7 +220,7 @@ class _Peringatan extends StatelessWidget {
                 'untuk keduanya sekaligus. Angkanya menunjukkan yang terjadi '
                 'bersamaan, bukan yang menyebabkan.',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   height: 1.5,
                   color: colorScheme.onSurfaceVariant,
                 ),

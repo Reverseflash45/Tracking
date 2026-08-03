@@ -307,7 +307,7 @@ class _BodyProfileFormPageState extends ConsumerState<BodyProfileFormPage> {
                               ),
                               subtitle: Text(
                                 level.description,
-                                style: const TextStyle(fontSize: 11),
+                                style: const TextStyle(fontSize: 12),
                               ),
                             ),
                         ],
@@ -337,7 +337,7 @@ class _BodyProfileFormPageState extends ConsumerState<BodyProfileFormPage> {
                               ),
                               subtitle: Text(
                                 goal.description,
-                                style: const TextStyle(fontSize: 11),
+                                style: const TextStyle(fontSize: 12),
                               ),
                             ),
                         ],
@@ -452,7 +452,7 @@ class _SelectCard extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: selected ? _color : colorScheme.onSurfaceVariant,
               ),

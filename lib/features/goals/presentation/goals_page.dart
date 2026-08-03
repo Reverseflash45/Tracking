@@ -198,14 +198,14 @@ class _GoalCard extends ConsumerWidget {
                             goal.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             '${goal.period.label}  ·  '
                             '${_tanggal.format(progress.window.mulai)}–'
                             '${_tanggal.format(progress.window.selesai)}',
-                            style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -219,7 +219,7 @@ class _GoalCard extends ConsumerWidget {
                       child: Text(
                         progress.status.label,
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.w800,
                           color: warna,
                         ),
@@ -236,20 +236,20 @@ class _GoalCard extends ConsumerWidget {
                       formatNilai(progress.nilai, goal.metric),
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 18,
+                        fontSize: 20,
                         color: warna,
                       ),
                     ),
                     const SizedBox(width: 5),
                     Text(
                       '/ ${formatNilai(goal.targetValue, goal.metric)}',
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                     ),
                     const Spacer(),
                     Text(
                       '${progress.persenMentah.round()}%',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -269,7 +269,7 @@ class _GoalCard extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   _catatan(progress),
-                  style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -440,7 +440,7 @@ class _GoalSheetState extends ConsumerState<_GoalSheet> {
             children: [
               Text(
                 _isEdit ? 'Edit Target' : 'Target Baru',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -508,7 +508,7 @@ class _GoalSheetState extends ConsumerState<_GoalSheet> {
                 _period == GoalPeriod.sekali
                     ? 'Diukur sekali di rentang tanggal yang kamu pilih.'
                     : 'Jendelanya berpindah sendiri — periode berikutnya mulai dari nol lagi.',
-                style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
               if (_period == GoalPeriod.sekali) ...[
                 const SizedBox(height: AppSpacing.md),

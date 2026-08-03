@@ -536,7 +536,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                       child: OutlinedButton.icon(
                         onPressed: _pickTemplate,
                         icon: const Icon(Icons.bookmark_outline, size: 18),
-                        label: const Text('Pakai Template', style: TextStyle(fontSize: 12)),
+                        label: const Text('Pakai Template', style: TextStyle(fontSize: 13)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _workoutColor,
                           side: BorderSide(color: _workoutColor.withValues(alpha: 0.4)),
@@ -549,7 +549,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                       child: OutlinedButton.icon(
                         onPressed: _saveAsTemplate,
                         icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-                        label: const Text('Simpan Template', style: TextStyle(fontSize: 12)),
+                        label: const Text('Simpan Template', style: TextStyle(fontSize: 13)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _workoutColor,
                           side: BorderSide(color: _workoutColor.withValues(alpha: 0.4)),
@@ -568,7 +568,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                     icon: const Icon(Icons.auto_awesome, size: 18),
                     label: Text(
                       'Terapkan $pendingSuggestions saran progresi',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                     ),
                     style: FilledButton.styleFrom(
                       backgroundColor: _workoutColor.withValues(alpha: 0.14),
@@ -644,7 +644,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                   foregroundColor: _workoutColor,
                   child: Text(
                     '${index + 1}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -686,7 +686,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                       onSelected: (_) => setState(() => row.type = type),
                       selectedColor: _workoutColor.withValues(alpha: 0.18),
                       labelStyle: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: row.type == type
                             ? _workoutColor
@@ -777,7 +777,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                   icon: const Icon(Icons.timer_outlined, size: 18),
                   label: Text(
                     'Istirahat ${formatRest(row.restSeconds ?? _defaultRest)}',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

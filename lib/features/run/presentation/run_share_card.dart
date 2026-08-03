@@ -89,7 +89,7 @@ class RunShareCard extends StatelessWidget {
                       'LARI',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 2,
                       ),
@@ -125,7 +125,7 @@ class RunShareCard extends StatelessWidget {
                   _dateFormat.format(run.startedAt),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 12,
+                    fontSize: 13,
                   ),
                 ),
               ],
@@ -153,7 +153,7 @@ class _Stat extends StatelessWidget {
           label.toUpperCase(),
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.75),
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
           ),

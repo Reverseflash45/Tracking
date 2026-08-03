@@ -247,7 +247,7 @@ class _Badge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color),
           ),
         ],
       ),
@@ -281,7 +281,7 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -291,7 +291,7 @@ class _InfoRow extends StatelessWidget {
               value,
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: valueColor,
               ),

@@ -92,7 +92,7 @@ class _ExercisePicker extends StatelessWidget {
                     'Lima gerakan ini dipilih karena sudutnya terbaca andal '
                     'dari satu kamera; bench press dan pull up tidak masuk '
                     'karena tubuhnya saling menutupi di tengah gerakan.',
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -126,7 +126,7 @@ class _ExercisePicker extends StatelessWidget {
                 ),
                 subtitle: Text(
                   exercise.cue,
-                  style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
                 trailing: const Icon(Icons.chevron_right),
               ),
@@ -626,7 +626,7 @@ class _Hud extends StatelessWidget {
                     padding: EdgeInsets.only(bottom: 5),
                     child: Text(
                       'rep',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                   ),
                   if (angle != null) ...[
@@ -637,7 +637,7 @@ class _Hud extends StatelessWidget {
                         '${angle!.round()}°',
                         style: const TextStyle(
                           color: Colors.white70,
-                          fontSize: 13,
+                          fontSize: 14,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -698,7 +698,7 @@ class _Banner extends StatelessWidget {
               text,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),

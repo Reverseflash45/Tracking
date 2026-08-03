@@ -11,6 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
+import '../../../core/widgets/menu_list.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../academic/data/models/class_schedule.dart';
 import '../../academic/data/models/task.dart';
@@ -84,7 +85,7 @@ class DashboardPage extends ConsumerWidget {
                   const _TodayNutritionCard(),
                   const SizedBox(height: AppSpacing.lg),
 
-                  const SectionHeader(title: 'Uang', icon: Icons.savings_outlined),
+                  const SectionHeader(title: 'Keuangan', icon: Icons.savings_outlined),
                   const _FinanceCard(),
                   const SizedBox(height: AppSpacing.lg),
 
@@ -171,7 +172,7 @@ class _HeroHeader extends ConsumerWidget {
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
-                              fontSize: 18,
+                              fontSize: 20,
                             ),
                           )
                         : null,
@@ -204,7 +205,7 @@ class _HeroHeader extends ConsumerWidget {
                         _dayFormat.format(DateTime.now()),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 12,
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -268,88 +269,53 @@ class _HeroHeader extends ConsumerWidget {
 /// Watchlist, Kendaraan, dan Dokumen terkubur dua lapis di dalam Profil —
 /// tempat orang mencari setelan, bukan mencari fitur. Sekarang kelimanya
 /// berjajar di layar yang paling sering kamu buka.
+/// Fitur yang tidak punya kartu ringkasan sendiri di Beranda.
+///
+/// Keterangannya sengaja tidak diisi untuk yang namanya sudah menjelaskan
+/// dirinya. "Target" dan "Wishlist" tidak butuh kalimat tambahan; "Watchlist"
+/// butuh, karena namanya tidak memberi tahu isinya film atau tempat menabung.
 class _PintasanLainnya extends StatelessWidget {
   const _PintasanLainnya();
 
   static const _isi = [
-    (Icons.flag_outlined, 'Target', '/goals', AppColors.dashboard),
-    (Icons.favorite_outline, 'Wishlist', '/wishlist', AppColors.finance),
-    (Icons.movie_outlined, 'Watchlist', '/watchlist', AppColors.watchlist),
-    (Icons.two_wheeler, 'Kendaraan', '/vehicle', AppColors.vehicle),
-    (Icons.badge_outlined, 'Dokumen', '/documents', AppColors.document),
+    MenuItemData(
+      icon: Icons.flag_outlined,
+      label: 'Target',
+      rute: '/goals',
+      warna: AppColors.dashboard,
+    ),
+    MenuItemData(
+      icon: Icons.favorite_outline,
+      label: 'Wishlist',
+      rute: '/wishlist',
+      warna: AppColors.finance,
+      keterangan: 'Barang yang ingin dibeli',
+    ),
+    MenuItemData(
+      icon: Icons.movie_outlined,
+      label: 'Watchlist',
+      rute: '/watchlist',
+      warna: AppColors.watchlist,
+      keterangan: 'Film, series, buku, komik',
+    ),
+    MenuItemData(
+      icon: Icons.two_wheeler,
+      label: 'Kendaraan',
+      rute: '/vehicle',
+      warna: AppColors.vehicle,
+      keterangan: 'Pajak, servis, bensin',
+    ),
+    MenuItemData(
+      icon: Icons.badge_outlined,
+      label: 'Dokumen',
+      rute: '/documents',
+      warna: AppColors.document,
+      keterangan: 'KTP, SIM, paspor, kartu',
+    ),
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Tiga per baris: cukup besar untuk disentuh dengan ibu jari, dan
-        // labelnya masih muat tanpa dipotong.
-        const jarak = AppSpacing.sm;
-        final lebar = (constraints.maxWidth - jarak * 2) / 3;
-
-        return Wrap(
-          spacing: jarak,
-          runSpacing: jarak,
-          children: [
-            for (final (icon, label, rute, warna) in _isi)
-              SizedBox(
-                width: lebar,
-                child: _KotakPintasan(icon: icon, label: label, rute: rute, warna: warna),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _KotakPintasan extends StatelessWidget {
-  const _KotakPintasan({
-    required this.icon,
-    required this.label,
-    required this.rute,
-    required this.warna,
-  });
-
-  final IconData icon;
-  final String label;
-  final String rute;
-  final Color warna;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Material(
-      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-      borderRadius: BorderRadius.circular(AppTheme.radius),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push(rute),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 20, color: warna),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const MenuList(items: _isi);
 }
 
 /// Menampilkan isinya seukuran aslinya, dan baru mengecilkannya kalau tidak
@@ -552,7 +518,7 @@ class _FinanceCard extends ConsumerWidget {
                         summary.kosong
                             ? 'Belum ada catatan keuangan'
                             : 'Keluar ${formatRupiah(summary.pengeluaran)} periode ini',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                       ),
                     ),
                     const Icon(Icons.chevron_right, size: 20),
@@ -569,7 +535,7 @@ class _FinanceCard extends ConsumerWidget {
                       Text(
                         kebobolan ? 'Lewat anggaran' : 'Jatah hari ini',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
@@ -579,7 +545,7 @@ class _FinanceCard extends ConsumerWidget {
                             ? formatRupiah(summary.sisaBudget!.abs())
                             : formatRupiah(jatah),
                         style: TextStyle(
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: FontWeight.w900,
                           height: 1,
                           color: kebobolan
@@ -593,7 +559,7 @@ class _FinanceCard extends ConsumerWidget {
                   Text(
                     '${summary.sisaHari} hari lagi',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -611,7 +577,7 @@ class _FinanceCard extends ConsumerWidget {
                 Icon(Icons.error_outline, size: 18, color: colorScheme.error),
                 const SizedBox(width: AppSpacing.sm),
                 const Expanded(
-                  child: Text('Gagal memuat keuangan', style: TextStyle(fontSize: 13)),
+                  child: Text('Gagal memuat keuangan', style: TextStyle(fontSize: 14)),
                 ),
               ],
             ),
@@ -659,7 +625,7 @@ class _TodayNutritionCard extends ConsumerWidget {
                   Text(
                     targets == null ? 'kkal' : '/ ${targets.goalKcal} kkal',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -667,7 +633,7 @@ class _TodayNutritionCard extends ConsumerWidget {
                   Text(
                     '${(today.waterMl / 1000).toStringAsFixed(1)} L air',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -696,7 +662,7 @@ class _TodayNutritionCard extends ConsumerWidget {
                     : 'Protein ${today.proteinG.round()} g  ·  '
                         'Karbo ${today.carbsG.round()} g  ·  Lemak ${today.fatG.round()} g',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),

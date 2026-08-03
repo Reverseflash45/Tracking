@@ -244,14 +244,14 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChoiceChip(
-      label: Text(label, style: const TextStyle(fontSize: 12)),
+      label: Text(label, style: const TextStyle(fontSize: 13)),
       selected: dipilih,
       onSelected: (_) => onTap(),
       selectedColor: _color.withValues(alpha: 0.18),
       showCheckmark: false,
       side: dipilih ? const BorderSide(color: _color) : null,
       labelStyle: TextStyle(
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: dipilih ? FontWeight.w700 : FontWeight.w500,
         color: dipilih ? _color : null,
       ),
@@ -281,7 +281,7 @@ class _SheetSaringan extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Bentuk', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          const Text('Bentuk', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: 6,
@@ -301,7 +301,7 @@ class _SheetSaringan extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          const Text('Asal', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          const Text('Asal', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: 6,
@@ -375,7 +375,7 @@ class _KartuNilai extends StatelessWidget {
                     // Jumlahnya selalu disebut: 9,0 dari satu judul bukan
                     // kesimpulan tentang seleramu.
                     'Dari $jumlah judul yang sudah kamu nilai',
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -458,7 +458,7 @@ class _KartuMedia extends ConsumerWidget {
                           Text(
                             '${item.origin.label}  ·  ${item.kind.label}  ·  '
                             '${item.status.labelUntuk(item.kind)}',
-                            style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -473,7 +473,7 @@ class _KartuMedia extends ConsumerWidget {
                         child: Text(
                           '$nilai/$kNilaiMaks',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w800,
                             color: _color,
                           ),
@@ -487,7 +487,7 @@ class _KartuMedia extends ConsumerWidget {
                     children: [
                       Text(
                         label,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                       ),
                       if (persen != null) ...[
                         const SizedBox(width: AppSpacing.sm),
@@ -513,7 +513,7 @@ class _KartuMedia extends ConsumerWidget {
                             child: Text(
                               'total belum diisi',
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: colorScheme.onSurfaceVariant,
                               ),
                             ),
@@ -528,7 +528,7 @@ class _KartuMedia extends ConsumerWidget {
                     catatan,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.sm),
@@ -591,7 +591,7 @@ class _AksiKecil extends StatelessWidget {
     return TextButton.icon(
       onPressed: onTap,
       icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
+      label: Text(label, style: const TextStyle(fontSize: 13)),
       style: TextButton.styleFrom(
         foregroundColor: _color,
         visualDensity: VisualDensity.compact,
@@ -820,7 +820,7 @@ class _SheetMediaState extends ConsumerState<_SheetMedia> {
             children: [
               Text(
                 _isEdit ? 'Edit Judul' : 'Judul Baru',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -972,7 +972,7 @@ class _Label extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: FontWeight.w700,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),

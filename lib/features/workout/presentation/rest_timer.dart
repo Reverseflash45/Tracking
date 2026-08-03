@@ -215,7 +215,7 @@ class RestTimerBar extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               color: colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -277,7 +277,7 @@ class _AdjustButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -357,7 +357,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                         widget.exerciseName!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                       ),
                   ],
                 ),
@@ -404,7 +404,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                   onSelected: (_) => setState(() => _seconds = preset),
                   selectedColor: _color.withValues(alpha: 0.18),
                   labelStyle: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: _seconds == preset ? _color : colorScheme.onSurfaceVariant,
                   ),

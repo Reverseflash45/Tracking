@@ -245,7 +245,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                                       'tidak ditebak. Pilih salah satu angka di '
                                       'bawah atau ketik sendiri.',
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             height: 1.4,
                             color: colorScheme.onSurface,
                           ),
@@ -282,11 +282,11 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                 // justru saat kamu paling butuh mengetik cepat.
                 autofocus: !_isEdit && _amountController.text.isEmpty,
                 keyboardType: TextInputType.number,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                 decoration: const InputDecoration(
                   labelText: 'Nominal',
                   prefixText: 'Rp ',
-                  prefixStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  prefixStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                 ),
                 validator: (value) {
                   final parsed = parseRupiah(value ?? '');
@@ -302,7 +302,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Angka yang terbaca di struk:',
-                  style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 6),
                 Wrap(
@@ -315,7 +315,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                         label: Text(
                           formatRupiah(value),
                           style: const TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -346,7 +346,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                       onSelected: (_) => setState(() => _category = category),
                       selectedColor: _color.withValues(alpha: 0.18),
                       labelStyle: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: _category == category
                             ? _color
@@ -375,7 +375,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
               const SizedBox(height: AppSpacing.md),
               Text(
                 'Tempat (opsional)',
-                style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 6),
               Wrap(
@@ -397,7 +397,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                           setState(() => _placeKind = dipilih ? place : null),
                       selectedColor: _color.withValues(alpha: 0.18),
                       labelStyle: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: _placeKind == place ? _color : colorScheme.onSurfaceVariant,
                       ),
@@ -440,7 +440,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                   tilePadding: EdgeInsets.zero,
                   title: Text(
                     'Lihat teks yang terbaca',
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                   ),
                   children: [
                     Container(
@@ -452,7 +452,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                       ),
                       child: Text(
                         widget.guess!.rawLines.join('\n'),
-                        style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                        style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
                       ),
                     ),
                   ],

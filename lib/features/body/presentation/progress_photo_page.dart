@@ -235,7 +235,7 @@ class _CatatanPrivasi extends StatelessWidget {
                 'yang bisa dilihat lewat tautan. Hanya akunmu yang bisa '
                 'membukanya.',
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   height: 1.45,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -293,7 +293,7 @@ class _PhotoTile extends ConsumerWidget {
                       _dateFormat.format(photo.takenOn),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 9.5,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -302,7 +302,7 @@ class _PhotoTile extends ConsumerWidget {
                         '${photo.weightKg!.toStringAsFixed(1)} kg',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 9,
+                          fontSize: 11,
                         ),
                       ),
                   ],
@@ -395,7 +395,7 @@ class _Perbandingan extends StatelessWidget {
                       '${selisihBerat.toStringAsFixed(1)} kg',
               ].join('  ·  '),
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -421,7 +421,7 @@ class _SisiBanding extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 10.5,
+            fontSize: 11,
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurfaceVariant,
           ),
@@ -437,12 +437,12 @@ class _SisiBanding extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           _dateFormat.format(photo.takenOn),
-          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
         ),
         if (photo.weightKg != null)
           Text(
             '${photo.weightKg!.toStringAsFixed(1)} kg',
-            style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
           ),
       ],
     );
@@ -485,7 +485,7 @@ Future<void> _bukaDetail(
                 if (photo.weightKg != null)
                   '${photo.weightKg!.toStringAsFixed(1)} kg',
               ].join('  ·  '),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
             ),
             const SizedBox(height: AppSpacing.sm),
             Consumer(

@@ -137,7 +137,7 @@ class HeroHeader extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
-                        fontSize: 22,
+                        fontSize: 20,
                       ),
                     ),
                     if (subtitle != null) ...[
@@ -146,7 +146,7 @@ class HeroHeader extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 12,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -206,7 +206,7 @@ class HeroHeader extends StatelessWidget {
                       style: TextStyle(
                         color: colorScheme.onSurface,
                         fontWeight: FontWeight.w700,
-                        fontSize: 19,
+                        fontSize: 20,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -218,7 +218,7 @@ class HeroHeader extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: colorScheme.onSurfaceVariant,
-                          fontSize: 12,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -280,7 +280,7 @@ class _StatStrip extends StatelessWidget {
                   style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.w800,
-                    fontSize: 18,
+                    fontSize: 20,
                     height: 1.1,
                   ),
                 ),
@@ -291,7 +291,7 @@ class _StatStrip extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: colorScheme.onSurfaceVariant,
-                    fontSize: 11,
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -339,7 +339,7 @@ class HeroStat extends StatelessWidget {
             data.label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
           ),
         ],
       ),

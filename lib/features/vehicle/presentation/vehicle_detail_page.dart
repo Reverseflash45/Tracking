@@ -124,7 +124,7 @@ class VehicleDetailPage extends ConsumerWidget {
                       child: Text(
                         'Belum ada yang bisa dihitung. Isi tanggal pajak lewat tombol '
                         'edit di atas, atau catat servis pertamamu.',
-                        style: TextStyle(fontSize: 12.5, height: 1.45),
+                        style: TextStyle(fontSize: 13, height: 1.45),
                       ),
                     )
                   else
@@ -210,7 +210,7 @@ class _Catatan extends StatelessWidget {
               child: Text(
                 teks,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   height: 1.45,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -254,12 +254,12 @@ class _BarisJadwal extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       pengingat.judul,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                     ),
                   ),
                   Text(
                     ringkasanSisa(pengingat),
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: warna),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: warna),
                   ),
                 ],
               ),
@@ -268,14 +268,14 @@ class _BarisJadwal extends ConsumerWidget {
                 pengingat.tanggal == null
                     ? pengingat.dasar
                     : '${_tanggalFormat.format(pengingat.tanggal!)}  ·  ${pengingat.dasar}',
-                style: TextStyle(fontSize: 11, height: 1.4, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, height: 1.4, color: colorScheme.onSurfaceVariant),
               ),
               if (pajak && vehicle.taxDueOn != null) ...[
                 const SizedBox(height: 4),
                 TextButton.icon(
                   onPressed: () => _bayarPajak(context, ref, vehicle),
                   icon: const Icon(Icons.check, size: 15),
-                  label: const Text('Sudah dibayar', style: TextStyle(fontSize: 12)),
+                  label: const Text('Sudah dibayar', style: TextStyle(fontSize: 13)),
                   style: TextButton.styleFrom(
                     foregroundColor: _color,
                     visualDensity: VisualDensity.compact,
@@ -384,7 +384,7 @@ class _KartuServis extends ConsumerWidget {
                     children: [
                       Text(
                         log.kind.label,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -395,14 +395,14 @@ class _KartuServis extends ConsumerWidget {
                         ].join('  ·  '),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
                 ),
                 Text(
                   log.cost == null ? '—' : formatRupiahRingkas(log.cost!),
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                 ),
               ],
             ),
@@ -550,7 +550,7 @@ class _SheetServisState extends ConsumerState<_SheetServis> {
             children: [
               Text(
                 _isEdit ? 'Edit Servis' : 'Catat Servis',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
               ),
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<ServiceKind>(
@@ -587,7 +587,7 @@ class _SheetServisState extends ConsumerState<_SheetServis> {
                   _ => 'Jenis ini tidak punya patokan jadwal — dicatat saja '
                       'sebagai riwayat.',
                 },
-                style: TextStyle(fontSize: 11.5, height: 1.4, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, height: 1.4, color: colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: AppSpacing.md),
               InkWell(
@@ -639,11 +639,11 @@ class _SheetServisState extends ConsumerState<_SheetServis> {
                   controlAffinity: ListTileControlAffinity.leading,
                   title: const Text(
                     'Catat juga sebagai pengeluaran',
-                    style: TextStyle(fontSize: 13),
+                    style: TextStyle(fontSize: 14),
                   ),
                   subtitle: const Text(
                     'Masuk kategori Transport di Keuangan',
-                    style: TextStyle(fontSize: 11),
+                    style: TextStyle(fontSize: 12),
                   ),
                 ),
               const SizedBox(height: AppSpacing.sm),
