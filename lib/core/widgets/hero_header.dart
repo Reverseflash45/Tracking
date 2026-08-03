@@ -113,8 +113,8 @@ class HeroHeader extends StatelessWidget {
           colors: gradientFor(color),
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
       ),
       child: Column(
@@ -146,7 +146,7 @@ class HeroHeader extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 13,
+                          fontSize: 14,
                         ),
                       ),
                     ],
@@ -218,7 +218,7 @@ class HeroHeader extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: colorScheme.onSurfaceVariant,
-                          fontSize: 13,
+                          fontSize: 14,
                         ),
                       ),
                     ],
@@ -311,7 +311,7 @@ class HeroStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(16),
@@ -321,7 +321,7 @@ class HeroStat extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(data.icon, color: Colors.white, size: 18),
+          Icon(data.icon, color: Colors.white, size: 20),
           const SizedBox(height: 8),
           Text(
             data.value,
@@ -372,7 +372,7 @@ class HeroIconButton extends StatelessWidget {
       return IconButton(
         onPressed: onPressed,
         tooltip: tooltip,
-        icon: Icon(icon, color: colorScheme.onSurfaceVariant, size: 22),
+        icon: Icon(icon, color: colorScheme.onSurfaceVariant, size: 24),
       );
     }
 
@@ -382,7 +382,7 @@ class HeroIconButton extends StatelessWidget {
       icon: Icon(icon, color: Colors.white),
       style: IconButton.styleFrom(
         backgroundColor: Colors.white.withValues(alpha: 0.16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }

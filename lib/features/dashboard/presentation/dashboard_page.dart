@@ -142,8 +142,8 @@ class _HeroHeader extends ConsumerWidget {
           colors: HeroHeader.gradientFor(AppColors.dashboard),
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
       ),
       child: Column(
@@ -205,7 +205,7 @@ class _HeroHeader extends ConsumerWidget {
                         _dayFormat.format(DateTime.now()),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 13,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -359,7 +359,7 @@ class _AchievementsRow extends ConsumerWidget {
         children: [
           for (final achievement in achievements)
             Chip(
-              avatar: Icon(achievement.icon, size: 18, color: Theme.of(context).colorScheme.primary),
+              avatar: Icon(achievement.icon, size: 20, color: Theme.of(context).colorScheme.primary),
               label: Text(achievement.label),
             ),
         ],
@@ -425,7 +425,7 @@ class _TodayScheduleCard extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: Row(
                         children: [
-                          const Icon(Icons.access_time, size: 18, color: _academicColor),
+                          const Icon(Icons.access_time, size: 20, color: _academicColor),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text('${schedule.timeRangeLabel} - ${schedule.courseName}'
@@ -468,7 +468,7 @@ class _UpcomingDeadlinesCard extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: Row(
                         children: [
-                          const Icon(Icons.alarm, size: 18, color: _deadlineColor),
+                          const Icon(Icons.alarm, size: 20, color: _deadlineColor),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text('${task.title} - ${_deadlineFormat.format(task.deadline)}'),
@@ -511,7 +511,7 @@ class _FinanceCard extends ConsumerWidget {
                 return Row(
                   children: [
                     const Icon(Icons.savings_outlined,
-                        size: 18, color: AppColors.finance),
+                        size: 20, color: AppColors.finance),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
@@ -559,7 +559,7 @@ class _FinanceCard extends ConsumerWidget {
                   Text(
                     '${summary.sisaHari} hari lagi',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -574,7 +574,7 @@ class _FinanceCard extends ConsumerWidget {
             ),
             error: (error, _) => Row(
               children: [
-                Icon(Icons.error_outline, size: 18, color: colorScheme.error),
+                Icon(Icons.error_outline, size: 20, color: colorScheme.error),
                 const SizedBox(width: AppSpacing.sm),
                 const Expanded(
                   child: Text('Gagal memuat keuangan', style: TextStyle(fontSize: 14)),
@@ -625,7 +625,7 @@ class _TodayNutritionCard extends ConsumerWidget {
                   Text(
                     targets == null ? 'kkal' : '/ ${targets.goalKcal} kkal',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -633,7 +633,7 @@ class _TodayNutritionCard extends ConsumerWidget {
                   Text(
                     '${(today.waterMl / 1000).toStringAsFixed(1)} L air',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -642,7 +642,7 @@ class _TodayNutritionCard extends ConsumerWidget {
               if (targets != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   child: LinearProgressIndicator(
                     value: (today.calories / targets.goalKcal).clamp(0.0, 1.0),
                     minHeight: 7,
@@ -662,7 +662,7 @@ class _TodayNutritionCard extends ConsumerWidget {
                     : 'Protein ${today.proteinG.round()} g  ·  '
                         'Karbo ${today.carbsG.round()} g  ·  Lemak ${today.fatG.round()} g',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),

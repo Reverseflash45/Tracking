@@ -197,7 +197,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.info_outline, size: 18, color: _color),
+                          const Icon(Icons.info_outline, size: 20, color: _color),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
@@ -208,7 +208,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                               'diperbaiki diam-diam. Periksa dulu sebelum '
                               'menyimpan.',
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 height: 1.45,
                                 color: colorScheme.onSurfaceVariant,
                               ),
@@ -227,7 +227,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                           style: FilledButton.styleFrom(
                             backgroundColor: _color,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           icon: _scanning
                               ? const SizedBox(
@@ -238,7 +238,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.photo_camera_outlined, size: 18),
+                              : const Icon(Icons.photo_camera_outlined, size: 20),
                           label: Text(_scanning ? 'Membaca...' : 'Foto KHS'),
                         ),
                       ),
@@ -249,9 +249,9 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: _color,
                             side: const BorderSide(color: _color),
-                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          icon: const Icon(Icons.photo_library_outlined, size: 18),
+                          icon: const Icon(Icons.photo_library_outlined, size: 20),
                           label: const Text('Dari Galeri'),
                         ),
                       ),
@@ -269,13 +269,13 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(Icons.error_outline,
-                              size: 18, color: colorScheme.onErrorContainer),
+                              size: 20, color: colorScheme.onErrorContainer),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               _error!,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 height: 1.4,
                                 color: colorScheme.onErrorContainer,
                               ),
@@ -368,7 +368,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                         style: TextButton.styleFrom(foregroundColor: _color),
                         child: Text(
                           _selected.length == _entries.length ? 'Lepas semua' : 'Pilih semua',
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ),
                     ],
@@ -391,7 +391,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                     tilePadding: EdgeInsets.zero,
                     title: Text(
                       'Lihat teks yang terbaca',
-                      style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                     ),
                     children: [
                       Container(
@@ -399,7 +399,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           _rawText!,
@@ -448,7 +448,7 @@ class _EntryTile extends StatelessWidget {
     final warna = belumTerbaca ? colorScheme.error : _color;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: 4),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         // Baris yang nilainya belum terbaca tidak bisa dicentang — yang bisa
@@ -467,10 +467,10 @@ class _EntryTile extends StatelessWidget {
                 width: 34,
                 height: 34,
                 alignment: Alignment.center,
-                margin: const EdgeInsets.only(right: 10),
+                margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color: warna.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(9),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   entry.huruf ?? '?',
@@ -507,7 +507,7 @@ class _EntryTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         'Nilainya tidak terbaca — ketuk untuk mengisi',
-                        style: TextStyle(fontSize: 11, color: colorScheme.error),
+                        style: TextStyle(fontSize: 12, color: colorScheme.error),
                       ),
                     ] else if (entry.sks == null) ...[
                       const SizedBox(height: 2),
@@ -515,20 +515,20 @@ class _EntryTile extends StatelessWidget {
                         // Nilainya tetap tersimpan; yang tidak bisa cuma ikut
                         // menghitung IPK, karena IPK ditimbang sks.
                         'Isi sks-nya supaya ikut menghitung IPK',
-                        style: TextStyle(fontSize: 11, color: colorScheme.error),
+                        style: TextStyle(fontSize: 12, color: colorScheme.error),
                       ),
                     ] else if (entry.janggal) ...[
                       const SizedBox(height: 2),
                       Text(
                         'Huruf dan bobotnya tidak cocok — periksa dulu',
-                        style: TextStyle(fontSize: 11, color: colorScheme.error),
+                        style: TextStyle(fontSize: 12, color: colorScheme.error),
                       ),
                     ],
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 18),
+                icon: const Icon(Icons.edit_outlined, size: 20),
                 tooltip: 'Perbaiki',
                 onPressed: onEdit,
               ),
@@ -637,11 +637,11 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
               const SizedBox(height: AppSpacing.sm),
               OutlinedButton.icon(
                 onPressed: () => setState(() => _huruf = saran),
-                icon: const Icon(Icons.calculate_outlined, size: 17),
+                icon: const Icon(Icons.calculate_outlined, size: 16),
                 label: Text(
                   'Pakai $saran — dari bobot '
                   '${_angkaRapi(widget.entry.bobot!)} ÷ ${_sksController.text.trim()} sks',
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: 14),
                 ),
               ),
             ],
@@ -689,7 +689,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
               style: FilledButton.styleFrom(
                 backgroundColor: _color,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: const Text('Simpan Perubahan'),
             ),

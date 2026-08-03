@@ -258,18 +258,11 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
+                  Icon(
                       _isEdit ? Icons.edit_outlined : Icons.restaurant,
-                      size: 18,
+                      size: 20,
                       color: _color,
                     ),
-                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     _isEdit ? 'Edit Makanan' : 'Catat Makanan',
@@ -293,7 +286,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                           width: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.qr_code_scanner, size: 18),
+                      : const Icon(Icons.qr_code_scanner, size: 20),
                   label: Text(
                     _memindai ? 'Mencari...' : 'Scan barcode kemasan',
                     style: const TextStyle(fontSize: 14),
@@ -315,13 +308,13 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 SizedBox(
                   height: 34,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: frequent.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 6),
+                    separatorBuilder: (_, _) => const SizedBox(width: 4),
                     itemBuilder: (context, index) {
                       final food = frequent[index];
                       return ActionChip(
@@ -400,10 +393,10 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                     foregroundColor: _color,
                     visualDensity: VisualDensity.compact,
                   ),
-                  icon: Icon(_showDetail ? Icons.expand_less : Icons.expand_more, size: 18),
+                  icon: Icon(_showDetail ? Icons.expand_less : Icons.expand_more, size: 20),
                   label: Text(
                     _showDetail ? 'Sembunyikan detail' : 'Detail lain (opsional)',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

@@ -144,14 +144,7 @@ class _InsightCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 18, color: _color),
-                ),
+                Icon(icon, size: 20, color: _color),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -169,7 +162,7 @@ class _InsightCard extends StatelessWidget {
             Text(
               insight.detail,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 height: 1.5,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -220,7 +213,7 @@ class _Peringatan extends StatelessWidget {
                 'untuk keduanya sekaligus. Angkanya menunjukkan yang terjadi '
                 'bersamaan, bukan yang menyebabkan.',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   height: 1.5,
                   color: colorScheme.onSurfaceVariant,
                 ),

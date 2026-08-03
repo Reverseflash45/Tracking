@@ -194,18 +194,11 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
+                  Icon(
                       _fromReceipt ? Icons.receipt_long : Icons.payments_outlined,
-                      size: 18,
+                      size: 20,
                       color: _color,
                     ),
-                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     _isEdit
@@ -227,7 +220,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: AppColors.priorityMedium.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +297,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                   'Angka yang terbaca di struk:',
                   style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
@@ -336,7 +329,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                     ChoiceChip(
                       avatar: Icon(
                         category.icon,
-                        size: 15,
+                        size: 16,
                         color: _category == category
                             ? _color
                             : colorScheme.onSurfaceVariant,
@@ -359,11 +352,11 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
               const SizedBox(height: AppSpacing.md),
               InkWell(
                 onTap: _pickDate,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 child: InputDecorator(
                   decoration: const InputDecoration(
                     labelText: 'Tanggal',
-                    prefixIcon: Icon(Icons.calendar_today, size: 18),
+                    prefixIcon: Icon(Icons.calendar_today, size: 20),
                   ),
                   child: Text(_dateFormat.format(_date)),
                 ),
@@ -377,7 +370,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                 'Tempat (opsional)',
                 style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -386,7 +379,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                     ChoiceChip(
                       avatar: Icon(
                         place.icon,
-                        size: 15,
+                        size: 16,
                         color: _placeKind == place ? _color : colorScheme.onSurfaceVariant,
                       ),
                       label: Text(place.label),
@@ -440,7 +433,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                   tilePadding: EdgeInsets.zero,
                   title: Text(
                     'Lihat teks yang terbaca',
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                   ),
                   children: [
                     Container(
@@ -448,7 +441,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         widget.guess!.rawLines.join('\n'),
@@ -465,7 +458,7 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                 style: FilledButton.styleFrom(
                   backgroundColor: _color,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 icon: _saving
                     ? const SizedBox(

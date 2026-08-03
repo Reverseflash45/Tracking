@@ -290,7 +290,7 @@ class _TaskTile extends ConsumerWidget {
                           color: task.isDone ? colorScheme.onSurfaceVariant : null,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
@@ -325,7 +325,7 @@ class _TaskTile extends ConsumerWidget {
                       .map((status) => PopupMenuItem(value: status, child: Text(status.label)))
                       .toList(),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(999),
@@ -361,11 +361,11 @@ class _MetaPill extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 3),
+        Icon(icon, size: 12, color: color),
+        const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 14, color: color, fontWeight: FontWeight.w500),
         ),
       ],
     );

@@ -92,7 +92,7 @@ class SleepPage extends ConsumerWidget {
                   else
                     for (final log in logs)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.only(bottom: 4),
                         child: _SleepTile(log: log),
                       ),
                 ],
@@ -153,9 +153,9 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: _color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.bedtime, size: 18, color: _color),
+                  child: const Icon(Icons.bedtime, size: 20, color: _color),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
@@ -168,7 +168,7 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(
               hariIni == null
                   ? 'Dicatat di tanggal bangun, jadi begadang sampai subuh '
@@ -239,12 +239,12 @@ class _RingkasanCard extends StatelessWidget {
               '(anjuran umum ${kSleepTargetMin.round()}–${kSleepTargetMax.round()} jam). '
               '${ringkasan.persenCukup.round()}% di antaranya cukup.',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 height: 1.45,
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               'Dihitung dari hari yang tercatat saja — hari yang lupa dicatat '
               'bukan hari kurang tidur.',
@@ -297,7 +297,7 @@ class _SleepTile extends ConsumerWidget {
             decoration: BoxDecoration(
               color: (cukup ? AppColors.statusDone : AppColors.priorityMedium)
                   .withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               cukup ? Icons.bedtime : Icons.nights_stay_outlined,

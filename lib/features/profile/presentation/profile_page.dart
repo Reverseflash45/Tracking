@@ -117,8 +117,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 colors: HeroHeader.gradientFor(AppColors.profile),
               ),
               borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(28),
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
               ),
             ),
             child: Column(
@@ -165,7 +165,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         right: -2,
                         bottom: -2,
                         child: Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: AppColors.profile,
                             shape: BoxShape.circle,
@@ -345,7 +345,7 @@ class _MenuTile extends StatelessWidget {
           // menempel ke tepi kartu dan bikin sesak.
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: 14,
+            vertical: 12,
           ),
           child: Row(
             children: [
@@ -353,7 +353,7 @@ class _MenuTile extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: busy
                     ? SizedBox(
@@ -361,7 +361,7 @@ class _MenuTile extends StatelessWidget {
                         width: 18,
                         child: CircularProgressIndicator(strokeWidth: 2, color: color),
                       )
-                    : Icon(icon, size: 18, color: color),
+                    : Icon(icon, size: 20, color: color),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -377,11 +377,11 @@ class _MenuTile extends StatelessWidget {
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         height: 1.35,
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -431,9 +431,9 @@ class _NotificationSettingsCard extends ConsumerWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.profile.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.alarm, size: 18, color: AppColors.profile),
+              child: const Icon(Icons.alarm, size: 20, color: AppColors.profile),
             ),
             title: const Text(
               'Pengingat',
@@ -458,7 +458,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
           const Divider(height: 1),
           ListTile(
             enabled: settings.aktif,
-            leading: const SizedBox(width: 34, child: Icon(Icons.schedule, size: 18)),
+            leading: const SizedBox(width: 34, child: Icon(Icons.schedule, size: 20)),
             title: const Text('Jam pengingat'),
             subtitle: const Text('Untuk deadline tugas dan tagihan rutin'),
             trailing: Text(
@@ -476,7 +476,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
           const Divider(height: 1),
           for (final kind in ReminderKind.values)
             SwitchListTile(
-              secondary: SizedBox(width: 34, child: Icon(kind.icon, size: 18)),
+              secondary: SizedBox(width: 34, child: Icon(kind.icon, size: 20)),
               title: Text(kind.label, style: const TextStyle(fontSize: 14)),
               subtitle: Text(_kapanBerbunyi(kind, settings), style: const TextStyle(fontSize: 12)),
               dense: true,
@@ -492,7 +492,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
             const Divider(height: 1),
             ListTile(
               enabled: settings.aktif,
-              leading: const SizedBox(width: 34, child: Icon(Icons.timer_outlined, size: 18)),
+              leading: const SizedBox(width: 34, child: Icon(Icons.timer_outlined, size: 20)),
               title: const Text('Jeda sebelum kelas', style: TextStyle(fontSize: 14)),
               dense: true,
               trailing: Text(
@@ -519,7 +519,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
           ],
           const Divider(height: 1),
           ListTile(
-            leading: const SizedBox(width: 34, child: Icon(Icons.send_outlined, size: 18)),
+            leading: const SizedBox(width: 34, child: Icon(Icons.send_outlined, size: 20)),
             title: const Text('Tes notifikasi'),
             subtitle: const Text('Kirim satu notifikasi sekarang'),
             onTap: () async {

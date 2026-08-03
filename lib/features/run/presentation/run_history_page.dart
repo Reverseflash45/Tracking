@@ -187,7 +187,7 @@ class _RunCard extends ConsumerWidget {
                   _dateFormat.format(run.startedAt),
                   style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -205,7 +205,7 @@ class _RunCard extends ConsumerWidget {
                       icon: Icons.timer_outlined,
                       label: formatDuration(run.durationSeconds),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     _Pill(
                       icon: Icons.speed,
                       label: pace == null ? '-' : '${formatPace(pace)}/km',
@@ -233,9 +233,9 @@ class _Pill extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color),
+        Icon(icon, size: 16, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 13, color: color)),
+        Text(label, style: TextStyle(fontSize: 14, color: color)),
       ],
     );
   }
@@ -280,7 +280,7 @@ class _RunDetailPage extends StatelessWidget {
           Text(
             _dateFormat.format(run.startedAt),
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
@@ -388,7 +388,7 @@ class _SplitRow extends StatelessWidget {
           ),
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               child: LinearProgressIndicator(
                 value: ratio,
                 minHeight: 8,
@@ -406,7 +406,7 @@ class _SplitRow extends StatelessWidget {
               split.label,
               textAlign: TextAlign.right,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 fontFeatures: [FontFeature.tabularFigures()],
               ),

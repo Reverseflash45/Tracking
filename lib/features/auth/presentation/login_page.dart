@@ -68,9 +68,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.rocket_launch, size: 34, color: Colors.white),
+                      child: const Icon(Icons.rocket_launch, size: 32, color: Colors.white),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     const Text(
@@ -98,8 +98,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
                   ),
                   child: SingleChildScrollView(

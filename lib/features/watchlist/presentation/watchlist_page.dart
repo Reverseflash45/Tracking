@@ -172,11 +172,11 @@ class _BarisCariState extends ConsumerState<_BarisCari> {
             decoration: InputDecoration(
               isDense: true,
               hintText: 'Cari judul',
-              prefixIcon: const Icon(Icons.search, size: 19),
+              prefixIcon: const Icon(Icons.search, size: 20),
               suffixIcon: _controller.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.close, size: 18),
+                      icon: const Icon(Icons.close, size: 20),
                       tooltip: 'Hapus',
                       onPressed: () {
                         _controller.clear();
@@ -219,7 +219,7 @@ class _ChipStatus extends ConsumerWidget {
             onTap: () => ref.read(watchFilterProvider.notifier).setStatus(null),
           ),
           for (final status in WatchStatus.values) ...[
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             _Chip(
               label: status.label,
               dipilih: aktif == status,
@@ -244,14 +244,14 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChoiceChip(
-      label: Text(label, style: const TextStyle(fontSize: 13)),
+      label: Text(label, style: const TextStyle(fontSize: 14)),
       selected: dipilih,
       onSelected: (_) => onTap(),
       selectedColor: _color.withValues(alpha: 0.18),
       showCheckmark: false,
       side: dipilih ? const BorderSide(color: _color) : null,
       labelStyle: TextStyle(
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: dipilih ? FontWeight.w700 : FontWeight.w500,
         color: dipilih ? _color : null,
       ),
@@ -375,7 +375,7 @@ class _KartuNilai extends StatelessWidget {
                     // Jumlahnya selalu disebut: 9,0 dari satu judul bukan
                     // kesimpulan tentang seleramu.
                     'Dari $jumlah judul yang sudah kamu nilai',
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -436,14 +436,7 @@ class _KartuMedia extends ConsumerWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: _color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(item.kind.icon, size: 16, color: _color),
-                    ),
+                    Icon(item.kind.icon, size: 16, color: _color),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Column(
@@ -454,7 +447,7 @@ class _KartuMedia extends ConsumerWidget {
                             item.year == null ? item.title : '${item.title} (${item.year})',
                             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
                           Text(
                             '${item.origin.label}  ·  ${item.kind.label}  ·  '
                             '${item.status.labelUntuk(item.kind)}',
@@ -487,13 +480,13 @@ class _KartuMedia extends ConsumerWidget {
                     children: [
                       Text(
                         label,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                       ),
                       if (persen != null) ...[
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(16),
                             child: LinearProgressIndicator(
                               value: persen,
                               minHeight: 6,
@@ -523,12 +516,12 @@ class _KartuMedia extends ConsumerWidget {
                   ),
                 ],
                 if (item.note case final catatan? when catatan.trim().isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     catatan,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.sm),
@@ -545,7 +538,7 @@ class _KartuMedia extends ConsumerWidget {
                         },
                       ),
                     if (!item.selesai) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       _AksiKecil(
                         icon: Icons.check,
                         label: 'Tamat',
@@ -553,7 +546,7 @@ class _KartuMedia extends ConsumerWidget {
                       ),
                     ],
                     if (item.selesai || item.status == WatchStatus.berhenti) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       _AksiKecil(
                         icon: Icons.star_border,
                         label: item.dinilai ? 'Ubah nilai' : 'Beri nilai',
@@ -563,7 +556,7 @@ class _KartuMedia extends ConsumerWidget {
                     const Spacer(),
                     if (item.url case final url? when url.trim().isNotEmpty)
                       IconButton(
-                        icon: const Icon(Icons.open_in_new, size: 17),
+                        icon: const Icon(Icons.open_in_new, size: 16),
                         tooltip: 'Buka tautan',
                         visualDensity: VisualDensity.compact,
                         onPressed: () => _bukaTautan(context, url),
@@ -591,11 +584,11 @@ class _AksiKecil extends StatelessWidget {
     return TextButton.icon(
       onPressed: onTap,
       icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 13)),
+      label: Text(label, style: const TextStyle(fontSize: 14)),
       style: TextButton.styleFrom(
         foregroundColor: _color,
         visualDensity: VisualDensity.compact,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
       ),
     );
   }
@@ -968,11 +961,11 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: FontWeight.w700,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),

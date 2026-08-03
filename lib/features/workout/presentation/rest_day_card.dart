@@ -95,14 +95,7 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: warna.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 18, color: warna),
-                ),
+                Icon(icon, size: 20, color: warna),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
@@ -115,7 +108,7 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
                           fontSize: 14,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Text(
                         pesan,
                         style: TextStyle(
@@ -151,7 +144,7 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
                 child: restToday != null
                     ? TextButton.icon(
                         onPressed: _sibuk ? null : () => _batalkan(restToday),
-                        icon: const Icon(Icons.undo, size: 17),
+                        icon: const Icon(Icons.undo, size: 16),
                         label: const Text('Batalkan'),
                       )
                     : FilledButton.tonalIcon(
@@ -160,7 +153,7 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
                           backgroundColor: _restColor.withValues(alpha: 0.14),
                           foregroundColor: _restColor,
                         ),
-                        icon: const Icon(Icons.bedtime_outlined, size: 17),
+                        icon: const Icon(Icons.bedtime_outlined, size: 16),
                         label: const Text('Tandai Istirahat'),
                       ),
               ),

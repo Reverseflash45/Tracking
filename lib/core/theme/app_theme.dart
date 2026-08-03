@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+/// Jarak, semuanya kelipatan 4.
+///
+/// Grid 8pt dipakai Apple maupun Google, dengan 4 sebagai setengah langkah
+/// untuk jarak halus di dalam satu komponen. App ini dulu memakai 21 nilai
+/// berbeda — termasuk 5, 6, 9, 13, 18, dan 26 — yang artinya tiap layar
+/// meleset dari garis yang sama sedikit-sedikit. Melesetnya tidak kelihatan
+/// satu per satu; yang kelihatan cuma rasa bahwa semuanya agak goyang.
 class AppSpacing {
   AppSpacing._();
 
@@ -10,31 +17,51 @@ class AppSpacing {
   static const double xl = 32;
 }
 
-/// Tangga ukuran huruf. Delapan langkah, dan tidak ada langkah kesembilan.
+/// Kelengkungan sudut, empat langkah.
+///
+/// Dulu ada 12 nilai berbeda, dan yang paling sering dipakai (10, 37 kali)
+/// bukan yang ada di theme (16, 4 kali). Theme-nya ditulis lalu diabaikan.
+///
+/// Sudut yang berbeda-beda tanpa alasan membuat elemen yang sebenarnya sejenis
+/// terlihat berasal dari app yang berbeda.
+class AppRadius {
+  AppRadius._();
+
+  /// 12 — elemen kecil di dalam kartu: kapsul kategori, kotak ikon, tombol.
+  static const double kecil = 12;
+
+  /// 16 — kartu dan kolom isian. Ukuran baku.
+  static const double kartu = 16;
+
+  /// 24 — lembar yang naik dari bawah dan wadah selebar layar.
+  static const double besar = 24;
+
+  /// Setengah lingkaran penuh untuk bentuk pil.
+  static const double kapsul = 999;
+}
+
+/// Tangga ukuran huruf. Enam langkah, dan tidak ada langkah ketujuh.
 ///
 /// Sebelum ini theme tidak punya textTheme sama sekali, jadi tiap widget
 /// mengarang ukurannya sendiri: 29 ukuran berbeda tersebar di 452 tempat,
-/// termasuk 11.5, 12.5, 13.5, dan 14.5. Beda setengah piksel antara dua teks
-/// bersebelahan tidak terbaca sebagai "yang ini lebih penting" — terbacanya
-/// seperti layar yang salah render. Hierarki baru terasa kalau langkahnya
-/// cukup jauh untuk terlihat.
+/// termasuk 11.5, 12.5, 13.5, dan 14.5.
 ///
-/// Lantainya 11sp. Material menaruh label terkecilnya di 11sp dan teks isi di
+/// Langkahnya bukan cuma harus sedikit, tapi harus berjauhan. Panduan hierarki
+/// visual memakai rasio 1.25–1.5x antar tingkat: di bawah itu mata tidak
+/// mengenali bedanya sebagai "yang ini lebih penting", dan dua teks
+/// bersebelahan yang bedanya satu piksel malah terbaca seperti layar yang
+/// salah render. Karena itu 11 dan 13 ikut dihapus, bukan cuma yang setengah.
+///
+/// Lantainya 12sp. Material menaruh label terkecilnya di 11sp dan teks isi di
 /// 14sp; app ini sebelumnya memakai 9 dan 10 untuk hal yang tetap harus
 /// dibaca. Padat itu boleh, terlalu kecil untuk dibaca tidak.
 class AppText {
   AppText._();
 
-  /// 11 — satuan, keterangan di bawah angka. Sekecil-kecilnya yang boleh.
-  static const double mikro = 11;
-
-  /// 12 — label, kapsul, teks di dalam tombol kecil.
+  /// 12 — label, kapsul, satuan. Sekecil-kecilnya yang boleh.
   static const double label = 12;
 
-  /// 13 — teks pendukung di dalam kartu.
-  static const double isi = 13;
-
-  /// 14 — teks utama dan judul baris daftar. Ukuran baku Material.
+  /// 14 — teks isi dan judul baris daftar. Ukuran baku Material.
   static const double badan = 14;
 
   /// 16 — judul kartu.
@@ -71,10 +98,10 @@ class AppTheme {
         titleSmall: const TextStyle(fontSize: AppText.badan, fontWeight: FontWeight.w700),
         bodyLarge: const TextStyle(fontSize: AppText.judulKartu),
         bodyMedium: const TextStyle(fontSize: AppText.badan),
-        bodySmall: TextStyle(fontSize: AppText.isi, color: colorScheme.onSurfaceVariant),
+        bodySmall: TextStyle(fontSize: AppText.label, color: colorScheme.onSurfaceVariant),
         labelLarge: const TextStyle(fontSize: AppText.badan, fontWeight: FontWeight.w700),
         labelMedium: const TextStyle(fontSize: AppText.label, fontWeight: FontWeight.w600),
-        labelSmall: TextStyle(fontSize: AppText.mikro, color: colorScheme.onSurfaceVariant),
+        labelSmall: TextStyle(fontSize: AppText.label, color: colorScheme.onSurfaceVariant),
       );
 
   static ThemeData light() => _build(Brightness.light);
@@ -151,8 +178,10 @@ class AppTheme {
         backgroundColor: colorScheme.surface,
         indicatorColor: colorScheme.primaryContainer,
         labelTextStyle: WidgetStateProperty.resolveWith(
+          // Label bar bawah tetap di langkah terkecil. Ini penanda tujuan, dan
+          // membesarkannya bikin lima label mulai berdesakan.
           (states) => TextStyle(
-            fontSize: 13,
+            fontSize: AppText.label,
             fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
             color: states.contains(WidgetState.selected)
                 ? colorScheme.onSurface

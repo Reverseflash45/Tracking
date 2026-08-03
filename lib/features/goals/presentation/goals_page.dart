@@ -180,14 +180,7 @@ class _GoalCard extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: warna.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(goal.metric.icon, size: 17, color: warna),
-                    ),
+                    Icon(goal.metric.icon, size: 16, color: warna),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
@@ -211,7 +204,7 @@ class _GoalCard extends ConsumerWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: warna.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
@@ -219,7 +212,7 @@ class _GoalCard extends ConsumerWidget {
                       child: Text(
                         progress.status.label,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
                           color: warna,
                         ),
@@ -240,23 +233,23 @@ class _GoalCard extends ConsumerWidget {
                         color: warna,
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 4),
                     Text(
                       '/ ${formatNilai(goal.targetValue, goal.metric)}',
-                      style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                     ),
                     const Spacer(),
                     Text(
                       '${progress.persenMentah.round()}%',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: LinearProgressIndicator(

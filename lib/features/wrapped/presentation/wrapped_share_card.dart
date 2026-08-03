@@ -53,7 +53,7 @@ class WrappedShareCard extends StatelessWidget {
 
     return Container(
       width: 320,
-      padding: const EdgeInsets.all(26),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -84,7 +84,7 @@ class WrappedShareCard extends StatelessWidget {
               fontSize: 12,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Text(
             stats.persona,
             style: const TextStyle(
@@ -94,14 +94,14 @@ class WrappedShareCard extends StatelessWidget {
               height: 1.05,
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
           for (final item in baris)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 children: [
                   Icon(item.icon, color: Colors.white.withValues(alpha: 0.85), size: 16),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       item.label,
@@ -128,7 +128,7 @@ class WrappedShareCard extends StatelessWidget {
               '${stats.persenTepatWaktu}% tugas selesai tepat waktu',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 13,
+                fontSize: 14,
               ),
             ),
           ],

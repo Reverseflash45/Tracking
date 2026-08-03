@@ -124,7 +124,7 @@ class VehicleDetailPage extends ConsumerWidget {
                       child: Text(
                         'Belum ada yang bisa dihitung. Isi tanggal pajak lewat tombol '
                         'edit di atas, atau catat servis pertamamu.',
-                        style: TextStyle(fontSize: 13, height: 1.45),
+                        style: TextStyle(fontSize: 14, height: 1.45),
                       ),
                     )
                   else
@@ -204,7 +204,7 @@ class _Catatan extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline, size: 15, color: colorScheme.onSurfaceVariant),
+            Icon(Icons.info_outline, size: 16, color: colorScheme.onSurfaceVariant),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
@@ -259,11 +259,11 @@ class _BarisJadwal extends ConsumerWidget {
                   ),
                   Text(
                     ringkasanSisa(pengingat),
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: warna),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: warna),
                   ),
                 ],
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 4),
               Text(
                 pengingat.tanggal == null
                     ? pengingat.dasar
@@ -274,8 +274,8 @@ class _BarisJadwal extends ConsumerWidget {
                 const SizedBox(height: 4),
                 TextButton.icon(
                   onPressed: () => _bayarPajak(context, ref, vehicle),
-                  icon: const Icon(Icons.check, size: 15),
-                  label: const Text('Sudah dibayar', style: TextStyle(fontSize: 13)),
+                  icon: const Icon(Icons.check, size: 16),
+                  label: const Text('Sudah dibayar', style: TextStyle(fontSize: 14)),
                   style: TextButton.styleFrom(
                     foregroundColor: _color,
                     visualDensity: VisualDensity.compact,
@@ -368,14 +368,7 @@ class _KartuServis extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(log.kind.icon, size: 16, color: _color),
-                ),
+                Icon(log.kind.icon, size: 16, color: _color),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
@@ -574,7 +567,7 @@ class _SheetServisState extends ConsumerState<_SheetServis> {
                 ],
                 onChanged: (nilai) => setState(() => _kind = nilai ?? _kind),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 // Patokannya disebut di form, bukan disembunyikan sampai
                 // jadwalnya muncul — supaya kamu tahu angka mana yang dipakai

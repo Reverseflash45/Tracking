@@ -153,7 +153,7 @@ class _CatatanCaraKerja extends StatelessWidget {
               'membuatnya muncul lagi — matikan template-nya kalau memang tidak '
               'ingin dibuat lagi.',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 height: 1.45,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -214,14 +214,14 @@ class _TemplateTile extends ConsumerWidget {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(9),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: (mati ? colorScheme.onSurfaceVariant : _color).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.event_repeat,
-                    size: 17,
+                    size: 16,
                     color: mati ? colorScheme.onSurfaceVariant : _color,
                   ),
                 ),
@@ -242,7 +242,7 @@ class _TemplateTile extends ConsumerWidget {
                           color: mati ? colorScheme.onSurfaceVariant : null,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Text(
                         [
                           'Tiap ${weekDayName(template.weekday)}',
@@ -251,7 +251,7 @@ class _TemplateTile extends ConsumerWidget {
                         ].join('  ·  '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -431,7 +431,7 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
                 child: Row(
                   children: [
                     for (var day = 1; day <= 7; day++) ...[
-                      if (day > 1) const SizedBox(width: 6),
+                      if (day > 1) const SizedBox(width: 4),
                       ChoiceChip(
                         label: Text(weekDayName(day).substring(0, 3)),
                         selected: _weekday == day,
@@ -451,7 +451,7 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
                         final picked = await showTimePicker(context: context, initialTime: _jam);
                         if (picked != null) setState(() => _jam = picked);
                       },
-                      icon: const Icon(Icons.schedule, size: 18),
+                      icon: const Icon(Icons.schedule, size: 20),
                       label: Text('Jam ${_jam.format(context)}'),
                     ),
                   ),

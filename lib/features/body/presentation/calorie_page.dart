@@ -240,7 +240,7 @@ class _WarningBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -286,21 +286,21 @@ class _BmiCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: warna.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       result.bmiCategory.label,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                        fontSize: 14,
                         color: warna,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     'Memakai ambang BMI Asia-Pasifik, yang lebih rendah daripada ambang '
                     'internasional.',
@@ -343,29 +343,29 @@ class _KcalCard extends StatelessWidget {
                     height: 1,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     'kkal/hari',
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 4),
-            Text(goal.description, style: const TextStyle(fontSize: 13)),
+            Text(goal.description, style: const TextStyle(fontSize: 14)),
             const Divider(height: AppSpacing.lg),
             for (final g in FitnessGoal.values)
               Padding(
-                padding: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         g.label,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: g == goal ? FontWeight.w800 : FontWeight.w400,
                           color: g == goal ? _color : colorScheme.onSurfaceVariant,
                         ),
@@ -374,7 +374,7 @@ class _KcalCard extends StatelessWidget {
                     Text(
                       '${_numberFormat.format(result.kcalFor(g))} kkal',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: g == goal ? FontWeight.w800 : FontWeight.w600,
                         color: g == goal ? _color : colorScheme.onSurface,
                       ),
@@ -445,14 +445,7 @@ class _MacroTile extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
+          Icon(icon, size: 20, color: color),
           const SizedBox(height: 8),
           Text(
             '$grams g',

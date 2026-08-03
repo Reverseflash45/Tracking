@@ -132,7 +132,7 @@ class _Catatan extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 15, color: colorScheme.onSurfaceVariant),
+            Icon(icon, size: 16, color: colorScheme.onSurfaceVariant),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
@@ -235,14 +235,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
               children: [
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: _color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(doc.kind.icon, size: 16, color: _color),
-                    ),
+                    Icon(doc.kind.icon, size: 16, color: _color),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Column(
@@ -298,14 +291,14 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                       IconButton(
                         icon: Icon(
                           _terbuka ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                          size: 18,
+                          size: 20,
                         ),
                         tooltip: _terbuka ? 'Sembunyikan' : 'Tampilkan',
                         visualDensity: VisualDensity.compact,
                         onPressed: () => setState(() => _terbuka = !_terbuka),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.copy_outlined, size: 17),
+                        icon: const Icon(Icons.copy_outlined, size: 16),
                         tooltip: 'Salin',
                         visualDensity: VisualDensity.compact,
                         onPressed: () async {
@@ -320,7 +313,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                   ),
                 ],
                 if (doc.pasporMepet(now)) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     'Masa berlakunya tinggal kurang dari $kBulanPasporAman bulan. '
                     'Masih sah di sini, tapi banyak negara menolak paspor '
@@ -333,12 +326,12 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                   ),
                 ],
                 if (doc.note case final catatan? when catatan.trim().isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     catatan,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ],
@@ -509,7 +502,7 @@ class _SheetDokumenState extends ConsumerState<_SheetDokumen> {
                 onChanged: (nilai) => setState(() => _kind = nilai ?? _kind),
               ),
               if (_kind.masaBerlakuTahun case final tahun?) ...[
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   'Umumnya berlaku $tahun tahun. Tanggal kedaluwarsanya diisikan '
                   'otomatis begitu kamu memilih tanggal terbit, dan tetap bisa '
@@ -639,7 +632,7 @@ class _PilihTanggal extends StatelessWidget {
           suffixIcon: onHapus == null
               ? null
               : IconButton(
-                  icon: const Icon(Icons.close, size: 18),
+                  icon: const Icon(Icons.close, size: 20),
                   tooltip: 'Kosongkan',
                   onPressed: onHapus,
                 ),

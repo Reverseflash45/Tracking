@@ -93,7 +93,7 @@ class RecurringPage extends ConsumerWidget {
                   else
                     for (final item in items)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.only(bottom: 4),
                         child: _RecurringTile(item: item),
                       ),
                 ],
@@ -177,7 +177,7 @@ class _RecurringTile extends ConsumerWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: _color.withValues(alpha: item.active ? 0.12 : 0.05),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               item.category.icon,
@@ -351,7 +351,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                 'Jatuh tempo tiap tanggal',
                 style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               // Dibatasi 28 supaya tidak ada bulan yang kehilangan tanggalnya
               // di Februari.
               SizedBox(
@@ -361,7 +361,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                   children: [
                     for (var day = 1; day <= 28; day++)
                       Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.only(right: 4),
                         child: Center(
                           child: ChoiceChip(
                             label: Text('$day'),
@@ -389,7 +389,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                     ChoiceChip(
                       avatar: Icon(
                         category.icon,
-                        size: 15,
+                        size: 16,
                         color: _category == category ? _color : colorScheme.onSurfaceVariant,
                       ),
                       label: Text(category.label),
@@ -421,7 +421,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                 style: FilledButton.styleFrom(
                   backgroundColor: _color,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 icon: _saving
                     ? const SizedBox(

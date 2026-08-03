@@ -136,14 +136,7 @@ class _KartuKendaraan extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(vehicle.type.icon, size: 16, color: _color),
-                  ),
+                  Icon(vehicle.type.icon, size: 16, color: _color),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
@@ -177,13 +170,13 @@ class _KartuKendaraan extends ConsumerWidget {
                 Text(
                   'Belum ada yang bisa dihitung. Isi tanggal pajak, atau catat '
                   'servis pertama lewat halaman kendaraan ini.',
-                  style: TextStyle(fontSize: 13, height: 1.4, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 14, height: 1.4, color: colorScheme.onSurfaceVariant),
                 ),
               ] else ...[
                 const SizedBox(height: AppSpacing.sm),
                 for (final item in utama)
                   Padding(
-                    padding: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.only(top: 4),
                     child: _BarisPengingat(pengingat: item, ringkas: true),
                   ),
               ],
@@ -237,7 +230,7 @@ class _BarisPengingat extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(pengingat.icon, size: 15, color: warna),
+        Icon(pengingat.icon, size: 16, color: warna),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -250,7 +243,7 @@ class _BarisPengingat extends StatelessWidget {
                     child: Text(
                       pengingat.judul,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: pengingat.lewat ? FontWeight.w800 : FontWeight.w600,
                         color: pengingat.lewat ? warna : null,
                       ),
@@ -558,7 +551,7 @@ class _PilihTanggal extends StatelessWidget {
           suffixIcon: onHapus == null
               ? null
               : IconButton(
-                  icon: const Icon(Icons.close, size: 18),
+                  icon: const Icon(Icons.close, size: 20),
                   tooltip: 'Kosongkan',
                   onPressed: onHapus,
                 ),

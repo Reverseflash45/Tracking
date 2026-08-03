@@ -149,15 +149,15 @@ class _ExerciseCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     exercise.type.label,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: _color,
                     ),
@@ -177,8 +177,8 @@ class _ExerciseCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.lightbulb_outline, size: 14, color: colorScheme.onSurfaceVariant),
-                const SizedBox(width: 6),
+                Icon(Icons.lightbulb_outline, size: 16, color: colorScheme.onSurfaceVariant),
+                const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     exercise.cue,
@@ -203,7 +203,7 @@ class _ExerciseCard extends StatelessWidget {
                 icon: const Icon(Icons.play_circle_outline, size: 16),
                 label: const Text(
                   'Lihat contoh gerakan',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -227,7 +227,7 @@ class _Spec extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant)),
+          Text(label, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
           const SizedBox(height: 2),
           Text(
             value,
@@ -257,16 +257,16 @@ class _BulletCard extends StatelessWidget {
           children: [
             for (var i = 0; i < items.length; i++)
               Padding(
-                padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 10),
+                padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(icon, size: 14, color: _color),
-                    const SizedBox(width: 10),
+                    Icon(icon, size: 16, color: _color),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         items[i],
-                        style: const TextStyle(fontSize: 13, height: 1.45),
+                        style: const TextStyle(fontSize: 14, height: 1.45),
                       ),
                     ),
                   ],
