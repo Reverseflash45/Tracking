@@ -134,7 +134,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Import dari Foto KRS',
             subtitle: 'Foto sekali, jadwalnya terisi otomatis',
             color: _color,

@@ -156,7 +156,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: _isEdit ? 'Edit Tugas' : 'Tambah Tugas',
               subtitle: 'Catat tugas beserta deadline dan prioritasnya',
               color: _deadlineColor,

@@ -35,7 +35,7 @@ class GradesPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Nilai & IPK',
               subtitle: 'Dihitung dari komponen yang sudah keluar',
               color: _color,

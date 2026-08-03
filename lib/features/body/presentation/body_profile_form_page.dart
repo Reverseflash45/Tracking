@@ -180,7 +180,7 @@ class _BodyProfileFormPageState extends ConsumerState<BodyProfileFormPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Profil Tubuh',
               subtitle: 'Dasar perhitungan kalori dan target harianmu',
               color: _color,

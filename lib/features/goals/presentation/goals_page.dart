@@ -59,7 +59,7 @@ class GoalsPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Target',
               subtitle: 'Dihitung sendiri dari catatanmu',
               color: _color,

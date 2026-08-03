@@ -36,7 +36,7 @@ class LiveWorkoutPage extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Latihan Terpandu',
             subtitle: 'Kamera menghitung repetisimu',
             color: _color,

@@ -48,7 +48,7 @@ class _CaloriePageState extends ConsumerState<CaloriePage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Kalkulator Kalori',
             subtitle: result == null
                 ? 'Butuh profil tubuh untuk menghitung'

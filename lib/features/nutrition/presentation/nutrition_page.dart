@@ -51,7 +51,7 @@ class NutritionPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Nutrisi Hari Ini',
               subtitle: targets == null
                   ? 'Isi profil tubuh untuk melihat targetmu'

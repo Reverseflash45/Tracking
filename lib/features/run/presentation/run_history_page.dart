@@ -52,7 +52,7 @@ class RunHistoryPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Lari',
               subtitle: 'Jarak, pace, dan rutemu',
               color: _color,

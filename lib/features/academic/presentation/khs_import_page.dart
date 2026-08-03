@@ -166,7 +166,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Import dari Foto KHS',
             subtitle: 'Foto kartu hasil studi, nilainya terisi otomatis',
             color: _color,

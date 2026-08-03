@@ -65,7 +65,7 @@ class VehicleDetailPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: vehicle.name,
               subtitle: vehicle.plate?.toUpperCase() ?? vehicle.type.label,
               color: _color,

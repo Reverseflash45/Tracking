@@ -36,7 +36,7 @@ class WatchlistPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Watchlist',
               subtitle: 'Tontonan dan bacaanmu',
               color: _color,

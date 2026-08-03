@@ -79,7 +79,7 @@ class _WorkoutHistoryPageState extends ConsumerState<WorkoutHistoryPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Riwayat Latihan',
               subtitle: 'Semua catatan, bisa disaring',
               color: AppColors.workout,
