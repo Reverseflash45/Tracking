@@ -109,7 +109,7 @@ class _ProgressDashboardPageState extends ConsumerState<ProgressDashboardPage> {
                       for (final p in StatsPeriod.values)
                         ButtonSegment(
                           value: p,
-                          label: Text(p.label, style: const TextStyle(fontSize: 13)),
+                          label: Text(p.label, style: const TextStyle(fontSize: 14)),
                         ),
                     ],
                     selected: {_period},
@@ -234,7 +234,7 @@ class _WeightSection extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
+                      padding: const EdgeInsets.only(bottom: 4),
                       child: Row(
                         children: [
                           Icon(
@@ -244,7 +244,7 @@ class _WeightSection extends StatelessWidget {
                             size: 16,
                             color: warna,
                           ),
-                          const SizedBox(width: 3),
+                          const SizedBox(width: 4),
                           Text(
                             stabil
                                 ? 'stabil'
@@ -267,14 +267,14 @@ class _WeightSection extends StatelessWidget {
                       Expanded(
                         child: Text(
                           'Target ${_trim(weight.targetWeightKg!)} kg',
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                       ),
                       if (persen != null)
                         Text(
                           '${persen.round()}% tercapai',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -282,9 +282,9 @@ class _WeightSection extends StatelessWidget {
                     ],
                   ),
                   if (persen != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(16),
                       child: LinearProgressIndicator(
                         value: persen / 100,
                         minHeight: 8,
@@ -446,7 +446,7 @@ class _AvgTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant)),
+          Text(label, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
           const SizedBox(height: 2),
           Text(
             value,
@@ -454,7 +454,7 @@ class _AvgTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: warna),
           ),
-          Text(unit, style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant)),
+          Text(unit, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
         ],
       ),
     );
@@ -542,7 +542,7 @@ class _WorkoutSection extends StatelessWidget {
                 Text(
                   'Kalori terbakar tidak ditampilkan karena app ini tidak mencatat durasi '
                   'sesi maupun detak jantung — angkanya hanya akan jadi tebakan.',
-                  style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -670,7 +670,7 @@ class _SectionPlaceholder extends StatelessWidget {
                 Expanded(
                   child: Text(
                     message,
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -679,7 +679,7 @@ class _SectionPlaceholder extends StatelessWidget {
                   style: TextButton.styleFrom(foregroundColor: _color),
                   child: Text(
                     actionLabel,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
@@ -748,10 +748,10 @@ class _LineChartView extends StatelessWidget {
                 if (index < 0 || index >= points.length) return const SizedBox.shrink();
                 final date = points[index].date;
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     '${date.day}/${date.month}',
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 );
               },
@@ -763,7 +763,7 @@ class _LineChartView extends StatelessWidget {
               reservedSize: 42,
               getTitlesWidget: (value, meta) => Text(
                 _numberFormat.format(value.round()),
-                style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
             ),
           ),
@@ -788,14 +788,14 @@ class _LineChartView extends StatelessWidget {
               final point = points[spot.x.toInt()];
               return LineTooltipItem(
                 '${_numberFormat.format(point.value.round())} $unit\n',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
                 children: [
                   TextSpan(
                     text: _dateFormat.format(point.date),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w400,
-                      fontSize: 11,
+                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -872,10 +872,10 @@ class _WeeklyBarChart extends StatelessWidget {
                 final index = value.toInt();
                 if (index < 0 || index >= points.length) return const SizedBox.shrink();
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     _dateFormat.format(points[index].date),
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 );
               },
@@ -888,7 +888,7 @@ class _WeeklyBarChart extends StatelessWidget {
               interval: 1,
               getTitlesWidget: (value, meta) => Text(
                 value.round().toString(),
-                style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
             ),
           ),
@@ -898,7 +898,7 @@ class _WeeklyBarChart extends StatelessWidget {
             getTooltipColor: (_) => AppColors.workout,
             getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
               '${rod.toY.round()} sesi',
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
             ),
           ),
         ),
@@ -911,7 +911,7 @@ class _WeeklyBarChart extends StatelessWidget {
                   toY: points[i].value,
                   color: AppColors.workout,
                   width: 14,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 ),
               ],
             ),

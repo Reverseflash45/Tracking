@@ -164,14 +164,14 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
                   for (var i = 0; i < cards.length; i++)
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
                       width: i == _page ? 20 : 6,
                       height: 6,
                       decoration: BoxDecoration(
                         color: i == _page
                             ? _storyColors[i % _storyColors.length]
                             : Theme.of(context).colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                 ],
@@ -326,7 +326,7 @@ class _StoryCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: HeroHeader.gradientFor(color),
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
       ),
       // Kartu bisa jadi lebih tinggi dari layar pendek saat caption panjang,
       // jadi isinya dibuat bisa di-scroll sendiri.
@@ -342,14 +342,14 @@ class _StoryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
               ),
-              child: Icon(data.icon, color: Colors.white, size: 26),
+              child: Icon(data.icon, color: Colors.white, size: 24),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               data.eyebrow.toUpperCase(),
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.85),
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
               ),

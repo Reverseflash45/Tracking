@@ -187,11 +187,11 @@ class _Legend extends StatelessWidget {
                 height: 8,
                 decoration: BoxDecoration(color: type.color, shape: BoxShape.circle),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
               Text(
                 type.label,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -213,14 +213,7 @@ class _EventTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: ListTile(
         onTap: event.route == null ? null : () => context.push(event.route!),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: event.type.color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(event.type.icon, size: 18, color: event.type.color),
-        ),
+        leading: Icon(event.type.icon, size: 20, color: event.type.color),
         title: Text(
           event.title,
           style: const TextStyle(fontWeight: FontWeight.w700),

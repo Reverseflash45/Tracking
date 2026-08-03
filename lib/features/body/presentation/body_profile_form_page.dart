@@ -236,9 +236,9 @@ class _BodyProfileFormPageState extends ConsumerState<BodyProfileFormPage> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: _color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.cake_outlined, size: 18, color: _color),
+                        child: const Icon(Icons.cake_outlined, size: 20, color: _color),
                       ),
                       title: Text(
                         _birthDate == null
@@ -372,9 +372,9 @@ class _BodyProfileFormPageState extends ConsumerState<BodyProfileFormPage> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: _color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.event_outlined, size: 18, color: _color),
+                        child: const Icon(Icons.event_outlined, size: 20, color: _color),
                       ),
                       title: Text(
                         _targetDate == null
@@ -438,7 +438,7 @@ class _SelectCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.radius),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: selected ? _color.withValues(alpha: 0.14) : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppTheme.radius),
@@ -452,7 +452,7 @@ class _SelectCard extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: selected ? _color : colorScheme.onSurfaceVariant,
               ),

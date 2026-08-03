@@ -345,7 +345,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
                           children: [
                             Icon(
                               Icons.error_outline,
-                              size: 18,
+                              size: 20,
                               color: Theme.of(context).colorScheme.onErrorContainer,
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -353,7 +353,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
                               child: Text(
                                 _error!,
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   color: Theme.of(context).colorScheme.onErrorContainer,
                                 ),
                               ),
@@ -417,7 +417,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
                     'Elevasi sengaja tidak dicatat: ketinggian dari GPS meleset '
                     '10-15 meter, jadi "total tanjakan" darinya hanya karangan.',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       height: 1.5,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -454,11 +454,11 @@ class _BigStat extends StatelessWidget {
                 height: 1,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -537,12 +537,12 @@ class _SignalCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
-            Icon(Icons.satellite_alt_outlined, size: 18, color: color),
+            Icon(Icons.satellite_alt_outlined, size: 20, color: color),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color),
               ),
             ),
             if (acc != null)
@@ -607,7 +607,7 @@ class _Controls extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: _color,
               side: const BorderSide(color: _color),
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
             icon: Icon(state == _TrackerState.berjalan ? Icons.pause : Icons.play_arrow),
             label: Text(state == _TrackerState.berjalan ? 'Jeda' : 'Lanjut'),
@@ -620,7 +620,7 @@ class _Controls extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: _color,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
             icon: saving
                 ? const SizedBox(

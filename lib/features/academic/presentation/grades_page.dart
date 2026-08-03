@@ -222,7 +222,7 @@ class _SemesterHeader extends StatelessWidget {
         summary.ip == null
             ? '${summary.sksTotal} sks'
             : 'IPS ${_ip(summary.ip)}  ·  ${summary.sksDinilai} sks',
-        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: _color),
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: _color),
       ),
     );
   }
@@ -288,7 +288,7 @@ class _CourseTile extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 4),
                     Text(
                       [
                         course.sks == null ? 'sks belum diisi' : '${course.sks} sks',
@@ -309,7 +309,7 @@ class _CourseTile extends ConsumerWidget {
                       style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                     ),
                     if (course.bobotJanggal) ...[
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Text(
                         'Bobot komponen berjumlah ${course.totalBobot.toStringAsFixed(0)}%, '
                         'bukan 100%',
@@ -319,7 +319,7 @@ class _CourseTile extends ConsumerWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, size: 18),
+              const Icon(Icons.chevron_right, size: 20),
             ],
           ),
         ),
@@ -498,7 +498,7 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                 ),
                 TextButton.icon(
                   onPressed: () => _komponenSheet(),
-                  icon: const Icon(Icons.add, size: 17),
+                  icon: const Icon(Icons.add, size: 16),
                   label: const Text('Tambah'),
                 ),
               ],
@@ -510,7 +510,7 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                   'Misalnya Tugas 20%, UTS 30%, UAS 50%. Komponen yang belum '
                   'keluar nilainya biarkan kosong — dia tidak akan dihitung nol.',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     height: 1.4,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -538,7 +538,7 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 18),
+                        icon: const Icon(Icons.delete_outline, size: 20),
                         tooltip: 'Hapus komponen',
                         onPressed: () async {
                           await ref

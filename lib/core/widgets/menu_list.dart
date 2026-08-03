@@ -89,7 +89,7 @@ class _BarisMenu extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: 14,
+          vertical: 12,
         ),
         child: Row(
           children: [
@@ -116,7 +116,7 @@ class _BarisMenu extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: AppText.isi,
+                        fontSize: AppText.label,
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),

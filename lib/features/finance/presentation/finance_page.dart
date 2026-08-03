@@ -97,7 +97,7 @@ class FinancePage extends ConsumerWidget {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: _color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.event_repeat, size: 16, color: _color),
                         ),
@@ -139,7 +139,7 @@ class FinancePage extends ConsumerWidget {
                     else
                       for (final tx in transactions)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.only(bottom: 4),
                           child: _TxTile(tx: tx),
                         ),
                   ],
@@ -248,7 +248,7 @@ class FinancePage extends ConsumerWidget {
               Text(
                 'Tanggal uang bulanan datang',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -304,7 +304,7 @@ class FinancePage extends ConsumerWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: _color,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: const Text('Simpan'),
               ),
@@ -379,7 +379,7 @@ class _BudgetCard extends StatelessWidget {
           ),
           subtitle: const Text(
             'Supaya app bisa hitung jatah harianmu',
-            style: TextStyle(fontSize: 13),
+            style: TextStyle(fontSize: 14),
           ),
           trailing: const Icon(Icons.chevron_right),
         ),
@@ -444,7 +444,7 @@ class _BudgetCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               child: LinearProgressIndicator(
                 value: (persen / 100).clamp(0, 1),
                 minHeight: 8,
@@ -452,7 +452,7 @@ class _BudgetCard extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation(warna),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               '${formatRupiah(summary.pengeluaran)} dari '
               '${formatRupiah(summary.budget!)} terpakai (${persen.round()}%)',
@@ -466,7 +466,7 @@ class _BudgetCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(Icons.lock_clock, size: 12, color: colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 5),
+                  const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       '${formatRupiah(summary.rutinBelumJatuhTempo)} disisihkan '
@@ -508,24 +508,24 @@ class _CategoryBreakdown extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
-                  vertical: 7,
+                  vertical: 8,
                 ),
                 child: Row(
                   children: [
                     Icon(item.category.icon, size: 16, color: _color),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     SizedBox(
                       width: 84,
                       child: Text(
                         item.category.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                       ),
                     ),
                     Expanded(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(16),
                         child: LinearProgressIndicator(
                           value: terbesar == 0 ? 0 : item.total / terbesar,
                           minHeight: 6,
@@ -534,10 +534,10 @@ class _CategoryBreakdown extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Text(
                       formatRupiahRingkas(item.total),
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -598,14 +598,7 @@ class _TxTile extends ConsumerWidget {
         child: ListTile(
           onTap: () => showTransactionSheet(context, existing: tx),
           dense: true,
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: _color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(tx.category.icon, size: 16, color: _color),
-          ),
+          leading: Icon(tx.category.icon, size: 16, color: _color),
           title: Row(
             children: [
               // Nama produk paling depan kalau ada — "Martabak telor" lebih
@@ -623,13 +616,13 @@ class _TxTile extends ConsumerWidget {
                 ),
               ),
               if (tx.placeKind != null) ...[
-                const SizedBox(width: 5),
+                const SizedBox(width: 4),
                 Icon(tx.placeKind!.icon, size: 12, color: colorScheme.onSurfaceVariant),
               ],
               // Catatan hasil OCR ditandai: angkanya lebih mungkin meleset
               // daripada yang kamu ketik sendiri.
               if (tx.fromReceipt) ...[
-                const SizedBox(width: 5),
+                const SizedBox(width: 4),
                 Icon(
                   Icons.document_scanner_outlined,
                   size: 12,

@@ -235,9 +235,9 @@ class RestTimerBar extends StatelessWidget {
                   ],
                 ),
                 if (!done) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(12),
                     child: LinearProgressIndicator(
                       value: controller.progress,
                       minHeight: 4,
@@ -270,14 +270,14 @@ class _AdjustButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: _color,
           side: BorderSide(color: _color.withValues(alpha: 0.4)),
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           minimumSize: Size.zero,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: VisualDensity.compact,
         ),
         child: Text(
           label,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -335,9 +335,9 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.timer_outlined, size: 18, color: _color),
+                child: const Icon(Icons.timer_outlined, size: 20, color: _color),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -357,7 +357,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                         widget.exerciseName!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                       ),
                   ],
                 ),
@@ -404,7 +404,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                   onSelected: (_) => setState(() => _seconds = preset),
                   selectedColor: _color.withValues(alpha: 0.18),
                   labelStyle: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: _seconds == preset ? _color : colorScheme.onSurfaceVariant,
                   ),
@@ -417,7 +417,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
             style: FilledButton.styleFrom(
               backgroundColor: _color,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
             icon: const Icon(Icons.play_arrow),
             label: const Text('Mulai Istirahat'),

@@ -92,7 +92,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                           label: const Text('Semua'),
                           avatar: Icon(
                             Icons.grid_view,
-                            size: 15,
+                            size: 16,
                             color: _selectedKey == null
                                 ? _workoutColor
                                 : Theme.of(context).colorScheme.onSurfaceVariant,
@@ -269,17 +269,17 @@ class _SummaryCard extends StatelessWidget {
                             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                           decoration: BoxDecoration(
                             color: _workoutColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
                             progress.type.label,
                             style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: _workoutColor,
                             ),
@@ -303,7 +303,7 @@ class _SummaryCard extends StatelessWidget {
                           delta > 0
                               ? Icons.trending_up
                               : (delta < 0 ? Icons.trending_down : Icons.trending_flat),
-                          size: 14,
+                          size: 16,
                           color: warna,
                         ),
                         const SizedBox(width: 4),
@@ -472,7 +472,7 @@ class _SingleSessionNote extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: _workoutColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
@@ -636,10 +636,10 @@ class _LineChart extends StatelessWidget {
                 if (index < 0 || index >= points.length) return const SizedBox.shrink();
                 final date = points[index].date;
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     '${date.day}/${date.month}',
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 );
               },
@@ -651,7 +651,7 @@ class _LineChart extends StatelessWidget {
               reservedSize: 42,
               getTitlesWidget: (value, meta) => Text(
                 _numberFormat.format(value.round()),
-                style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
             ),
           ),

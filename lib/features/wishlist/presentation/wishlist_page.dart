@@ -155,7 +155,7 @@ class _SurplusCard extends StatelessWidget {
               children: [
                 Icon(
                   negatif ? Icons.trending_down : Icons.trending_up,
-                  size: 18,
+                  size: 20,
                   color: negatif ? colorScheme.error : _color,
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -175,7 +175,7 @@ class _SurplusCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               negatif
                   ? 'Dari $kBulanRiwayatSurplus bulan terakhir, pengeluaranmu '
@@ -188,7 +188,7 @@ class _SurplusCard extends StatelessWidget {
               style: TextStyle(fontSize: 12, height: 1.45, color: colorScheme.onSurfaceVariant),
             ),
             if (ringkasan.tanpaHarga > 0) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 '${ringkasan.tanpaHarga} barang belum diisi harganya, jadi belum '
                 'ikut dihitung di total mana pun.',
@@ -251,14 +251,7 @@ class _WishCard extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: _color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(iconUntuk(item), size: 17, color: _color),
-                    ),
+                    Icon(iconUntuk(item), size: 16, color: _color),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
@@ -293,7 +286,7 @@ class _WishCard extends ConsumerWidget {
                     ),
                     if (item.url != null && item.url!.trim().isNotEmpty)
                       IconButton(
-                        icon: const Icon(Icons.open_in_new, size: 17),
+                        icon: const Icon(Icons.open_in_new, size: 16),
                         tooltip: 'Buka link',
                         onPressed: () => _bukaLink(context, item.url!),
                       ),
@@ -322,7 +315,7 @@ class _WishCard extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(999),
                     child: LinearProgressIndicator(
@@ -343,7 +336,7 @@ class _WishCard extends ConsumerWidget {
                   ),
                 ),
                 if (!item.dibeli) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       TextButton.icon(
@@ -354,7 +347,7 @@ class _WishCard extends ConsumerWidget {
                           visualDensity: VisualDensity.compact,
                         ),
                         icon: const Icon(Icons.add, size: 16),
-                        label: const Text('Nabung', style: TextStyle(fontSize: 13)),
+                        label: const Text('Nabung', style: TextStyle(fontSize: 14)),
                       ),
                       const SizedBox(width: 4),
                       TextButton.icon(
@@ -365,7 +358,7 @@ class _WishCard extends ConsumerWidget {
                           visualDensity: VisualDensity.compact,
                         ),
                         icon: const Icon(Icons.shopping_bag_outlined, size: 16),
-                        label: const Text('Sudah dibeli', style: TextStyle(fontSize: 13)),
+                        label: const Text('Sudah dibeli', style: TextStyle(fontSize: 14)),
                       ),
                     ],
                   ),
@@ -807,7 +800,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
                   );
                   if (picked != null) setState(() => _targetDate = picked);
                 },
-                icon: const Icon(Icons.event_outlined, size: 18),
+                icon: const Icon(Icons.event_outlined, size: 20),
                 label: Text(
                   _targetDate == null
                       ? 'Kapan ingin punya (opsional)'
@@ -819,7 +812,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
                   alignment: Alignment.centerLeft,
                   child: TextButton(
                     onPressed: () => setState(() => _targetDate = null),
-                    child: const Text('Hapus target', style: TextStyle(fontSize: 13)),
+                    child: const Text('Hapus target', style: TextStyle(fontSize: 14)),
                   ),
                 ),
               const SizedBox(height: 12),

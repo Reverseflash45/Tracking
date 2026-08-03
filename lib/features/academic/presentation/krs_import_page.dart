@@ -165,7 +165,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.info_outline, size: 18, color: _color),
+                          const Icon(Icons.info_outline, size: 20, color: _color),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
@@ -174,7 +174,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                               'jamnya tidak jelas sengaja dilewati daripada '
                               'dikarang. Periksa dulu sebelum menyimpan.',
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 height: 1.45,
                                 color: colorScheme.onSurfaceVariant,
                               ),
@@ -193,7 +193,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                           style: FilledButton.styleFrom(
                             backgroundColor: _color,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           icon: _scanning
                               ? const SizedBox(
@@ -204,7 +204,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.photo_camera_outlined, size: 18),
+                              : const Icon(Icons.photo_camera_outlined, size: 20),
                           label: Text(_scanning ? 'Membaca...' : 'Foto KRS'),
                         ),
                       ),
@@ -215,9 +215,9 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: _color,
                             side: const BorderSide(color: _color),
-                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          icon: const Icon(Icons.photo_library_outlined, size: 18),
+                          icon: const Icon(Icons.photo_library_outlined, size: 20),
                           label: const Text('Dari Galeri'),
                         ),
                       ),
@@ -235,13 +235,13 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(Icons.error_outline,
-                              size: 18, color: colorScheme.onErrorContainer),
+                              size: 20, color: colorScheme.onErrorContainer),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               _error!,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 height: 1.4,
                                 color: colorScheme.onErrorContainer,
                               ),
@@ -277,7 +277,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                           _selected.length == _entries.length
                               ? 'Lepas semua'
                               : 'Pilih semua',
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ),
                     ],
@@ -300,7 +300,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                     tilePadding: EdgeInsets.zero,
                     title: Text(
                       'Lihat teks yang terbaca',
-                      style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                     ),
                     children: [
                       Container(
@@ -308,7 +308,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           _rawText!,
@@ -357,7 +357,7 @@ class _EntryTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: 4),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onToggle,
@@ -392,7 +392,7 @@ class _EntryTile extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 18),
+                icon: const Icon(Icons.edit_outlined, size: 20),
                 tooltip: 'Perbaiki',
                 onPressed: onEdit,
               ),
@@ -564,7 +564,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
               style: FilledButton.styleFrom(
                 backgroundColor: _color,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: const Text('Simpan Perubahan'),
             ),
