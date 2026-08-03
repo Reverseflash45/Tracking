@@ -18,7 +18,7 @@ class MuscleBuilderPage extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Muscle Builder',
             subtitle: 'Pilih otot yang mau dikembangkan',
             color: _color,

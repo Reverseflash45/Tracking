@@ -160,7 +160,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
     );
 
     if (selected != null) {
-      return HeroHeader(
+      return HeroHeader.sub(
         title: selected.name,
         subtitle: '${selected.type.label} - progres ${selected.metric.label.toLowerCase()}',
         color: _workoutColor,
@@ -188,7 +188,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
     final totalSesi = all.fold<int>(0, (sum, p) => sum + p.sessionCount);
     final naik = all.where((p) => p.delta > 0).length;
 
-    return HeroHeader(
+    return HeroHeader.sub(
       title: 'Progress Latihan',
       subtitle: 'Perkembangan semua latihanmu',
       color: _workoutColor,

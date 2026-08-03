@@ -278,35 +278,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ],
             ),
           ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/profile',
-              builder: (context, state) => const ProfilePage(),
-              routes: [
-                GoRoute(
-                  path: 'wrapped',
-                  builder: (context, state) => const WrappedPage(),
-                ),
-                GoRoute(
-                  path: 'insight',
-                  builder: (context, state) => const InsightPage(),
-                ),
-                GoRoute(
-                  path: 'tanya',
-                  // Jalur utama gratis: pertanyaan siap pakai yang jawabannya
-                  // dihitung di HP. Ketik bebas jadi cabang opsional karena
-                  // butuh Edge Function dan berbayar.
-                  builder: (context, state) => const PresetAnswersPage(),
-                  routes: [
-                    GoRoute(
-                      path: 'bebas',
-                      builder: (context, state) => const AssistantPage(),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ]),
+        ],
+      ),
+      // Profil di luar rangka tab: dia berisi setelan, rekap, dan ekspor —
+      // dibuka sesekali, bukan tiap hari. Dibuka dari foto profil di Beranda,
+      // dan karena berdiri di atas rangka, bar bawahnya ikut menghilang selama
+      // kamu di dalamnya. Itu memang yang diinginkan: sedang mengatur app,
+      // bukan sedang memakainya.
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfilePage(),
+        routes: [
+          GoRoute(
+            path: 'wrapped',
+            builder: (context, state) => const WrappedPage(),
+          ),
+          GoRoute(
+            path: 'insight',
+            builder: (context, state) => const InsightPage(),
+          ),
+          GoRoute(
+            path: 'tanya',
+            // Jalur utama gratis: pertanyaan siap pakai yang jawabannya
+            // dihitung di HP. Ketik bebas jadi cabang opsional karena
+            // butuh Edge Function dan berbayar.
+            builder: (context, state) => const PresetAnswersPage(),
+            routes: [
+              GoRoute(
+                path: 'bebas',
+                builder: (context, state) => const AssistantPage(),
+              ),
+            ],
+          ),
         ],
       ),
     ],

@@ -87,7 +87,7 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
     return Scaffold(
       body: Column(
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Wrapped',
             subtitle: stats == null
                 ? 'Menyiapkan rekapmu...'

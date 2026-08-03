@@ -35,7 +35,7 @@ class MuscleDetailPage extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: group.name,
             subtitle: group.summary,
             color: _color,

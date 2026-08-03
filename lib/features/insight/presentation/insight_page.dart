@@ -55,7 +55,7 @@ class InsightPage extends ConsumerWidget {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Pola',
             subtitle: 'Hubungan antara kebiasaan dan hasilmu',
             color: _color,

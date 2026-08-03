@@ -313,7 +313,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: _isEdit ? 'Edit Jadwal' : 'Tambah Jadwal',
               subtitle: 'Atur mata kuliah, hari, dan jam perkuliahan',
               color: _academicColor,

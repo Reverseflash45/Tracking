@@ -20,15 +20,21 @@ class _TabData {
   final Color color;
 }
 
-/// Urutan tab, dipakai kartu ringkasan di Dashboard untuk pindah ke bagiannya.
+/// Urutan tab, dipakai kartu ringkasan di Beranda untuk pindah ke bagiannya.
 ///
 /// Angkanya harus sama persis dengan urutan `branches` di app_router.dart.
+///
+/// Lima, bukan enam. Material membatasi bar bawah di 3–5 tujuan, dan alasannya
+/// bukan estetika: di bawah itu tiap tujuan kehilangan lebar sentuh dan
+/// labelnya mulai terpotong. Yang dikeluarkan Profil — dia berisi setelan,
+/// rekap, dan ekspor, hal-hal yang dibuka sesekali, bukan tiap hari seperti
+/// empat lainnya. Jalan masuknya pindah ke foto profil di Beranda, tempat
+/// orang memang mencarinya.
 const int kTabBeranda = 0;
 const int kTabJadwal = 1;
 const int kTabTugas = 2;
 const int kTabWorkout = 3;
 const int kTabKeuangan = 4;
-const int kTabProfil = 5;
 
 const _tabs = [
   _TabData(
@@ -62,12 +68,6 @@ const _tabs = [
     selectedIcon: Icons.account_balance_wallet,
     label: 'Uang',
     color: AppColors.finance,
-  ),
-  _TabData(
-    icon: Icons.person_outline,
-    selectedIcon: Icons.person,
-    label: 'Profil',
-    color: AppColors.profile,
   ),
 ];
 

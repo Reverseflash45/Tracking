@@ -63,40 +63,33 @@ class DashboardPage extends ConsumerWidget {
                   // sebelum kamu menganggap semuanya sudah tersimpan.
                   const OfflineBanner(),
                   const _AchievementsRow(),
-                  const SectionHeader(
-                    title: 'Jadwal Hari Ini',
-                    icon: Icons.school_outlined,
-                    color: _academicColor,
-                  ),
+
+                  // Dikelompokkan, bukan lima judul sejajar.
+                  //
+                  // Sebelumnya Beranda berisi lima blok berbentuk sama persis:
+                  // judul, ikon, kartu. Semuanya terlihat sama pentingnya, dan
+                  // kalau semuanya sama penting berarti tidak ada yang penting.
+                  // Sekarang isinya dibagi menurut pertanyaan yang dijawab:
+                  // apa yang harus kulakukan hari ini, bagaimana badanku, dan
+                  // bagaimana uangku.
+                  const SectionHeader(title: 'Hari Ini', icon: Icons.today_outlined),
                   const _TodayScheduleCard(),
-                  const SizedBox(height: AppSpacing.md),
-                  const SectionHeader(
-                    title: 'Deadline Terdekat',
-                    icon: Icons.alarm,
-                    color: _deadlineColor,
-                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   const _UpcomingDeadlinesCard(),
-                  const SizedBox(height: AppSpacing.md),
-                  const SectionHeader(
-                    title: 'Workout Hari Ini',
-                    icon: Icons.fitness_center,
-                    color: _workoutColor,
-                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  const SectionHeader(title: 'Badan', icon: Icons.favorite_outline),
                   const _TodayWorkoutCard(),
-                  const SizedBox(height: AppSpacing.md),
-                  const SectionHeader(
-                    title: 'Nutrisi Hari Ini',
-                    icon: Icons.restaurant_menu,
-                    color: _deadlineColor,
-                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   const _TodayNutritionCard(),
-                  const SizedBox(height: AppSpacing.md),
-                  const SectionHeader(
-                    title: 'Keuangan',
-                    icon: Icons.savings_outlined,
-                    color: AppColors.finance,
-                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  const SectionHeader(title: 'Uang', icon: Icons.savings_outlined),
                   const _FinanceCard(),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  const SectionHeader(title: 'Lainnya', icon: Icons.grid_view_outlined),
+                  const _PintasanLainnya(),
                 ],
               ),
             ),
@@ -158,20 +151,32 @@ class _HeroHeader extends ConsumerWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.white.withValues(alpha: 0.25),
-                backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                child: avatarUrl == null
-                    ? Text(
-                        initial,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 18,
-                        ),
-                      )
-                    : null,
+              // Foto profil membuka Profil. Selama ini dia terlihat seperti
+              // tombol tapi tidak melakukan apa pun, sementara Profil punya
+              // tab sendiri di bawah — sekarang kebalikannya, dan ini pola
+              // yang sudah dikenal orang dari app lain.
+              Semantics(
+                button: true,
+                label: 'Buka profil',
+                child: InkWell(
+                  onTap: () => context.push('/profile'),
+                  customBorder: const CircleBorder(),
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.white.withValues(alpha: 0.25),
+                    backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                    child: avatarUrl == null
+                        ? Text(
+                            initial,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -206,21 +211,10 @@ class _HeroHeader extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Target, Wishlist, dan Cari ditaruh di header karena ketiganya
-              // berlaku untuk seluruh app, bukan milik satu bagian saja.
-              // Cari tetap paling kanan supaya letaknya tidak berpindah.
-              HeroIconButton(
-                icon: Icons.flag_outlined,
-                tooltip: 'Target',
-                onPressed: () => context.push('/goals'),
-              ),
-              const SizedBox(width: 6),
-              HeroIconButton(
-                icon: Icons.favorite_outline,
-                tooltip: 'Wishlist',
-                onPressed: () => context.push('/wishlist'),
-              ),
-              const SizedBox(width: 6),
+              // Tinggal satu tombol. Target dan Wishlist turun ke pintasan
+              // "Lainnya" di bawah, tempat namanya terbaca — tiga ikon
+              // berdempet di pojok kanan atas menuntutmu menghafal arti
+              // bendera dan hati sebelum bisa memakainya.
               HeroIconButton(
                 icon: Icons.search,
                 tooltip: 'Cari',
@@ -263,6 +257,96 @@ class _HeroHeader extends ConsumerWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Pintasan ke bagian yang tidak punya tab sendiri.
+///
+/// Dulu tersebar: Target dan Wishlist jadi tombol kecil di header, sedangkan
+/// Watchlist, Kendaraan, dan Dokumen terkubur dua lapis di dalam Profil —
+/// tempat orang mencari setelan, bukan mencari fitur. Sekarang kelimanya
+/// berjajar di layar yang paling sering kamu buka.
+class _PintasanLainnya extends StatelessWidget {
+  const _PintasanLainnya();
+
+  static const _isi = [
+    (Icons.flag_outlined, 'Target', '/goals', AppColors.dashboard),
+    (Icons.favorite_outline, 'Wishlist', '/wishlist', AppColors.finance),
+    (Icons.movie_outlined, 'Watchlist', '/watchlist', AppColors.watchlist),
+    (Icons.two_wheeler, 'Kendaraan', '/vehicle', AppColors.vehicle),
+    (Icons.badge_outlined, 'Dokumen', '/documents', AppColors.document),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Tiga per baris: cukup besar untuk disentuh dengan ibu jari, dan
+        // labelnya masih muat tanpa dipotong.
+        const jarak = AppSpacing.sm;
+        final lebar = (constraints.maxWidth - jarak * 2) / 3;
+
+        return Wrap(
+          spacing: jarak,
+          runSpacing: jarak,
+          children: [
+            for (final (icon, label, rute, warna) in _isi)
+              SizedBox(
+                width: lebar,
+                child: _KotakPintasan(icon: icon, label: label, rute: rute, warna: warna),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _KotakPintasan extends StatelessWidget {
+  const _KotakPintasan({
+    required this.icon,
+    required this.label,
+    required this.rute,
+    required this.warna,
+  });
+
+  final IconData icon;
+  final String label;
+  final String rute;
+  final Color warna;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+      borderRadius: BorderRadius.circular(AppTheme.radius),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(rute),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: warna),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

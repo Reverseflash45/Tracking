@@ -123,6 +123,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
             child: Column(
               children: [
+                // Profil bukan tab lagi, jadi dia butuh jalan pulang sendiri.
+                // Gradient di sini tetap dipertahankan: ini kartu identitas,
+                // bukan header halaman — pola yang sama dipakai hampir semua
+                // app yang punya layar akun.
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: HeroIconButton(
+                    icon: Icons.arrow_back,
+                    tooltip: 'Kembali',
+                    // Kalau halaman ini yang pertama dibuka (mis. dari tautan),
+                    // tidak ada yang bisa dilepas — pulang ke Beranda.
+                    onPressed: () =>
+                        context.canPop() ? context.pop() : context.go('/'),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
                 GestureDetector(
                   onTap: _uploadingAvatar ? null : _changeAvatar,
                   child: Stack(
@@ -224,35 +240,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const _NotificationSettingsCard(),
                 const SizedBox(height: AppSpacing.md),
-                const SectionHeader(
-                  title: 'Koleksi & Pengingat',
-                  icon: Icons.inventory_2_outlined,
-                  color: AppColors.profile,
-                ),
-                _MenuTile(
-                  icon: Icons.movie_outlined,
-                  color: AppColors.watchlist,
-                  title: 'Watchlist',
-                  subtitle: 'Film, series, anime, buku, dan komik',
-                  onTap: () => context.push('/watchlist'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _MenuTile(
-                  icon: Icons.two_wheeler,
-                  color: AppColors.vehicle,
-                  title: 'Kendaraan',
-                  subtitle: 'Servis, oli, dan jatuh tempo pajak',
-                  onTap: () => context.push('/vehicle'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _MenuTile(
-                  icon: Icons.badge_outlined,
-                  color: AppColors.document,
-                  title: 'Dokumen',
-                  subtitle: 'SIM, paspor, BPJS, dan masa berlakunya',
-                  onTap: () => context.push('/documents'),
-                ),
-                const SizedBox(height: AppSpacing.md),
+                // Watchlist, Kendaraan, dan Dokumen dulu ada di sini. Sekarang
+                // pindah ke pintasan di Beranda: Profil tempat orang mencari
+                // setelan dan akun, bukan tempat mencari fitur.
                 const SectionHeader(
                   title: 'Rekap',
                   icon: Icons.auto_awesome,

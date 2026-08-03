@@ -64,7 +64,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Cari',
             subtitle: 'Semua catatanmu dalam satu kotak',
             color: _color,

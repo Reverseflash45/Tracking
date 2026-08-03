@@ -469,7 +469,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: _isEdit
                 ? 'Edit Sesi Workout'
                 : (_isRepeat ? 'Ulangi Sesi' : 'Catat Sesi Workout'),

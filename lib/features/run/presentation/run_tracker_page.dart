@@ -315,7 +315,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
         body: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Lari',
               subtitle: switch (_state) {
                 _TrackerState.siap => 'Tekan mulai saat kamu siap berangkat',

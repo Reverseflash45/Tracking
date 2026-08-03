@@ -47,7 +47,7 @@ class WishlistPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Wishlist',
               subtitle: 'Barang yang ingin kamu punya',
               color: _color,

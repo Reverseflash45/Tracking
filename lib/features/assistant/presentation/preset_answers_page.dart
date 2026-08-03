@@ -55,7 +55,7 @@ class PresetAnswersPage extends ConsumerWidget {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Tanya Data',
             subtitle: 'Ketuk pertanyaan, jawabannya dihitung dari catatanmu',
             color: _color,

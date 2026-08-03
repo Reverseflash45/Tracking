@@ -34,7 +34,7 @@ class SleepPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Tidur',
               subtitle: 'Rata-rata $kSleepWindowDays hari terakhir',
               color: _color,

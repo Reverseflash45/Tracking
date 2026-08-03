@@ -108,7 +108,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     return Scaffold(
       body: Column(
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Tanya Data',
             subtitle: 'Tanya apa saja tentang catatanmu sendiri',
             color: _color,

@@ -43,7 +43,7 @@ class RecurringPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Pengeluaran Rutin',
               subtitle: 'Kos, internet, langganan',
               color: _color,

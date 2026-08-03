@@ -38,7 +38,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          HeroHeader(
+          HeroHeader.sub(
             title: 'Kalender',
             subtitle: 'Jadwal, deadline, dan workout dalam satu tampilan',
             color: _color,

@@ -68,7 +68,7 @@ class _ProgressDashboardPageState extends ConsumerState<ProgressDashboardPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Progres',
               subtitle: 'Perkembangan tubuh, nutrisi, dan latihanmu',
               color: _color,

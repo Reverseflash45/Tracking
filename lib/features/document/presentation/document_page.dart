@@ -37,7 +37,7 @@ class DocumentPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Dokumen',
               subtitle: 'Masa berlaku dan nomornya',
               color: _color,

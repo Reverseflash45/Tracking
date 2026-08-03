@@ -39,7 +39,7 @@ class RecurringTasksPage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Tugas Berulang',
               subtitle: 'Dibuat otomatis tiap minggu',
               color: _color,

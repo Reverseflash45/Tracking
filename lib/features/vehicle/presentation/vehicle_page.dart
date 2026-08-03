@@ -39,7 +39,7 @@ class VehiclePage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Kendaraan',
               subtitle: 'Servis dan pajak',
               color: _color,

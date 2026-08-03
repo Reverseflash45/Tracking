@@ -137,7 +137,7 @@ class _ProgressPhotoPageState extends ConsumerState<ProgressPhotoPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Foto Progres',
               subtitle: _modeBanding
                   ? 'Pilih dua foto untuk dibandingkan'
