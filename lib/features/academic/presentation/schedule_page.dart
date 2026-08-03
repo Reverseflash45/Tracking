@@ -193,7 +193,7 @@ class _ConflictBanner extends StatelessWidget {
                       : 'Ada $pasangan jadwal yang bertabrakan',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 13,
+                    fontSize: 14,
                     color: colorScheme.onErrorContainer,
                   ),
                 ),
@@ -202,7 +202,7 @@ class _ConflictBanner extends StatelessWidget {
                   'Kartunya ditandai di bawah. Biasanya ini sisa import KRS '
                   'yang terlanjur dijalankan dua kali.',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     height: 1.35,
                     color: colorScheme.onErrorContainer,
                   ),
@@ -246,7 +246,7 @@ class _DayHeader extends StatelessWidget {
               ),
               child: const Text(
                 'Hari ini',
-                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -319,7 +319,7 @@ class _ScheduleTile extends ConsumerWidget {
                         schedule.startTime.substring(0, 5),
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
-                          fontSize: 15,
+                          fontSize: 16,
                           color: AppColors.academic,
                           height: 1.2,
                         ),
@@ -327,7 +327,7 @@ class _ScheduleTile extends ConsumerWidget {
                       Text(
                         schedule.endTime.substring(0, 5),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: colorScheme.onSurfaceVariant,
                           height: 1.2,
                         ),
@@ -351,7 +351,7 @@ class _ScheduleTile extends ConsumerWidget {
                     children: [
                       Text(
                         schedule.courseName,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                       ),
                       const SizedBox(height: 4),
                       _MetaLine(
@@ -389,7 +389,7 @@ class _ScheduleTile extends ConsumerWidget {
                           ? 'PHL ${_phlDateFormat.format(schedule.specificDate!)}'
                           : 'PHL',
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: AppColors.academic,
                       ),
@@ -423,7 +423,7 @@ class _MetaLine extends StatelessWidget {
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, color: color),
+            style: TextStyle(fontSize: 13, color: color),
           ),
         ),
       ],

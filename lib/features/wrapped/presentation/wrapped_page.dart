@@ -349,7 +349,7 @@ class _StoryCard extends StatelessWidget {
               data.eyebrow.toUpperCase(),
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.85),
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
               ),
@@ -412,7 +412,7 @@ class _EmptyWrapped extends StatelessWidget {
               'Belum ada tugas selesai, sesi workout, atau catatan makan '
               '${period.phrase}. Coba pilih periode yang lebih panjang.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
             ),
           ],
         ),

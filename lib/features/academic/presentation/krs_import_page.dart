@@ -174,7 +174,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                               'jamnya tidak jelas sengaja dilewati daripada '
                               'dikarang. Periksa dulu sebelum menyimpan.',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 height: 1.45,
                                 color: colorScheme.onSurfaceVariant,
                               ),
@@ -241,7 +241,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                             child: Text(
                               _error!,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 height: 1.4,
                                 color: colorScheme.onErrorContainer,
                               ),
@@ -277,7 +277,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                           _selected.length == _entries.length
                               ? 'Lepas semua'
                               : 'Pilih semua',
-                          style: const TextStyle(fontSize: 12),
+                          style: const TextStyle(fontSize: 13),
                         ),
                       ),
                     ],
@@ -300,7 +300,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                     tilePadding: EdgeInsets.zero,
                     title: Text(
                       'Lihat teks yang terbaca',
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                     ),
                     children: [
                       Container(
@@ -312,7 +312,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                         ),
                         child: Text(
                           _rawText!,
-                          style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                          style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
                         ),
                       ),
                     ],
@@ -379,14 +379,14 @@ class _EntryTile extends StatelessWidget {
                       entry.courseName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${weekDayName(entry.dayOfWeek)} · '
                       '${entry.startTime}-${entry.endTime}'
                       '${entry.room != null ? ' · ${entry.room}' : ''}',
-                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -495,7 +495,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
                     onSelected: (_) => setState(() => _day = day),
                     selectedColor: _color.withValues(alpha: 0.18),
                     labelStyle: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: _day == day
                           ? _color

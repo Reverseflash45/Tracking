@@ -331,7 +331,7 @@ class _PriorityOption extends StatelessWidget {
             Text(
               priority.label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: selected ? color : colorScheme.onSurfaceVariant,
               ),
@@ -355,7 +355,7 @@ class _DeadlinePresetChip extends StatelessWidget {
       label: Text(label),
       onPressed: onTap,
       avatar: const Icon(Icons.bolt, size: 16, color: _deadlineColor),
-      labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
     );
   }
 }

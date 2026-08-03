@@ -191,7 +191,7 @@ class _Legend extends StatelessWidget {
               Text(
                 type.label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),

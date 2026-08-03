@@ -52,7 +52,7 @@ class OverloadStrip extends StatelessWidget {
                   'Target: ${suggestion.targetLabel}',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: 14,
                     color: _workoutColor,
                   ),
                 ),
@@ -60,7 +60,7 @@ class OverloadStrip extends StatelessWidget {
                 Text(
                   'Terakhir ${suggestion.lastLabel}',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -112,7 +112,7 @@ class OverloadCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     adviceLabel(suggestion.advice),
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                   ),
                 ),
               ],
@@ -143,7 +143,7 @@ class OverloadCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               suggestion.reason,
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -168,7 +168,7 @@ class _TargetColumn extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
         Text(

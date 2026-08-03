@@ -191,7 +191,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               'Kalau angkanya terasa aneh, percaya catatanmu — bukan jawabannya.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 11,
                 height: 1.35,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -240,7 +240,7 @@ class _Pembuka extends StatelessWidget {
         Text(
           'Coba salah satu ini:',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.md),
         for (final contoh in _contohPertanyaan)
@@ -253,7 +253,7 @@ class _Pembuka extends StatelessWidget {
                 dense: true,
                 enabled: siap,
                 onTap: () => onPick(contoh),
-                title: Text(contoh, style: const TextStyle(fontSize: 13)),
+                title: Text(contoh, style: const TextStyle(fontSize: 14)),
                 trailing: const Icon(Icons.north_east, size: 16),
               ),
             ),
@@ -292,7 +292,7 @@ class _TurnView extends StatelessWidget {
             ),
             child: Text(
               turn.question,
-              style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.4),
+              style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
             ),
           ),
         ),
@@ -309,7 +309,7 @@ class _TurnView extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Membaca datamu...',
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -331,7 +331,7 @@ class _TurnView extends StatelessWidget {
                   child: Text(
                     turn.error!,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       height: 1.45,
                       color: colorScheme.onErrorContainer,
                     ),
@@ -345,7 +345,7 @@ class _TurnView extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.lg, left: 4, right: 24),
             child: Text(
               turn.answer!,
-              style: const TextStyle(fontSize: 13.5, height: 1.5),
+              style: const TextStyle(fontSize: 14, height: 1.5),
             ),
           ),
       ],

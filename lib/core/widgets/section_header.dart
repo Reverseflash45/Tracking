@@ -41,7 +41,7 @@ class SectionHeader extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.2,
                 color: colorScheme.onSurfaceVariant,

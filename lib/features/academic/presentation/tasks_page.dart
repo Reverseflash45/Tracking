@@ -285,7 +285,7 @@ class _TaskTile extends ConsumerWidget {
                         task.title,
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          fontSize: 15,
+                          fontSize: 16,
                           decoration: task.isDone ? TextDecoration.lineThrough : null,
                           color: task.isDone ? colorScheme.onSurfaceVariant : null,
                         ),
@@ -333,7 +333,7 @@ class _TaskTile extends ConsumerWidget {
                     child: Text(
                       task.status.label,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: statusColor,
                       ),
@@ -365,7 +365,7 @@ class _MetaPill extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w500),
         ),
       ],
     );

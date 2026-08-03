@@ -148,7 +148,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                 child: Text(
                   '• ${conflict.lawan.courseName} '
                   '(${conflict.lawan.timeRangeLabel}) — ${conflict.durasiLabel}',
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: 14),
                 ),
               ),
             const SizedBox(height: AppSpacing.sm),
@@ -440,7 +440,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                       Text(
                         _durationLabel,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: _isDurationValid
                               ? Theme.of(context).colorScheme.onSurfaceVariant
@@ -567,7 +567,7 @@ class _ConflictWarning extends StatelessWidget {
                       : 'Bentrok dengan ${conflicts.length} jadwal lain',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 13,
+                    fontSize: 14,
                     color: colorScheme.onErrorContainer,
                   ),
                 ),
@@ -580,7 +580,7 @@ class _ConflictWarning extends StatelessWidget {
                       '${conflict.lawan.timeRangeLabel} · '
                       'menimpa ${conflict.durasiLabel}',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         height: 1.35,
                         color: colorScheme.onErrorContainer,
                       ),
@@ -624,7 +624,7 @@ class _DayChip extends StatelessWidget {
               weekDayName(day).substring(0, 3),
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 13,
+                fontSize: 14,
                 color: selected
                     ? Colors.white
                     : colorScheme.onSurfaceVariant.withValues(alpha: disabled ? 0.5 : 1),
@@ -662,13 +662,13 @@ class _TimeCard extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 2),
             Text(
               '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
               style: const TextStyle(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.w800,
                 color: _academicColor,
                 height: 1.2,

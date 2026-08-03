@@ -153,7 +153,7 @@ class _CatatanCaraKerja extends StatelessWidget {
               'membuatnya muncul lagi — matikan template-nya kalau memang tidak '
               'ingin dibuat lagi.',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 height: 1.45,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -237,7 +237,7 @@ class _TemplateTile extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          fontSize: 14.5,
+                          fontSize: 14,
                           decoration: mati ? TextDecoration.lineThrough : null,
                           color: mati ? colorScheme.onSurfaceVariant : null,
                         ),
@@ -251,7 +251,7 @@ class _TemplateTile extends ConsumerWidget {
                         ].join('  ·  '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -381,7 +381,7 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
             children: [
               Text(
                 _isEdit ? 'Edit Template' : 'Tugas Berulang Baru',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -424,7 +424,7 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text('Hari', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              const Text('Hari', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               const SizedBox(height: AppSpacing.sm),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -458,7 +458,7 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text('Prioritas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              const Text('Prioritas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               const SizedBox(height: AppSpacing.sm),
               SegmentedButton<TaskPriority>(
                 segments: [

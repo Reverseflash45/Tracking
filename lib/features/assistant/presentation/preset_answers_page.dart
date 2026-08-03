@@ -152,7 +152,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                       widget.question.text,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 13.5,
+                        fontSize: 14,
                         height: 1.35,
                       ),
                     ),
@@ -183,7 +183,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                         child: Text(
                           answer.detail,
                           style: TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 13,
                             height: 1.45,
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -195,7 +195,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                   Text(
                     answer.headline!,
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.w900,
                       height: 1.15,
                       color: _warna(answer.tone, colorScheme),
@@ -205,7 +205,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                   Text(
                     answer.detail,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       height: 1.45,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -253,7 +253,7 @@ class _CatatanBawah extends StatelessWidget {
                     'catatanmu — bukan ditebak. Gratis, seketika, dan tidak ada '
                     'data yang keluar dari HP-mu.',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       height: 1.45,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -279,11 +279,11 @@ class _CatatanBawah extends StatelessWidget {
             ),
             title: const Text(
               'Punya pertanyaan lain?',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
             ),
             subtitle: const Text(
               'Ketik bebas — butuh setup & berbayar',
-              style: TextStyle(fontSize: 11.5),
+              style: TextStyle(fontSize: 12),
             ),
             trailing: const Icon(Icons.chevron_right, size: 20),
           ),

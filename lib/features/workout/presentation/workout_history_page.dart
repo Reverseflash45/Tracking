@@ -183,7 +183,7 @@ class _FilterBar extends StatelessWidget {
           decoration: InputDecoration(
             isDense: true,
             hintText: 'Cari nama latihan',
-            hintStyle: const TextStyle(fontSize: 13),
+            hintStyle: const TextStyle(fontSize: 14),
             prefixIcon: const Icon(Icons.search, size: 19),
             suffixIcon: filter.query.isEmpty
                 ? null
@@ -235,7 +235,7 @@ class _FilterBar extends StatelessWidget {
                 foregroundColor: colorScheme.onSurfaceVariant,
               ),
               icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
-              label: const Text('Tampilkan semua', style: TextStyle(fontSize: 12)),
+              label: const Text('Tampilkan semua', style: TextStyle(fontSize: 13)),
             ),
           ),
         ],
@@ -268,7 +268,7 @@ class _ChipRow extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -306,7 +306,7 @@ class _FilterChip extends StatelessWidget {
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         selectedColor: AppColors.workout.withValues(alpha: 0.18),
         labelStyle: TextStyle(
-          fontSize: 11.5,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
           color: selected ? AppColors.workout : colorScheme.onSurfaceVariant,
         ),
@@ -406,7 +406,7 @@ class _SessionCard extends ConsumerWidget {
                     '${session.sessionDate.day}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
-                      fontSize: 17,
+                      fontSize: 20,
                       color: AppColors.workout,
                       height: 1.1,
                     ),
@@ -414,7 +414,7 @@ class _SessionCard extends ConsumerWidget {
                   Text(
                     _monthFormat.format(session.sessionDate),
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppColors.workout,
                       height: 1.2,
@@ -425,7 +425,7 @@ class _SessionCard extends ConsumerWidget {
             ),
             title: Text(
               _weekDayFormat.format(session.sessionDate),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -465,12 +465,12 @@ class _SessionCard extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           exercise.exerciseName,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                         ),
                       ),
                       Text(
                         _exerciseSummary(exercise),
-                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -495,7 +495,7 @@ class _SessionCard extends ConsumerWidget {
                         child: Text(
                           session.notes!,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                             fontStyle: FontStyle.italic,
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -594,7 +594,7 @@ class _RestDayTile extends ConsumerWidget {
                     Text(
                       _monthFormat.format(restDay.restOn),
                       style: const TextStyle(
-                        fontSize: 9,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppColors.statusInProgress,
                         height: 1.2,
@@ -610,14 +610,14 @@ class _RestDayTile extends ConsumerWidget {
                   children: [
                     Text(
                       _weekDayFormat.format(restDay.restOn),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       restDay.note?.trim().isNotEmpty == true
                           ? restDay.note!
                           : 'Hari istirahat',
-                      style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -649,7 +649,7 @@ class _StatPill extends StatelessWidget {
       children: [
         Icon(icon, size: 13, color: color),
         const SizedBox(width: 3),
-        Text(label, style: TextStyle(fontSize: 12, color: color)),
+        Text(label, style: TextStyle(fontSize: 13, color: color)),
       ],
     );
   }

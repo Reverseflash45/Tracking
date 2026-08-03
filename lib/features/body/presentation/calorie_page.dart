@@ -120,7 +120,7 @@ class _CaloriePageState extends ConsumerState<CaloriePage> {
                           label: Text(
                             // Nama panjang tidak muat di layar HP.
                             g == FitnessGoal.recomposition ? 'Recomp' : g.label,
-                            style: const TextStyle(fontSize: 11),
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ),
                     ],
@@ -152,7 +152,7 @@ class _CaloriePageState extends ConsumerState<CaloriePage> {
                         : 'BMR dihitung dengan rumus Mifflin-St Jeor. Isi persentase lemak tubuh '
                             'di profil untuk hasil yang lebih akurat.',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -198,7 +198,7 @@ class _BelumAdaProfil extends StatelessWidget {
           Text(
             'Isi berat, tinggi, umur, dan tingkat aktivitas dulu supaya kalorimu bisa dihitung.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
           ),
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
@@ -240,7 +240,7 @@ class _WarningBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -276,7 +276,7 @@ class _BmiCard extends StatelessWidget {
                   result.bmi.toStringAsFixed(1),
                   style: TextStyle(fontWeight: FontWeight.w900, fontSize: 32, color: warna),
                 ),
-                Text('BMI', style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant)),
+                Text('BMI', style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
               ],
             ),
             const SizedBox(width: AppSpacing.md),
@@ -295,7 +295,7 @@ class _BmiCard extends StatelessWidget {
                       result.bmiCategory.label,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 12,
+                        fontSize: 13,
                         color: warna,
                       ),
                     ),
@@ -304,7 +304,7 @@ class _BmiCard extends StatelessWidget {
                   Text(
                     'Memakai ambang BMI Asia-Pasifik, yang lebih rendah daripada ambang '
                     'internasional.',
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -338,7 +338,7 @@ class _KcalCard extends StatelessWidget {
                   _numberFormat.format(result.goalKcal),
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: 34,
+                    fontSize: 32,
                     color: _color,
                     height: 1,
                   ),
@@ -348,13 +348,13 @@ class _KcalCard extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     'kkal/hari',
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 4),
-            Text(goal.description, style: const TextStyle(fontSize: 12)),
+            Text(goal.description, style: const TextStyle(fontSize: 13)),
             const Divider(height: AppSpacing.lg),
             for (final g in FitnessGoal.values)
               Padding(
@@ -365,7 +365,7 @@ class _KcalCard extends StatelessWidget {
                       child: Text(
                         g.label,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: g == goal ? FontWeight.w800 : FontWeight.w400,
                           color: g == goal ? _color : colorScheme.onSurfaceVariant,
                         ),
@@ -374,7 +374,7 @@ class _KcalCard extends StatelessWidget {
                     Text(
                       '${_numberFormat.format(result.kcalFor(g))} kkal',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: g == goal ? FontWeight.w800 : FontWeight.w600,
                         color: g == goal ? _color : colorScheme.onSurface,
                       ),
@@ -458,7 +458,7 @@ class _MacroTile extends StatelessWidget {
             '$grams g',
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
           ),
-          Text(label, style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant)),
+          Text(label, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
         ],
       ),
     );
@@ -510,10 +510,10 @@ class _HabitRow extends StatelessWidget {
     return ListTile(
       dense: true,
       leading: Icon(icon, size: 20, color: _color),
-      title: Text(label, style: const TextStyle(fontSize: 13)),
+      title: Text(label, style: const TextStyle(fontSize: 14)),
       trailing: Text(
         value,
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
       ),
     );
   }

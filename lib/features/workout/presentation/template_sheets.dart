@@ -96,7 +96,7 @@ class _TemplatePickerSheet extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 13,
                                     color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),

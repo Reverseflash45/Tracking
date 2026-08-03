@@ -353,7 +353,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
                               child: Text(
                                 _error!,
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 13,
                                   color: Theme.of(context).colorScheme.onErrorContainer,
                                 ),
                               ),
@@ -417,7 +417,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
                     'Elevasi sengaja tidak dicatat: ketinggian dari GPS meleset '
                     '10-15 meter, jadi "total tanjakan" darinya hanya karangan.',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       height: 1.5,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -458,7 +458,7 @@ class _BigStat extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -486,7 +486,7 @@ class _SmallStat extends StatelessWidget {
             Text(
               value,
               style: const TextStyle(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.w800,
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
@@ -495,7 +495,7 @@ class _SmallStat extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -542,13 +542,13 @@ class _SignalCard extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color),
               ),
             ),
             if (acc != null)
               Text(
                 '±${acc.round()} m  ·  $points titik',
-                style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
           ],
         ),

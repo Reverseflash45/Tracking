@@ -79,7 +79,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                     trailing: Text(
                       '${all.length} latihan',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -279,7 +279,7 @@ class _SummaryCard extends StatelessWidget {
                           child: Text(
                             progress.type.label,
                             style: const TextStyle(
-                              fontSize: 9,
+                              fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: _workoutColor,
                             ),
@@ -294,7 +294,7 @@ class _SummaryCard extends StatelessWidget {
                       '  ·  ${_shortDateFormat.format(progress.lastDate)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -313,7 +313,7 @@ class _SummaryCard extends StatelessWidget {
                               : '${delta > 0 ? "+" : ""}${_trimNumber(delta)} '
                                   '${progress.metric.unit} sejak awal',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: warna,
                           ),
@@ -487,13 +487,13 @@ class _SingleSessionNote extends StatelessWidget {
                 children: [
                   Text(
                     '${_trimNumber(progress.latest)} ${progress.metric.unit}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Baru satu sesi (${_pointDateFormat.format(progress.lastDate)}). '
                     'Catat sekali lagi untuk melihat grafiknya.',
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -542,7 +542,7 @@ class _DeltaBanner extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: color, fontSize: 13),
+              style: TextStyle(fontWeight: FontWeight.w600, color: color, fontSize: 14),
             ),
           ),
         ],
@@ -639,7 +639,7 @@ class _LineChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     '${date.day}/${date.month}',
-                    style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                   ),
                 );
               },
@@ -651,7 +651,7 @@ class _LineChart extends StatelessWidget {
               reservedSize: 42,
               getTitlesWidget: (value, meta) => Text(
                 _numberFormat.format(value.round()),
-                style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
               ),
             ),
           ),
@@ -664,14 +664,14 @@ class _LineChart extends StatelessWidget {
               final point = points[spot.x.toInt()];
               return LineTooltipItem(
                 '${_numberFormat.format(_valueOf(point))}$satuan\n',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
                 children: [
                   TextSpan(
                     text: _pointDateFormat.format(point.date),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w400,
-                      fontSize: 11,
+                      fontSize: 12,
                     ),
                   ),
                 ],
