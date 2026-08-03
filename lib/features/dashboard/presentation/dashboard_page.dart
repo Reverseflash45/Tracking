@@ -11,6 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
+import '../../../core/widgets/menu_list.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../academic/data/models/class_schedule.dart';
 import '../../academic/data/models/task.dart';
@@ -268,91 +269,60 @@ class _HeroHeader extends ConsumerWidget {
 /// Watchlist, Kendaraan, dan Dokumen terkubur dua lapis di dalam Profil —
 /// tempat orang mencari setelan, bukan mencari fitur. Sekarang kelimanya
 /// berjajar di layar yang paling sering kamu buka.
+/// Fitur yang tidak punya kartu ringkasan sendiri di Beranda.
+///
+/// Dulu lima petak ikon, tiga per baris — yang berarti baris kedua selalu
+/// menyisakan satu lubang. Lubang itu terbaca sebagai sesuatu yang belum
+/// selesai, dan jumlah pintasan di sini memang tidak akan pernah habis dibagi
+/// tiga.
+///
+/// Keterangannya sengaja tidak diisi untuk yang namanya sudah menjelaskan
+/// dirinya. "Target" tidak butuh; "Watchlist" butuh, karena namanya tidak
+/// memberi tahu isinya film atau tempat menabung.
 class _PintasanLainnya extends StatelessWidget {
   const _PintasanLainnya();
 
   static const _isi = [
-    (Icons.flag_outlined, 'Target', '/goals', AppColors.dashboard),
-    (Icons.favorite_outline, 'Wishlist', '/wishlist', AppColors.finance),
-    (Icons.movie_outlined, 'Watchlist', '/watchlist', AppColors.watchlist),
-    (Icons.two_wheeler, 'Kendaraan', '/vehicle', AppColors.vehicle),
-    (Icons.badge_outlined, 'Dokumen', '/documents', AppColors.document),
+    MenuItemData(
+      icon: Icons.flag_outlined,
+      label: 'Target',
+      rute: '/goals',
+      warna: AppColors.dashboard,
+    ),
+    MenuItemData(
+      icon: Icons.favorite_outline,
+      label: 'Wishlist',
+      rute: '/wishlist',
+      warna: AppColors.finance,
+      keterangan: 'Barang yang ingin dibeli',
+    ),
+    MenuItemData(
+      icon: Icons.movie_outlined,
+      label: 'Watchlist',
+      rute: '/watchlist',
+      warna: AppColors.watchlist,
+      keterangan: 'Film, series, buku, komik',
+    ),
+    MenuItemData(
+      icon: Icons.two_wheeler,
+      label: 'Kendaraan',
+      rute: '/vehicle',
+      warna: AppColors.vehicle,
+      keterangan: 'Pajak, servis, dan bensin',
+    ),
+    MenuItemData(
+      icon: Icons.badge_outlined,
+      label: 'Dokumen',
+      rute: '/documents',
+      warna: AppColors.document,
+      keterangan: 'KTP, SIM, paspor, kartu',
+    ),
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Tiga per baris: cukup besar untuk disentuh dengan ibu jari, dan
-        // labelnya masih muat tanpa dipotong.
-        const jarak = AppSpacing.sm;
-        final lebar = (constraints.maxWidth - jarak * 2) / 3;
-
-        return Wrap(
-          spacing: jarak,
-          runSpacing: jarak,
-          children: [
-            for (final (icon, label, rute, warna) in _isi)
-              SizedBox(
-                width: lebar,
-                child: _KotakPintasan(icon: icon, label: label, rute: rute, warna: warna),
-              ),
-          ],
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => const MenuList(items: _isi);
 }
 
-class _KotakPintasan extends StatelessWidget {
-  const _KotakPintasan({
-    required this.icon,
-    required this.label,
-    required this.rute,
-    required this.warna,
-  });
-
-  final IconData icon;
-  final String label;
-  final String rute;
-  final Color warna;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Material(
-      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-      borderRadius: BorderRadius.circular(AppTheme.radius),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push(rute),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 20, color: warna),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Menampilkan isinya seukuran aslinya, dan baru mengecilkannya kalau tidak
 /// muat. Tidak pernah memotong maupun memindahkan teks ke baris berikutnya.
 class _Menyusut extends StatelessWidget {
   const _Menyusut({required this.child});

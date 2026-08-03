@@ -66,7 +66,10 @@ const _tabs = [
   _TabData(
     icon: Icons.account_balance_wallet_outlined,
     selectedIcon: Icons.account_balance_wallet,
-    label: 'Uang',
+    // "Keuangan", sama persis dengan judul halaman yang dituju. Label yang
+    // berbeda dari judul tujuannya membuat orang ragu apakah sudah sampai di
+    // tempat yang benar.
+    label: 'Keuangan',
     color: AppColors.finance,
   ),
 ];
