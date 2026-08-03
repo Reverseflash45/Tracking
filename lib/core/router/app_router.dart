@@ -37,6 +37,7 @@ import '../../features/workout/presentation/workout_form_page.dart';
 import '../../features/workout/presentation/workout_history_page.dart';
 import '../../features/workout/presentation/workout_home_page.dart';
 import '../../features/workout/presentation/workout_progress_page.dart';
+import '../../features/watchlist/presentation/watchlist_page.dart';
 import '../../features/wishlist/presentation/wishlist_page.dart';
 import '../../features/wrapped/presentation/wrapped_page.dart';
 import '../supabase/supabase_client_provider.dart';
@@ -84,6 +85,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   // dan tidak seharusnya lewat halaman itu dulu.
                   path: 'wishlist',
                   builder: (context, state) => const WishlistPage(),
+                ),
+                GoRoute(
+                  path: 'watchlist',
+                  builder: (context, state) => const WatchlistPage(),
                 ),
               ],
             ),
