@@ -225,6 +225,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 const _NotificationSettingsCard(),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
+                  title: 'Koleksi & Pengingat',
+                  icon: Icons.inventory_2_outlined,
+                  color: AppColors.profile,
+                ),
+                _MenuTile(
+                  icon: Icons.movie_outlined,
+                  color: AppColors.watchlist,
+                  title: 'Watchlist',
+                  subtitle: 'Film, series, anime, buku, dan komik',
+                  onTap: () => context.push('/watchlist'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const SectionHeader(
                   title: 'Rekap',
                   icon: Icons.auto_awesome,
                   color: AppColors.profile,

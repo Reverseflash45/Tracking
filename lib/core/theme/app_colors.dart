@@ -16,6 +16,13 @@ class AppColors {
   /// status di daftar tugas.
   static const Color finance = Color(0xFF2E7D32);
 
+  /// Merah muda tua untuk watchlist, biru abu untuk kendaraan, cokelat untuk
+  /// dokumen. Ketiganya dipilih supaya tetap terbedakan dari enam warna di
+  /// atas saat berjajar sebagai ikon kecil di halaman Profil.
+  static const Color watchlist = Color(0xFFC2185B);
+  static const Color vehicle = Color(0xFF546E7A);
+  static const Color document = Color(0xFF6D4C41);
+
   static const Color priorityHigh = Color(0xFFE53935);
   static const Color priorityMedium = Color(0xFFFB8C00);
   static const Color priorityLow = Color(0xFF43A047);
