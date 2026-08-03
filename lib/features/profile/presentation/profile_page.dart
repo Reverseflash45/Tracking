@@ -244,6 +244,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   subtitle: 'Servis, oli, dan jatuh tempo pajak',
                   onTap: () => context.push('/vehicle'),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                _MenuTile(
+                  icon: Icons.badge_outlined,
+                  color: AppColors.document,
+                  title: 'Dokumen',
+                  subtitle: 'SIM, paspor, BPJS, dan masa berlakunya',
+                  onTap: () => context.push('/documents'),
+                ),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
                   title: 'Rekap',
