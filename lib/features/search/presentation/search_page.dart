@@ -8,8 +8,13 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../academic/presentation/academic_providers.dart';
+import '../../document/data/document_repository.dart';
 import '../../finance/data/finance_repository.dart';
+import '../../goals/data/goal_repository.dart';
 import '../../nutrition/data/nutrition_repository.dart';
+import '../../vehicle/data/vehicle_repository.dart';
+import '../../watchlist/data/watchlist_repository.dart';
+import '../../wishlist/data/wishlist_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../domain/global_search.dart';
 
@@ -41,9 +46,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final hits = searchAll(
       query: _query,
       tasks: ref.watch(tasksProvider).value ?? const [],
+      courses: ref.watch(coursesProvider).value ?? const [],
       sessions: ref.watch(workoutSessionsProvider).value ?? const [],
       foods: ref.watch(foodLogsProvider).value ?? const [],
       transactions: ref.watch(transactionsProvider).value ?? const [],
+      wishlist: ref.watch(wishlistProvider).value ?? const [],
+      media: ref.watch(watchlistProvider).value ?? const [],
+      vehicles: ref.watch(vehiclesProvider).value ?? const [],
+      services: ref.watch(vehicleServicesProvider).value ?? const [],
+      documents: ref.watch(documentsProvider).value ?? const [],
+      goals: ref.watch(goalsProvider).value ?? const [],
     );
     final grouped = groupHits(hits);
     final cukupPanjang = _query.trim().length >= kMinQueryLength;
@@ -54,7 +66,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         children: [
           HeroHeader(
             title: 'Cari',
-            subtitle: 'Tugas, latihan, makanan, dan pengeluaran',
+            subtitle: 'Semua catatanmu dalam satu kotak',
             color: _color,
             leading: HeroIconButton(
               icon: Icons.arrow_back,
@@ -98,8 +110,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     padding: const EdgeInsets.only(top: AppSpacing.lg),
                     child: Text(
                       _query.isEmpty
-                          ? 'Cari nama tugas, nama latihan, nama makanan, atau '
-                              'nama toko dan produk yang pernah kamu catat.'
+                          ? 'Tugas, mata kuliah, latihan, makanan, pengeluaran, '
+                              'wishlist, watchlist, kendaraan, dokumen, dan '
+                              'target — semuanya sekaligus.'
                           : 'Ketik minimal $kMinQueryLength huruf — satu huruf '
                               'cocok dengan hampir semua catatan.',
                       textAlign: TextAlign.center,

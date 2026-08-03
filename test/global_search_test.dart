@@ -1,8 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tracking/features/academic/data/models/course.dart';
 import 'package:tracking/features/academic/data/models/task.dart';
+import 'package:tracking/features/document/domain/document.dart';
 import 'package:tracking/features/finance/domain/transaction.dart';
+import 'package:tracking/features/goals/domain/goal.dart';
 import 'package:tracking/features/nutrition/domain/food_log.dart';
 import 'package:tracking/features/search/domain/global_search.dart';
+import 'package:tracking/features/vehicle/domain/vehicle.dart';
+import 'package:tracking/features/watchlist/domain/watchlist.dart';
+import 'package:tracking/features/wishlist/domain/wishlist.dart';
 import 'package:tracking/features/workout/data/models/exercise_entry.dart';
 import 'package:tracking/features/workout/data/models/workout_session.dart';
 
@@ -55,6 +61,49 @@ Transaction _tx({String? produk, String? toko, String? catatan}) => Transaction(
       product: produk,
       merchant: toko,
       note: catatan,
+    );
+
+Course _matkul(String nama, {String? dosen, int? sks}) => Course(
+      id: nama,
+      userId: 'u',
+      name: nama,
+      lecturer: dosen,
+      sks: sks,
+      createdAt: _now,
+    );
+
+WishlistItem _barang(String nama, {double? harga, String? catatan}) =>
+    WishlistItem(id: nama, name: nama, price: harga, note: catatan);
+
+MediaItem _tontonan(String judul, {MediaKind kind = MediaKind.series, String? catatan}) =>
+    MediaItem(id: judul, title: judul, kind: kind, note: catatan, createdAt: _now);
+
+Vehicle _kendaraan(String nama, {String? nopol}) =>
+    Vehicle(id: nama, name: nama, plate: nopol, createdAt: _now);
+
+ServiceLog _servis(String vehicleId, {String? catatan}) => ServiceLog(
+      id: '$vehicleId-servis',
+      vehicleId: vehicleId,
+      kind: ServiceKind.oli,
+      doneOn: _now,
+      note: catatan,
+    );
+
+Document _dokumen(String nama, {DocKind kind = DocKind.sim, String? nomor}) => Document(
+      id: nama,
+      name: nama,
+      kind: kind,
+      number: nomor,
+      createdAt: _now,
+    );
+
+Goal _target(String judul, {bool arsip = false}) => Goal(
+      id: judul,
+      title: judul,
+      metric: GoalMetric.jarakLari,
+      targetValue: 20,
+      period: GoalPeriod.mingguan,
+      archived: arsip,
     );
 
 void main() {
@@ -168,6 +217,93 @@ void main() {
         tasks: [_tugas('Laporan praktikum', selesai: _now)],
       );
       expect(hasil.first.subtitle, 'Selesai');
+    });
+  });
+
+  group('searchAll — sumber yang dulu tertinggal', () {
+    test('mata kuliah dicari lewat nama dan dosen', () {
+      final hasil = searchAll(
+        query: 'slamet',
+        courses: [_matkul('Basis Data', dosen: 'Pak Slamet', sks: 3)],
+      );
+
+      expect(hasil.single.kind, SearchKind.matkul);
+      expect(hasil.single.subtitle, contains('3 sks'));
+    });
+
+    test('wishlist dicari lewat nama dan catatan', () {
+      final hasil = searchAll(
+        query: 'mekanik',
+        wishlist: [_barang('Keyboard', catatan: 'Yang mekanik, switch merah')],
+      );
+
+      expect(hasil.single.kind, SearchKind.wishlist);
+    });
+
+    test('barang tanpa harga mengatakannya, bukan menampilkan nol', () {
+      final hasil = searchAll(query: 'keyboard', wishlist: [_barang('Keyboard')]);
+      expect(hasil.single.subtitle, 'Harga belum diisi');
+    });
+
+    test('watchlist dicari lewat judul', () {
+      final hasil = searchAll(query: 'frieren', media: [_tontonan('Frieren')]);
+      expect(hasil.single.kind, SearchKind.tontonan);
+      expect(hasil.single.subtitle, contains('Series'));
+    });
+
+    test('kendaraan dicari lewat nama maupun nopol', () {
+      final hasil = searchAll(
+        query: 'l 1234',
+        vehicles: [_kendaraan('Beat', nopol: 'L 1234 AB')],
+      );
+
+      expect(hasil.single.kind, SearchKind.kendaraan);
+      expect(hasil.single.tujuan, '/vehicle/Beat');
+    });
+
+    test('catatan servis ikut tercari dan menunjuk kendaraannya', () {
+      final hasil = searchAll(
+        query: 'ahass',
+        vehicles: [_kendaraan('Beat')],
+        services: [_servis('Beat', catatan: 'Servis di AHASS depan kampus')],
+      );
+
+      expect(hasil.single.title, 'Oli mesin Beat');
+      expect(hasil.single.tujuan, '/vehicle/Beat');
+    });
+
+    test('dokumen dicari lewat nama dan jenisnya', () {
+      final hasil = searchAll(query: 'paspor', documents: [_dokumen('Paspor', kind: DocKind.paspor)]);
+      expect(hasil.single.kind, SearchKind.dokumen);
+    });
+
+    test('nomor dokumen tidak ikut dicari dan tidak ikut ditampilkan', () {
+      final nomor = '3578011234567890';
+      final hasil = searchAll(query: nomor, documents: [_dokumen('KTP', nomor: nomor)]);
+
+      expect(hasil, isEmpty);
+
+      final lewatNama = searchAll(query: 'ktp', documents: [_dokumen('KTP', nomor: nomor)]);
+      expect(lewatNama.single.subtitle, isNot(contains('3578')));
+    });
+
+    test('target dicari lewat judul, yang diarsipkan dilewati', () {
+      final hasil = searchAll(
+        query: 'lari',
+        goals: [_target('Lari rutin'), _target('Lari lama', arsip: true)],
+      );
+
+      expect(hasil, hasLength(1));
+      expect(hasil.single.kind, SearchKind.target);
+    });
+
+    test('yang tidak punya tanggal turun ke bawah dan diurut abjad', () {
+      final hasil = searchAll(
+        query: 'beli',
+        wishlist: [_barang('Beli Zulu'), _barang('Beli Alfa')],
+      );
+
+      expect(hasil.map((h) => h.title).toList(), ['Beli Alfa', 'Beli Zulu']);
     });
   });
 
