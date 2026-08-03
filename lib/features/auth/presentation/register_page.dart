@@ -83,7 +83,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.person_add_alt_1, size: 24, color: Colors.white),
+                      child: const Icon(Icons.person_add_alt_1, size: 26, color: Colors.white),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     const Expanded(
@@ -106,8 +106,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
                     ),
                   ),
                   child: SingleChildScrollView(

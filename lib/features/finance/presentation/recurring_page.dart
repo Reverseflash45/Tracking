@@ -93,7 +93,7 @@ class RecurringPage extends ConsumerWidget {
                   else
                     for (final item in items)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.only(bottom: 6),
                         child: _RecurringTile(item: item),
                       ),
                 ],
@@ -129,7 +129,7 @@ class _Penjelasan extends StatelessWidget {
                 'App tidak mencatatkan transaksinya sendiri — kamu tetap yang '
                 'mencatat waktu benar-benar membayar.',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11.5,
                   height: 1.45,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -177,7 +177,7 @@ class _RecurringTile extends ConsumerWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: _color.withValues(alpha: item.active ? 0.12 : 0.05),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               item.category.icon,
@@ -189,7 +189,7 @@ class _RecurringTile extends ConsumerWidget {
             item.name,
             style: TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 14,
+              fontSize: 13,
               decoration: item.active ? null : TextDecoration.lineThrough,
               color: item.active ? null : colorScheme.onSurfaceVariant,
             ),
@@ -197,13 +197,13 @@ class _RecurringTile extends ConsumerWidget {
           subtitle: Text(
             'Tiap tanggal ${item.dueDay}  ·  ${item.category.label}'
             '${item.active ? '' : '  ·  nonaktif'}',
-            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
           ),
           trailing: Text(
             formatRupiah(item.amount),
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 14,
+              fontSize: 13,
               color: item.active ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
             ),
           ),
@@ -349,9 +349,9 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
               const SizedBox(height: AppSpacing.md),
               Text(
                 'Jatuh tempo tiap tanggal',
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               // Dibatasi 28 supaya tidak ada bulan yang kehilangan tanggalnya
               // di Februari.
               SizedBox(
@@ -361,7 +361,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                   children: [
                     for (var day = 1; day <= 28; day++)
                       Padding(
-                        padding: const EdgeInsets.only(right: 4),
+                        padding: const EdgeInsets.only(right: 6),
                         child: Center(
                           child: ChoiceChip(
                             label: Text('$day'),
@@ -370,7 +370,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                             visualDensity: VisualDensity.compact,
                             selectedColor: _color.withValues(alpha: 0.18),
                             labelStyle: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                               color: _dueDay == day ? _color : colorScheme.onSurfaceVariant,
                             ),
@@ -389,7 +389,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                     ChoiceChip(
                       avatar: Icon(
                         category.icon,
-                        size: 16,
+                        size: 15,
                         color: _category == category ? _color : colorScheme.onSurfaceVariant,
                       ),
                       label: Text(category.label),
@@ -397,7 +397,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                       onSelected: (_) => setState(() => _category = category),
                       selectedColor: _color.withValues(alpha: 0.18),
                       labelStyle: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w600,
                         color: _category == category ? _color : colorScheme.onSurfaceVariant,
                       ),
@@ -409,10 +409,10 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                 contentPadding: EdgeInsets.zero,
                 value: _active,
                 onChanged: (value) => setState(() => _active = value),
-                title: const Text('Masih aktif', style: TextStyle(fontSize: 14)),
+                title: const Text('Masih aktif', style: TextStyle(fontSize: 13)),
                 subtitle: Text(
                   'Dimatikan kalau langganannya berhenti — datanya tetap tersimpan',
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -421,7 +421,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                 style: FilledButton.styleFrom(
                   backgroundColor: _color,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 icon: _saving
                     ? const SizedBox(

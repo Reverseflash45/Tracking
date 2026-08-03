@@ -137,7 +137,7 @@ class _SkalaPicker extends ConsumerWidget {
           children: [
             const Text(
               'Skala huruf kampusmu',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
             ),
             const SizedBox(height: AppSpacing.sm),
             SegmentedButton<GradeScale>(
@@ -145,7 +145,7 @@ class _SkalaPicker extends ConsumerWidget {
                 for (final pilihan in GradeScale.values)
                   ButtonSegment(
                     value: pilihan,
-                    label: Text(pilihan.label, style: const TextStyle(fontSize: 12)),
+                    label: Text(pilihan.label, style: const TextStyle(fontSize: 11.5)),
                   ),
               ],
               selected: {scale},
@@ -158,7 +158,7 @@ class _SkalaPicker extends ConsumerWidget {
               'Ambang hurufnya mengikuti yang paling umum dipakai, bukan aturan '
               'resmi tiap kampus. Kalau kampusmu berbeda, angka skornya tetap '
               'benar — yang bergeser cuma hurufnya.',
-              style: TextStyle(fontSize: 12, height: 1.4, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 11.5, height: 1.4, color: colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -194,7 +194,7 @@ class _CatatanSebagian extends StatelessWidget {
               '$belum lainnya belum punya sks atau belum ada nilainya, jadi '
               'belum ikut terhitung.',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11.5,
                 height: 1.4,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -222,7 +222,7 @@ class _SemesterHeader extends StatelessWidget {
         summary.ip == null
             ? '${summary.sksTotal} sks'
             : 'IPS ${_ip(summary.ip)}  ·  ${summary.sksDinilai} sks',
-        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: _color),
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: _color),
       ),
     );
   }
@@ -286,9 +286,9 @@ class _CourseTile extends ConsumerWidget {
                       course.courseName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       [
                         course.sks == null ? 'sks belum diisi' : '${course.sks} sks',
@@ -306,20 +306,20 @@ class _CourseTile extends ConsumerWidget {
                       ].join('  ·  '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
                     ),
                     if (course.bobotJanggal) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         'Bobot komponen berjumlah ${course.totalBobot.toStringAsFixed(0)}%, '
                         'bukan 100%',
-                        style: TextStyle(fontSize: 12, color: colorScheme.error),
+                        style: TextStyle(fontSize: 11, color: colorScheme.error),
                       ),
                     ],
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, size: 20),
+              const Icon(Icons.chevron_right, size: 18),
             ],
           ),
         ),
@@ -420,7 +420,7 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
           children: [
             Text(
               course.courseName,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
             ),
             const SizedBox(height: AppSpacing.md),
             Row(
@@ -453,7 +453,7 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
             const SizedBox(height: AppSpacing.lg),
             const Text(
               'Nilai akhir (dari KHS)',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
             ),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
@@ -469,7 +469,7 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                     onSelected: (pilih) => _setHuruf(pilih ? huruf : null),
                     selectedColor: _color.withValues(alpha: 0.18),
                     labelStyle: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: course.finalLetter == huruf
                           ? _color
@@ -485,7 +485,7 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                       'jadi catatan saja.'
                   : 'Kosongkan kalau nilainya belum keluar — IPK akan memakai '
                       'hitungan dari komponen di bawah.',
-              style: TextStyle(fontSize: 12, height: 1.4, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 11.5, height: 1.4, color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.lg),
             Row(
@@ -493,12 +493,12 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                 const Expanded(
                   child: Text(
                     'Komponen penilaian',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: () => _komponenSheet(),
-                  icon: const Icon(Icons.add, size: 16),
+                  icon: const Icon(Icons.add, size: 17),
                   label: const Text('Tambah'),
                 ),
               ],
@@ -510,7 +510,7 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                   'Misalnya Tugas 20%, UTS 30%, UAS 50%. Komponen yang belum '
                   'keluar nilainya biarkan kosong — dia tidak akan dihitung nol.',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     height: 1.4,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -521,10 +521,10 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  title: Text(komponen.name, style: const TextStyle(fontSize: 14)),
+                  title: Text(komponen.name, style: const TextStyle(fontSize: 13.5)),
                   subtitle: Text(
                     '${komponen.weight.toStringAsFixed(0)}%',
-                    style: const TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 11.5),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -533,12 +533,12 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                         komponen.score?.toStringAsFixed(1) ?? 'belum',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontSize: 13,
                           color: komponen.dinilai ? _color : colorScheme.onSurfaceVariant,
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20),
+                        icon: const Icon(Icons.delete_outline, size: 18),
                         tooltip: 'Hapus komponen',
                         onPressed: () async {
                           await ref
@@ -656,7 +656,7 @@ class _ComponentSheetState extends ConsumerState<_ComponentSheet> {
           children: [
             Text(
               widget.komponen == null ? 'Komponen Baru' : 'Edit Komponen',
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
             ),
             const SizedBox(height: AppSpacing.md),
             TextFormField(

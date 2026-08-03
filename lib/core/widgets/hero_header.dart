@@ -113,8 +113,8 @@ class HeroHeader extends StatelessWidget {
           colors: gradientFor(color),
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
         ),
       ),
       child: Column(
@@ -137,7 +137,7 @@ class HeroHeader extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
-                        fontSize: 20,
+                        fontSize: 22,
                       ),
                     ),
                     if (subtitle != null) ...[
@@ -146,7 +146,7 @@ class HeroHeader extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 14,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -206,7 +206,7 @@ class HeroHeader extends StatelessWidget {
                       style: TextStyle(
                         color: colorScheme.onSurface,
                         fontWeight: FontWeight.w700,
-                        fontSize: 20,
+                        fontSize: 19,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -218,7 +218,7 @@ class HeroHeader extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: colorScheme.onSurfaceVariant,
-                          fontSize: 14,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -280,7 +280,7 @@ class _StatStrip extends StatelessWidget {
                   style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.w800,
-                    fontSize: 20,
+                    fontSize: 18,
                     height: 1.1,
                   ),
                 ),
@@ -291,7 +291,7 @@ class _StatStrip extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: colorScheme.onSurfaceVariant,
-                    fontSize: 12,
+                    fontSize: 11,
                   ),
                 ),
               ],
@@ -311,7 +311,7 @@ class HeroStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(16),
@@ -321,7 +321,7 @@ class HeroStat extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(data.icon, color: Colors.white, size: 20),
+          Icon(data.icon, color: Colors.white, size: 18),
           const SizedBox(height: 8),
           Text(
             data.value,
@@ -339,7 +339,7 @@ class HeroStat extends StatelessWidget {
             data.label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11),
           ),
         ],
       ),
@@ -372,7 +372,7 @@ class HeroIconButton extends StatelessWidget {
       return IconButton(
         onPressed: onPressed,
         tooltip: tooltip,
-        icon: Icon(icon, color: colorScheme.onSurfaceVariant, size: 24),
+        icon: Icon(icon, color: colorScheme.onSurfaceVariant, size: 22),
       );
     }
 
@@ -382,7 +382,7 @@ class HeroIconButton extends StatelessWidget {
       icon: Icon(icon, color: Colors.white),
       style: IconButton.styleFrom(
         backgroundColor: Colors.white.withValues(alpha: 0.16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }

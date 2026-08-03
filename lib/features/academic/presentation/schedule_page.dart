@@ -64,13 +64,13 @@ class SchedulePage extends ConsumerWidget {
                     tooltip: 'Nilai & IPK',
                     onPressed: () => context.push('/academic/schedule/grades'),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                   HeroIconButton(
                     icon: Icons.document_scanner_outlined,
                     tooltip: 'Import dari foto KRS',
                     onPressed: () => context.push('/academic/schedule/import'),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                   HeroIconButton(
                     icon: Icons.calendar_month,
                     tooltip: 'Kalender',
@@ -181,7 +181,7 @@ class _ConflictBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, size: 20, color: colorScheme.error),
+          Icon(Icons.warning_amber_rounded, size: 18, color: colorScheme.error),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -193,7 +193,7 @@ class _ConflictBanner extends StatelessWidget {
                       : 'Ada $pasangan jadwal yang bertabrakan',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 14,
+                    fontSize: 13,
                     color: colorScheme.onErrorContainer,
                   ),
                 ),
@@ -202,7 +202,7 @@ class _ConflictBanner extends StatelessWidget {
                   'Kartunya ditandai di bawah. Biasanya ini sisa import KRS '
                   'yang terlanjur dijalankan dua kali.',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     height: 1.35,
                     color: colorScheme.onErrorContainer,
                   ),
@@ -246,7 +246,7 @@ class _DayHeader extends StatelessWidget {
               ),
               child: const Text(
                 'Hari ini',
-                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -319,7 +319,7 @@ class _ScheduleTile extends ConsumerWidget {
                         schedule.startTime.substring(0, 5),
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
-                          fontSize: 16,
+                          fontSize: 15,
                           color: AppColors.academic,
                           height: 1.2,
                         ),
@@ -327,7 +327,7 @@ class _ScheduleTile extends ConsumerWidget {
                       Text(
                         schedule.endTime.substring(0, 5),
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: colorScheme.onSurfaceVariant,
                           height: 1.2,
                         ),
@@ -351,7 +351,7 @@ class _ScheduleTile extends ConsumerWidget {
                     children: [
                       Text(
                         schedule.courseName,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                       ),
                       const SizedBox(height: 4),
                       _MetaLine(
@@ -389,7 +389,7 @@ class _ScheduleTile extends ConsumerWidget {
                           ? 'PHL ${_phlDateFormat.format(schedule.specificDate!)}'
                           : 'PHL',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: AppColors.academic,
                       ),
@@ -416,14 +416,14 @@ class _MetaLine extends StatelessWidget {
     final color = this.color ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       children: [
-        Icon(icon, size: 12, color: color),
-        const SizedBox(width: 4),
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 3),
         Expanded(
           child: Text(
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 14, color: color),
+            style: TextStyle(fontSize: 12, color: color),
           ),
         ),
       ],

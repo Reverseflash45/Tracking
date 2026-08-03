@@ -1,19 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
-
-/// Tampilan saat belum ada isinya.
-///
-/// Dulu ikonnya duduk di dalam lingkaran berwarna. Karena widget ini muncul di
-/// hampir tiap halaman, lingkaran itu jadi bentuk yang paling sering terlihat
-/// di seluruh app — dan yang paling sering terlihat sebaiknya justru yang
-/// paling tenang.
-///
-/// Panduan hierarki visual membagi kontras jadi tiga tingkat: yang utama
-/// penuh, yang kedua 70–80%, yang ketiga 40–50%. Layar kosong itu tingkat
-/// ketiga — dia mengabari, bukan menuntut. Jadi ikonnya diredupkan, judulnya
-/// yang dapat kontras penuh, dan warna kategori tinggal satu titik di ikon,
-/// bukan satu bidang di belakangnya.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -28,26 +14,33 @@ class EmptyState extends StatelessWidget {
   final String title;
   final String? subtitle;
 
-  /// Warna aksen ikon, dibedakan per kategori. Null berarti ikut warna teks
-  /// redup. Berapa pun warnanya, opasitasnya diturunkan di sini.
+  /// Warna aksen ikon, dibedakan per kategori (jadwal, deadline, workout, dst)
+  /// supaya konten terasa lebih hidup daripada seragam satu warna saja.
   final Color? color;
 
-  /// True untuk versi ringkas (satu baris) di dalam kartu kecil di Beranda.
-  /// False (default) untuk halaman kosong penuh.
+  /// True untuk versi ringkas (baris horizontal) dipakai di dalam card
+  /// dashboard yang kecil. False (default) untuk halaman kosong penuh.
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final accent = (color ?? colorScheme.onSurfaceVariant).withValues(alpha: 0.55);
+    final accent = color ?? colorScheme.primary;
 
     if (compact) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(icon, size: 24, color: accent),
-            const SizedBox(width: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 24, color: accent),
+            ),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,19 +48,17 @@ class EmptyState extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: AppText.badan,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style:
+                        Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                   ),
-                  if (subtitle case final subtitle?) ...[
+                  if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: AppText.label,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      subtitle!,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ],
@@ -79,34 +70,32 @@ class EmptyState extends StatelessWidget {
     }
 
     return Padding(
-      // Lega di atas dan bawah. Ruang kosong bukan ruang terbuang: ini
-      // satu-satunya isi layar, dan menyempitkannya cuma membuat pesannya
-      // terlihat seperti kesalahan.
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.xl + AppSpacing.md,
-        horizontal: AppSpacing.lg,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 32, color: accent),
-          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 30, color: accent),
+          ),
+          const SizedBox(height: 16),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: AppText.judulKartu,
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
-          if (subtitle case final subtitle?) ...[
-            const SizedBox(height: AppSpacing.sm),
+          if (subtitle != null) ...[
+            const SizedBox(height: 6),
             Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: AppText.badan,
-                color: colorScheme.onSurfaceVariant,
-              ),
+              subtitle!,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],

@@ -153,7 +153,7 @@ class _CatatanCaraKerja extends StatelessWidget {
               'membuatnya muncul lagi — matikan template-nya kalau memang tidak '
               'ingin dibuat lagi.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 height: 1.45,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -214,14 +214,14 @@ class _TemplateTile extends ConsumerWidget {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
                     color: (mati ? colorScheme.onSurfaceVariant : _color).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     Icons.event_repeat,
-                    size: 16,
+                    size: 17,
                     color: mati ? colorScheme.onSurfaceVariant : _color,
                   ),
                 ),
@@ -237,12 +237,12 @@ class _TemplateTile extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontSize: 14.5,
                           decoration: mati ? TextDecoration.lineThrough : null,
                           color: mati ? colorScheme.onSurfaceVariant : null,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         [
                           'Tiap ${weekDayName(template.weekday)}',
@@ -251,7 +251,7 @@ class _TemplateTile extends ConsumerWidget {
                         ].join('  ·  '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -381,7 +381,7 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
             children: [
               Text(
                 _isEdit ? 'Edit Template' : 'Tugas Berulang Baru',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -424,14 +424,14 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text('Hari', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              const Text('Hari', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               const SizedBox(height: AppSpacing.sm),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
                     for (var day = 1; day <= 7; day++) ...[
-                      if (day > 1) const SizedBox(width: 4),
+                      if (day > 1) const SizedBox(width: 6),
                       ChoiceChip(
                         label: Text(weekDayName(day).substring(0, 3)),
                         selected: _weekday == day,
@@ -451,14 +451,14 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
                         final picked = await showTimePicker(context: context, initialTime: _jam);
                         if (picked != null) setState(() => _jam = picked);
                       },
-                      icon: const Icon(Icons.schedule, size: 20),
+                      icon: const Icon(Icons.schedule, size: 18),
                       label: Text('Jam ${_jam.format(context)}'),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text('Prioritas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              const Text('Prioritas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               const SizedBox(height: AppSpacing.sm),
               SegmentedButton<TaskPriority>(
                 segments: [

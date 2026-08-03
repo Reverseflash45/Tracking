@@ -136,7 +136,14 @@ class _KartuKendaraan extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(vehicle.type.icon, size: 16, color: _color),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(vehicle.type.icon, size: 16, color: _color),
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
@@ -155,7 +162,7 @@ class _KartuKendaraan extends ConsumerWidget {
                                   ? '$odo km  ·  catatan terakhirmu'
                                   : '± $odo km  ·  perkiraan hari ini',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
@@ -170,13 +177,13 @@ class _KartuKendaraan extends ConsumerWidget {
                 Text(
                   'Belum ada yang bisa dihitung. Isi tanggal pajak, atau catat '
                   'servis pertama lewat halaman kendaraan ini.',
-                  style: TextStyle(fontSize: 14, height: 1.4, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, height: 1.4, color: colorScheme.onSurfaceVariant),
                 ),
               ] else ...[
                 const SizedBox(height: AppSpacing.sm),
                 for (final item in utama)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.only(top: 6),
                     child: _BarisPengingat(pengingat: item, ringkas: true),
                   ),
               ],
@@ -230,7 +237,7 @@ class _BarisPengingat extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(pengingat.icon, size: 16, color: warna),
+        Icon(pengingat.icon, size: 15, color: warna),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -243,7 +250,7 @@ class _BarisPengingat extends StatelessWidget {
                     child: Text(
                       pengingat.judul,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12.5,
                         fontWeight: pengingat.lewat ? FontWeight.w800 : FontWeight.w600,
                         color: pengingat.lewat ? warna : null,
                       ),
@@ -251,7 +258,7 @@ class _BarisPengingat extends StatelessWidget {
                   ),
                   Text(
                     ringkasanSisa(pengingat),
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: warna),
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: warna),
                   ),
                 ],
               ),
@@ -262,7 +269,7 @@ class _BarisPengingat extends StatelessWidget {
                       ? pengingat.dasar
                       : '${_tanggalFormat.format(pengingat.tanggal!)}  ·  ${pengingat.dasar}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     height: 1.35,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -413,7 +420,7 @@ class _SheetKendaraanState extends ConsumerState<_SheetKendaraan> {
             children: [
               Text(
                 _isEdit ? 'Edit Kendaraan' : 'Kendaraan Baru',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),
               SegmentedButton<VehicleType>(
@@ -495,7 +502,7 @@ class _SheetKendaraanState extends ConsumerState<_SheetKendaraan> {
                 'Dua tanggal ini ada di STNK-mu. Yang lima tahunan paling '
                 'sering terlewat justru karena jaraknya jauh sekali.',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11.5,
                   height: 1.4,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -551,7 +558,7 @@ class _PilihTanggal extends StatelessWidget {
           suffixIcon: onHapus == null
               ? null
               : IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: 18),
                   tooltip: 'Kosongkan',
                   onPressed: onHapus,
                 ),

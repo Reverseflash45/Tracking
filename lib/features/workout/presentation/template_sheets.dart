@@ -45,9 +45,9 @@ class _TemplatePickerSheet extends ConsumerWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: _color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.bookmark_outline, size: 20, color: _color),
+                    child: const Icon(Icons.bookmark_outline, size: 18, color: _color),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
@@ -76,7 +76,7 @@ class _TemplatePickerSheet extends ConsumerWidget {
                       : ListView.separated(
                           shrinkWrap: true,
                           itemCount: templates.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 4),
+                          separatorBuilder: (_, _) => const SizedBox(height: 6),
                           itemBuilder: (context, index) {
                             final template = templates[index];
                             return Card(
@@ -96,7 +96,7 @@ class _TemplatePickerSheet extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),

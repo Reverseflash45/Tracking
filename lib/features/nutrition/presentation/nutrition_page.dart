@@ -122,7 +122,7 @@ class NutritionPage extends ConsumerWidget {
                           : Text(
                               '${today!.waterMl} / ${targets.waterMl} ml',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                             ),
@@ -158,9 +158,9 @@ class _TargetPrompt extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: _color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.accessibility_new, size: 20, color: _color),
+          child: const Icon(Icons.accessibility_new, size: 18, color: _color),
         ),
         title: const Text(
           'Profil tubuh belum diisi',
@@ -168,7 +168,7 @@ class _TargetPrompt extends StatelessWidget {
         ),
         subtitle: Text(
           'Catatanmu tetap tersimpan, tapi belum ada target pembandingnya.',
-          style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
         ),
         trailing: const Icon(Icons.chevron_right),
       ),
@@ -210,7 +210,7 @@ class _TargetCard extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     '/ ${_numberFormat.format(targets.goalKcal)} kkal',
-                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
                 const Spacer(),
@@ -221,7 +221,7 @@ class _TargetCard extends StatelessWidget {
                         ? 'Sisa ${_numberFormat.format(sisa.round())}'
                         : 'Lebih ${_numberFormat.format((-sisa).round())}',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: sisa >= 0 ? AppColors.statusDone : AppColors.priorityHigh,
                     ),
@@ -290,8 +290,8 @@ class _MiniStat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$label ', style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
-        Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+        Text('$label ', style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant)),
+        Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
       ],
     );
   }
@@ -318,15 +318,15 @@ class _MacroProgress extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
             ),
             Text(
               '${value.round()} / ${target.round()} g',
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         _ProgressBar(value: value, target: target, color: color),
       ],
     );
@@ -347,7 +347,7 @@ class _ProgressBar extends StatelessWidget {
     final lewat = target > 0 && value > target;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: LinearProgressIndicator(
         value: ratio.toDouble(),
         minHeight: 8,
@@ -399,7 +399,7 @@ class _WaterCard extends ConsumerWidget {
                     targetGelas == null
                         ? '$gelas gelas'
                         : '$gelas dari $targetGelas gelas',
-                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -422,8 +422,8 @@ class _WaterCard extends ConsumerWidget {
                       foregroundColor: _color,
                       side: const BorderSide(color: _color),
                     ),
-                    icon: const Icon(Icons.add, size: 20),
-                    label: const Text('1 gelas', style: TextStyle(fontSize: 14)),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('1 gelas', style: TextStyle(fontSize: 12)),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -434,8 +434,8 @@ class _WaterCard extends ConsumerWidget {
                       foregroundColor: _color,
                       side: const BorderSide(color: _color),
                     ),
-                    icon: const Icon(Icons.add, size: 20),
-                    label: const Text('1 botol', style: TextStyle(fontSize: 14)),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('1 botol', style: TextStyle(fontSize: 12)),
                   ),
                 ),
               ],
@@ -473,7 +473,7 @@ class _MealSection extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(meal.icon, size: 20, color: _color),
+                  Icon(meal.icon, size: 18, color: _color),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
@@ -483,7 +483,7 @@ class _MealSection extends ConsumerWidget {
                   ),
                   Text(
                     '${_numberFormat.format(today.caloriesForMeal(meal).round())} kkal',
-                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                   IconButton(
                     icon: const Icon(Icons.add_circle_outline, size: 20),
@@ -499,7 +499,7 @@ class _MealSection extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     'Belum ada catatan',
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                   ),
                 )
               else
@@ -512,16 +512,16 @@ class _MealSection extends ConsumerWidget {
                       padding: const EdgeInsets.only(right: 12),
                       decoration: BoxDecoration(
                         color: colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(Icons.delete_outline, color: colorScheme.onErrorContainer),
                     ),
                     onDismissed: (_) => _delete(ref, food),
                     child: InkWell(
                       onTap: () => showFoodFormSheet(context, existing: food),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
                         child: Row(
                           children: [
                             Expanded(
@@ -535,7 +535,7 @@ class _MealSection extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 14,
+                                      fontSize: 13,
                                     ),
                                   ),
                                   Text(
@@ -545,7 +545,7 @@ class _MealSection extends ConsumerWidget {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 10,
                                       color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
@@ -555,12 +555,12 @@ class _MealSection extends ConsumerWidget {
                             const SizedBox(width: AppSpacing.sm),
                             Text(
                               '${_numberFormat.format(food.calories.round())} kkal',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                             ),
                             const SizedBox(width: 4),
                             Icon(
                               Icons.edit_outlined,
-                              size: 16,
+                              size: 14,
                               color: colorScheme.onSurfaceVariant,
                             ),
                           ],

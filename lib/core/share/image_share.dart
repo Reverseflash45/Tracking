@@ -121,7 +121,7 @@ class _SharePreviewPageState extends State<SharePreviewPage> {
             style: FilledButton.styleFrom(
               backgroundColor: widget.accent,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
             icon: _sharing
                 ? const SizedBox(

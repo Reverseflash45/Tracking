@@ -89,7 +89,7 @@ class PresetAnswersPage extends ConsumerWidget {
                     ),
                     for (final question in entry.value)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.only(bottom: 6),
                         child: _QuestionCard(question: question, input: input),
                       ),
                     const SizedBox(height: AppSpacing.md),
@@ -152,7 +152,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                       widget.question.text,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontSize: 13.5,
                         height: 1.35,
                       ),
                     ),
@@ -175,7 +175,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                     children: [
                       Icon(
                         Icons.info_outline,
-                        size: 16,
+                        size: 15,
                         color: colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
@@ -183,7 +183,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                         child: Text(
                           answer.detail,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 12.5,
                             height: 1.45,
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -195,7 +195,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                   Text(
                     answer.headline!,
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.w900,
                       height: 1.15,
                       color: _warna(answer.tone, colorScheme),
@@ -205,7 +205,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                   Text(
                     answer.detail,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12.5,
                       height: 1.45,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -253,7 +253,7 @@ class _CatatanBawah extends StatelessWidget {
                     'catatanmu — bukan ditebak. Gratis, seketika, dan tidak ada '
                     'data yang keluar dari HP-mu.',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       height: 1.45,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -273,17 +273,17 @@ class _CatatanBawah extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: _color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.forum_outlined, size: 20, color: _color),
+              child: const Icon(Icons.forum_outlined, size: 18, color: _color),
             ),
             title: const Text(
               'Punya pertanyaan lain?',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
             ),
             subtitle: const Text(
               'Ketik bebas — butuh setup & berbayar',
-              style: TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 11.5),
             ),
             trailing: const Icon(Icons.chevron_right, size: 20),
           ),

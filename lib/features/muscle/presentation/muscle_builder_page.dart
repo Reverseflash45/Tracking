@@ -101,7 +101,14 @@ class _MuscleCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(group.icon, size: 20, color: _color),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(group.icon, size: 18, color: _color),
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -110,14 +117,14 @@ class _MuscleCard extends StatelessWidget {
                     group.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${group.exercises.length} latihan - ${group.frequencyPerWeek}x/minggu',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -146,7 +153,7 @@ class _NutritionCard extends StatelessWidget {
               'tertentu — latihanmu yang menentukan otot mana yang tumbuh, makanan menyediakan '
               'bahan bakunya.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 height: 1.5,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -159,12 +166,12 @@ class _NutritionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Padding(
-                      padding: EdgeInsets.only(top: 4),
+                      padding: EdgeInsets.only(top: 5),
                       child: Icon(Icons.circle, size: 5, color: _color),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(tip, style: const TextStyle(fontSize: 14, height: 1.45)),
+                      child: Text(tip, style: const TextStyle(fontSize: 12, height: 1.45)),
                     ),
                   ],
                 ),

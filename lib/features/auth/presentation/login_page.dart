@@ -68,9 +68,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Icon(Icons.rocket_launch, size: 32, color: Colors.white),
+                      child: const Icon(Icons.rocket_launch, size: 34, color: Colors.white),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     const Text(
@@ -78,14 +78,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
-                        fontSize: 20,
+                        fontSize: 22,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Kuliah, workout, dan produktivitasmu di satu tempat',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 14),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -98,8 +98,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
                     ),
                   ),
                   child: SingleChildScrollView(

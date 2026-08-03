@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/hero_header.dart';
-import '../../../core/widgets/menu_list.dart';
-import '../../../core/widgets/section_header.dart';
 import '../data/models/workout_session.dart';
 import '../data/rest_day_repository.dart';
 import 'rest_day_card.dart';
@@ -90,110 +88,14 @@ class WorkoutHomePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const RestDayCard(),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Dikelompokkan menurut apa yang kamu buka, bukan dijejer
-                  // delapan ubin seragam. Sebelumnya "Nutrisi", "Tidur", dan
-                  // "Kalkulator Kalori" berdiri sederet dengan "Lari" dan
-                  // "Muscle Builder" — semuanya berwarna sama, berukuran sama,
-                  // tanpa memberi tahu mana yang catatan harian dan mana yang
-                  // alat sekali pakai.
-                  const SectionHeader(
-                    title: 'Latihan',
-                    icon: Icons.fitness_center_outlined,
-                    color: AppColors.workout,
+                  const SizedBox(height: AppSpacing.sm),
+                  const _ProgressCard(),
+                  const SizedBox(height: AppSpacing.sm),
+                  _RiwayatCard(
+                    jumlah: sessions.length + restDays.length,
                   ),
-                  MenuList(
-                    items: [
-                      MenuItemData(
-                        icon: Icons.history,
-                        label: 'Riwayat Latihan',
-                        rute: '/workout/history',
-                        warna: AppColors.workout,
-                        keterangan: _keteranganRiwayat(sessions.length + restDays.length),
-                      ),
-                      const MenuItemData(
-                        icon: Icons.directions_run,
-                        label: 'Lari',
-                        rute: '/workout/run',
-                        warna: AppColors.workout,
-                      ),
-                      const MenuItemData(
-                        icon: Icons.videocam_outlined,
-                        label: 'Latihan Terpandu',
-                        rute: '/workout/live',
-                        warna: AppColors.workout,
-                        keterangan: 'Dipandu hitungan dan waktu istirahat',
-                      ),
-                      const MenuItemData(
-                        icon: Icons.sports_gymnastics,
-                        label: 'Muscle Builder',
-                        rute: '/workout/muscle',
-                        warna: AppColors.workout,
-                        keterangan: 'Panduan latihan per kelompok otot',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  const SectionHeader(
-                    title: 'Catatan Harian',
-                    icon: Icons.event_repeat_outlined,
-                  ),
-                  const MenuList(
-                    items: [
-                      MenuItemData(
-                        icon: Icons.restaurant_menu,
-                        label: 'Nutrisi',
-                        rute: '/workout/nutrition',
-                        warna: AppColors.priorityMedium,
-                        keterangan: 'Makan, minum, dan kalori hari ini',
-                      ),
-                      MenuItemData(
-                        icon: Icons.bedtime_outlined,
-                        label: 'Tidur',
-                        rute: '/workout/sleep',
-                        warna: AppColors.academic,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  const SectionHeader(
-                    title: 'Badan',
-                    icon: Icons.accessibility_new,
-                  ),
-                  const MenuList(
-                    items: [
-                      MenuItemData(
-                        icon: Icons.insights,
-                        label: 'Progres',
-                        rute: '/workout/stats',
-                        warna: AppColors.dashboard,
-                        keterangan: 'Grafik berat badan, nutrisi, dan latihan',
-                      ),
-                      MenuItemData(
-                        icon: Icons.accessibility_new,
-                        label: 'Profil Tubuh',
-                        rute: '/workout/body',
-                        warna: AppColors.dashboard,
-                        keterangan: 'Tinggi, berat, target',
-                      ),
-                      MenuItemData(
-                        icon: Icons.local_fire_department,
-                        label: 'Kalkulator Kalori',
-                        rute: '/workout/calories',
-                        warna: AppColors.dashboard,
-                        keterangan: 'Kebutuhan kalori dan makro harian',
-                      ),
-                      MenuItemData(
-                        icon: Icons.photo_camera_outlined,
-                        label: 'Foto Progres',
-                        rute: '/workout/photos',
-                        warna: AppColors.dashboard,
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const _ToolGrid(),
                 ],
               ),
             ),
@@ -204,8 +106,212 @@ class WorkoutHomePage extends ConsumerWidget {
   }
 }
 
-/// Angka catatan ditaruh sebagai keterangan baris, bukan sebagai kartu
-/// tersendiri. Jumlahnya berguna untuk tahu ada isinya atau belum, tapi tidak
-/// cukup penting untuk memakan satu blok utuh di layar.
-String _keteranganRiwayat(int jumlah) =>
-    jumlah == 0 ? 'Belum ada catatan' : '$jumlah catatan tersimpan';
+/// Pintasan ke alat bantu kebugaran. Ditaruh di sini, bukan di bottom nav,
+/// supaya jumlah tab tetap 5 sesuai panduan Material 3.
+class _ToolGrid extends StatelessWidget {
+  const _ToolGrid();
+
+  static const _tools = [
+    _ToolCard(icon: Icons.directions_run, label: 'Lari', route: '/workout/run'),
+    _ToolCard(
+      icon: Icons.videocam_outlined,
+      label: 'Latihan Terpandu',
+      route: '/workout/live',
+    ),
+    _ToolCard(
+      icon: Icons.restaurant_menu,
+      label: 'Nutrisi',
+      route: '/workout/nutrition',
+    ),
+    _ToolCard(
+      icon: Icons.bedtime_outlined,
+      label: 'Tidur',
+      route: '/workout/sleep',
+    ),
+    _ToolCard(
+      icon: Icons.local_fire_department,
+      label: 'Kalkulator Kalori',
+      route: '/workout/calories',
+    ),
+    _ToolCard(
+      icon: Icons.accessibility_new,
+      label: 'Profil Tubuh',
+      route: '/workout/body',
+    ),
+    _ToolCard(
+      icon: Icons.photo_camera_outlined,
+      label: 'Foto Progres',
+      route: '/workout/photos',
+    ),
+    _ToolCard(
+      icon: Icons.sports_gymnastics,
+      label: 'Muscle Builder',
+      route: '/workout/muscle',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    // Grid 2 kolom, karena empat kolom bikin label seperti "Muscle Builder"
+    // terpotong di layar HP sempit.
+    return Column(
+      children: [
+        for (var i = 0; i < _tools.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(child: _tools[i]),
+              const SizedBox(width: AppSpacing.sm),
+              if (i + 1 < _tools.length)
+                Expanded(child: _tools[i + 1])
+              else
+                const Spacer(),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Kartu lebar untuk hal yang isinya ringkasan lintas fitur.
+class _WideCard extends StatelessWidget {
+  const _WideCard({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.route,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(route),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 20, color: color),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard();
+
+  @override
+  Widget build(BuildContext context) => const _WideCard(
+        icon: Icons.insights,
+        color: AppColors.dashboard,
+        title: 'Progres',
+        subtitle: 'Grafik berat badan, nutrisi, dan latihan',
+        route: '/workout/stats',
+      );
+}
+
+class _RiwayatCard extends StatelessWidget {
+  const _RiwayatCard({required this.jumlah});
+
+  final int jumlah;
+
+  @override
+  Widget build(BuildContext context) => _WideCard(
+        icon: Icons.history,
+        color: AppColors.workout,
+        title: 'Riwayat Latihan',
+        subtitle: jumlah == 0
+            ? 'Belum ada catatan'
+            : '$jumlah catatan · bisa disaring per periode & jenis',
+        route: '/workout/history',
+      );
+}
+
+class _ToolCard extends StatelessWidget {
+  const _ToolCard({required this.icon, required this.label, required this.route});
+
+  final IconData icon;
+  final String label;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(route),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.workout.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: AppColors.workout),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

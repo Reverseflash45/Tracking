@@ -91,11 +91,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   decoration: InputDecoration(
                     isDense: true,
                     hintText: 'Ketik apa saja',
-                    prefixIcon: const Icon(Icons.search, size: 20),
+                    prefixIcon: const Icon(Icons.search, size: 19),
                     suffixIcon: _query.isEmpty
                         ? null
                         : IconButton(
-                            icon: const Icon(Icons.close, size: 20),
+                            icon: const Icon(Icons.close, size: 18),
                             tooltip: 'Hapus',
                             onPressed: () {
                               _controller.clear();
@@ -117,7 +117,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                               'cocok dengan hampir semua catatan.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12.5,
                         height: 1.5,
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -139,7 +139,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     ),
                     for (final hit in entry.value)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.only(bottom: 6),
                         child: _HitTile(hit: hit),
                       ),
                     const SizedBox(height: AppSpacing.md),
@@ -168,20 +168,27 @@ class _HitTile extends StatelessWidget {
       child: ListTile(
         onTap: () => context.push(hit.tujuan),
         dense: true,
-        leading: Icon(hit.kind.icon, size: 16, color: _color),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(hit.kind.icon, size: 16, color: _color),
+        ),
         title: Text(
           hit.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
         ),
         subtitle: Text(
           hit.subtitle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
         ),
-        trailing: const Icon(Icons.chevron_right, size: 20),
+        trailing: const Icon(Icons.chevron_right, size: 18),
       ),
     );
   }

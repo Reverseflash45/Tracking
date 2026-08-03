@@ -185,9 +185,9 @@ class _RunCard extends ConsumerWidget {
               children: [
                 Text(
                   _dateFormat.format(run.startedAt),
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -205,7 +205,7 @@ class _RunCard extends ConsumerWidget {
                       icon: Icons.timer_outlined,
                       label: formatDuration(run.durationSeconds),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     _Pill(
                       icon: Icons.speed,
                       label: pace == null ? '-' : '${formatPace(pace)}/km',
@@ -233,9 +233,9 @@ class _Pill extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: color),
+        Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 14, color: color)),
+        Text(label, style: TextStyle(fontSize: 12, color: color)),
       ],
     );
   }
@@ -280,7 +280,7 @@ class _RunDetailPage extends StatelessWidget {
           Text(
             _dateFormat.format(run.startedAt),
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
@@ -348,7 +348,7 @@ class _DetailStat extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -383,12 +383,12 @@ class _SplitRow extends StatelessWidget {
             width: 28,
             child: Text(
               '${split.km}',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
           ),
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               child: LinearProgressIndicator(
                 value: ratio,
                 minHeight: 8,
@@ -406,7 +406,7 @@ class _SplitRow extends StatelessWidget {
               split.label,
               textAlign: TextAlign.right,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 fontFeatures: [FontFeature.tabularFigures()],
               ),

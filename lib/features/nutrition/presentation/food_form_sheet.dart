@@ -258,11 +258,18 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
             children: [
               Row(
                 children: [
-                  Icon(
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
                       _isEdit ? Icons.edit_outlined : Icons.restaurant,
-                      size: 20,
+                      size: 18,
                       color: _color,
                     ),
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     _isEdit ? 'Edit Makanan' : 'Catat Makanan',
@@ -286,10 +293,10 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                           width: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.qr_code_scanner, size: 20),
+                      : const Icon(Icons.qr_code_scanner, size: 18),
                   label: Text(
                     _memindai ? 'Mencari...' : 'Scan barcode kemasan',
-                    style: const TextStyle(fontSize: 14),
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ),
               ],
@@ -302,24 +309,24 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                   child: Text(
                     'Sering dicatat',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 SizedBox(
                   height: 34,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: frequent.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 4),
+                    separatorBuilder: (_, _) => const SizedBox(width: 6),
                     itemBuilder: (context, index) {
                       final food = frequent[index];
                       return ActionChip(
                         label: Text('${food.name} · ${food.calories.round()} kkal'),
-                        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                         onPressed: () => _applyFrequent(food),
                       );
                     },
@@ -350,7 +357,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                       onSelected: (_) => setState(() => _meal = meal),
                       selectedColor: _color.withValues(alpha: 0.18),
                       labelStyle: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: _meal == meal
                             ? _color
@@ -393,10 +400,10 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                     foregroundColor: _color,
                     visualDensity: VisualDensity.compact,
                   ),
-                  icon: Icon(_showDetail ? Icons.expand_less : Icons.expand_more, size: 20),
+                  icon: Icon(_showDetail ? Icons.expand_less : Icons.expand_more, size: 18),
                   label: Text(
                     _showDetail ? 'Sembunyikan detail' : 'Detail lain (opsional)',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

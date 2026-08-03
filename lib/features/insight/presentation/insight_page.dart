@@ -111,7 +111,7 @@ class _Pengantar extends StatelessWidget {
       'Aplikasi lain tidak bisa menghitung ini: Strava tidak tahu nilaimu, '
       'aplikasi tugas tidak tahu kamu olahraga. Di sini keduanya ada.',
       style: TextStyle(
-        fontSize: 14,
+        fontSize: 13,
         height: 1.5,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
@@ -144,7 +144,14 @@ class _InsightCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 20, color: _color),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 18, color: _color),
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -162,7 +169,7 @@ class _InsightCard extends StatelessWidget {
             Text(
               insight.detail,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 height: 1.5,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -177,7 +184,7 @@ class _InsightCard extends StatelessWidget {
                   : 'Dibanding dari ${insight.weeksHigh} minggu aktif dan '
                       '${insight.weeksLow} minggu jarang olahraga',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontStyle: FontStyle.italic,
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
               ),
@@ -213,7 +220,7 @@ class _Peringatan extends StatelessWidget {
                 'untuk keduanya sekaligus. Angkanya menunjukkan yang terjadi '
                 'bersamaan, bukan yang menyebabkan.',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   height: 1.5,
                   color: colorScheme.onSurfaceVariant,
                 ),

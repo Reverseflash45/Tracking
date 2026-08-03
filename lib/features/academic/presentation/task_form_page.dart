@@ -231,9 +231,9 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: _deadlineColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.calendar_today, size: 20, color: _deadlineColor),
+                        child: const Icon(Icons.calendar_today, size: 18, color: _deadlineColor),
                       ),
                       title: Text(
                         _deadlineFormat.format(_deadline),
@@ -326,12 +326,12 @@ class _PriorityOption extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.flag, size: 20, color: selected ? color : colorScheme.onSurfaceVariant),
+            Icon(Icons.flag, size: 18, color: selected ? color : colorScheme.onSurfaceVariant),
             const SizedBox(height: 4),
             Text(
               priority.label,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: selected ? color : colorScheme.onSurfaceVariant,
               ),
@@ -355,7 +355,7 @@ class _DeadlinePresetChip extends StatelessWidget {
       label: Text(label),
       onPressed: onTap,
       avatar: const Icon(Icons.bolt, size: 16, color: _deadlineColor),
-      labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
     );
   }
 }

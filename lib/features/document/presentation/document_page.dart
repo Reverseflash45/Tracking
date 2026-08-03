@@ -132,13 +132,13 @@ class _Catatan extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 16, color: colorScheme.onSurfaceVariant),
+            Icon(icon, size: 15, color: colorScheme.onSurfaceVariant),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 teks,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11.5,
                   height: 1.45,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -235,7 +235,14 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
               children: [
                 Row(
                   children: [
-                    Icon(doc.kind.icon, size: 16, color: _color),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(doc.kind.icon, size: 16, color: _color),
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Column(
@@ -250,7 +257,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                           Text(
                             doc.kind.label,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11.5,
                               color: colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -266,7 +273,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                         StatusDokumen.belumDiisi => 'belum diisi',
                       },
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w800,
                         color: warna,
                       ),
@@ -281,7 +288,7 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                         child: Text(
                           _terbuka ? nomor : nomorTersamar(nomor),
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.1,
                             fontFamily: 'monospace',
@@ -291,14 +298,14 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                       IconButton(
                         icon: Icon(
                           _terbuka ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                          size: 20,
+                          size: 18,
                         ),
                         tooltip: _terbuka ? 'Sembunyikan' : 'Tampilkan',
                         visualDensity: VisualDensity.compact,
                         onPressed: () => setState(() => _terbuka = !_terbuka),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.copy_outlined, size: 16),
+                        icon: const Icon(Icons.copy_outlined, size: 17),
                         tooltip: 'Salin',
                         visualDensity: VisualDensity.compact,
                         onPressed: () async {
@@ -313,25 +320,25 @@ class _KartuDokumenState extends ConsumerState<_KartuDokumen> {
                   ),
                 ],
                 if (doc.pasporMepet(now)) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     'Masa berlakunya tinggal kurang dari $kBulanPasporAman bulan. '
                     'Masih sah di sini, tapi banyak negara menolak paspor '
                     'sependek itu di konter check-in.',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11.5,
                       height: 1.4,
                       color: AppColors.priorityMedium,
                     ),
                   ),
                 ],
                 if (doc.note case final catatan? when catatan.trim().isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     catatan,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ],
@@ -477,7 +484,7 @@ class _SheetDokumenState extends ConsumerState<_SheetDokumen> {
             children: [
               Text(
                 _isEdit ? 'Edit Dokumen' : 'Dokumen Baru',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<DocKind>(
@@ -502,13 +509,13 @@ class _SheetDokumenState extends ConsumerState<_SheetDokumen> {
                 onChanged: (nilai) => setState(() => _kind = nilai ?? _kind),
               ),
               if (_kind.masaBerlakuTahun case final tahun?) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   'Umumnya berlaku $tahun tahun. Tanggal kedaluwarsanya diisikan '
                   'otomatis begitu kamu memilih tanggal terbit, dan tetap bisa '
                   'kamu ubah.',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     height: 1.4,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -564,11 +571,11 @@ class _SheetDokumenState extends ConsumerState<_SheetDokumen> {
                 controlAffinity: ListTileControlAffinity.leading,
                 title: const Text(
                   'Tidak punya masa berlaku',
-                  style: TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: 13),
                 ),
                 subtitle: const Text(
                   'KTP dan NPWP, misalnya. Beda dari sekadar belum diisi.',
-                  style: TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 11),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -632,7 +639,7 @@ class _PilihTanggal extends StatelessWidget {
           suffixIcon: onHapus == null
               ? null
               : IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: 18),
                   tooltip: 'Kosongkan',
                   onPressed: onHapus,
                 ),
