@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/features/academic/data/models/task.dart';
 import 'package:tracking/features/nutrition/domain/food_log.dart';
 import 'package:tracking/features/run/data/run_repository.dart';
+import 'package:tracking/features/watchlist/domain/watchlist.dart';
 import 'package:tracking/features/workout/data/models/exercise_entry.dart';
 import 'package:tracking/features/workout/data/models/workout_session.dart';
 import 'package:tracking/features/wrapped/domain/wrapped_stats.dart';
@@ -391,6 +392,139 @@ void main() {
         tasks: const [],
         sessions: const [],
         foods: [_food(DateTime(2026, 7, 28)), _food(DateTime(2026, 7, 29))],
+      );
+
+      expect(stats.hariAktif, 0);
+    });
+  });
+
+  group('tontonan', () {
+    MediaItem media(
+      String judul, {
+      DateTime? tamat,
+      MediaOrigin origin = MediaOrigin.anime,
+      MediaKind kind = MediaKind.series,
+      int? nilai,
+      WatchStatus status = WatchStatus.selesai,
+    }) =>
+        MediaItem(
+          id: judul,
+          title: judul,
+          kind: kind,
+          origin: origin,
+          status: status,
+          rating: nilai,
+          finishedOn: tamat,
+          createdAt: DateTime(2026, 1, 1),
+        );
+
+    test('hanya yang tamat di dalam rentang yang dihitung', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.mingguan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        media: [
+          media('Minggu ini', tamat: DateTime(2026, 7, 28)),
+          media('Minggu lalu', tamat: DateTime(2026, 7, 20)),
+        ],
+      );
+
+      expect(stats.tontonan.judulTamat, 1);
+    });
+
+    test('yang tamat tanpa tanggal tidak ditebak masuk rentang', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.tahunan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        media: [media('Entah kapan')],
+      );
+
+      expect(stats.tontonan.kosong, isTrue);
+    });
+
+    test('yang belum tamat tidak ikut walau tanggalnya ada', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.tahunan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        media: [
+          media('Masih jalan', tamat: DateTime(2026, 7, 28), status: WatchStatus.jalan),
+        ],
+      );
+
+      expect(stats.tontonan.judulTamat, 0);
+    });
+
+    test('asal terbanyak dihitung dari yang tamat', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.tahunan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        media: [
+          media('A', tamat: DateTime(2026, 2, 1)),
+          media('B', tamat: DateTime(2026, 3, 1)),
+          media('C', tamat: DateTime(2026, 4, 1), origin: MediaOrigin.hollywood),
+        ],
+      );
+
+      expect(stats.tontonan.asalTerbanyak!.label, 'Anime');
+      expect(stats.tontonan.asalTerbanyak!.count, 2);
+    });
+
+    test('rata-rata nilai hanya dari yang dinilai', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.tahunan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        media: [
+          media('A', tamat: DateTime(2026, 2, 1), nilai: 9),
+          media('B', tamat: DateTime(2026, 3, 1), nilai: 7),
+          media('C', tamat: DateTime(2026, 4, 1)),
+        ],
+      );
+
+      expect(stats.tontonan.rataNilai, 8.0);
+      expect(stats.tontonan.jumlahDinilai, 2);
+      expect(stats.tontonan.judulTamat, 3);
+    });
+
+    test('belum ada yang dinilai berarti null, bukan nol', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.tahunan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        media: [media('A', tamat: DateTime(2026, 2, 1))],
+      );
+
+      expect(stats.tontonan.rataNilai, isNull);
+    });
+
+    test('menamatkan tontonan saja sudah membuat rekap tidak kosong', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.tahunan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        media: [media('A', tamat: DateTime(2026, 2, 1))],
+      );
+
+      expect(stats.kosong, isFalse);
+    });
+
+    test('menonton tidak dihitung sebagai hari aktif', () {
+      final stats = computeWrappedStats(
+        period: WrappedPeriod.tahunan,
+        now: now,
+        tasks: const [],
+        sessions: const [],
+        media: [media('A', tamat: DateTime(2026, 2, 1))],
       );
 
       expect(stats.hariAktif, 0);

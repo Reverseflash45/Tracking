@@ -2,6 +2,7 @@ import '../../academic/data/models/task.dart';
 import '../../run/data/run_repository.dart';
 import '../../nutrition/domain/daily_nutrition.dart';
 import '../../nutrition/domain/food_log.dart';
+import '../../watchlist/domain/watchlist.dart';
 import '../../workout/data/models/workout_session.dart';
 
 enum WrappedPeriod {
@@ -93,6 +94,45 @@ class NutritionRecap {
   );
 }
 
+/// Ringkasan tontonan dan bacaan selama periode Wrapped.
+///
+/// Yang dihitung hanya yang punya tanggal selesai di dalam rentang. Judul yang
+/// ditandai tamat tanpa tanggal tidak ikut — tidak ada cara jujur menebak
+/// kapan itu terjadi, dan menaruhnya di rekap minggu ini cuma karena datanya
+/// ada akan membuat angkanya berbohong.
+class WatchRecap {
+  const WatchRecap({
+    required this.judulTamat,
+    required this.asalTerbanyak,
+    required this.bentukTerbanyak,
+    required this.rataNilai,
+    required this.jumlahDinilai,
+  });
+
+  final int judulTamat;
+
+  /// Asal yang paling sering kamu tamatkan, mis. "Anime, 17 judul".
+  final Highlight? asalTerbanyak;
+
+  final Highlight? bentukTerbanyak;
+
+  /// Rata-rata nilai judul yang tamat di periode ini. Null kalau belum ada
+  /// satu pun yang kamu nilai.
+  final double? rataNilai;
+
+  final int jumlahDinilai;
+
+  bool get kosong => judulTamat == 0;
+
+  static const empty = WatchRecap(
+    judulTamat: 0,
+    asalTerbanyak: null,
+    bentukTerbanyak: null,
+    rataNilai: null,
+    jumlahDinilai: 0,
+  );
+}
+
 class WrappedStats {
   const WrappedStats({
     required this.period,
@@ -107,6 +147,7 @@ class WrappedStats {
     required this.prBeban,
     required this.hariPalingProduktif,
     required this.nutrisi,
+    required this.tontonan,
     required this.sesiLari,
     required this.jarakLariMeter,
     required this.lariTerjauhMeter,
@@ -131,6 +172,7 @@ class WrappedStats {
   final int? hariPalingProduktif;
 
   final NutritionRecap nutrisi;
+  final WatchRecap tontonan;
 
   final int sesiLari;
   final double jarakLariMeter;
@@ -141,7 +183,11 @@ class WrappedStats {
   final String persona;
 
   bool get kosong =>
-      tugasSelesai == 0 && sesiWorkout == 0 && sesiLari == 0 && nutrisi.kosong;
+      tugasSelesai == 0 &&
+      sesiWorkout == 0 &&
+      sesiLari == 0 &&
+      nutrisi.kosong &&
+      tontonan.kosong;
 
   /// Dibulatkan ke bilangan bulat; 0 kalau belum ada tugas yang selesai.
   int get persenTepatWaktu =>
@@ -156,6 +202,7 @@ WrappedStats computeWrappedStats({
   List<FoodLog> foods = const [],
   List<WaterLog> waters = const [],
   List<RunLog> runs = const [],
+  List<MediaItem> media = const [],
 }) {
   final range = rangeFor(period, now);
 
@@ -209,6 +256,9 @@ WrappedStats computeWrappedStats({
   // --- Nutrisi ---
   final nutrisi = _recapNutrisi(range: range, foods: foods, waters: waters);
 
+  // --- Tontonan ---
+  final tontonan = _recapTontonan(range: range, media: media);
+
   // --- Hari aktif ---
   // Sengaja tidak menghitung hari yang hanya ada catatan makan: mencatat
   // makanan bukan aktivitas, dan memasukkannya akan menggelembungkan angka ini.
@@ -235,6 +285,7 @@ WrappedStats computeWrappedStats({
     prBeban: pr,
     hariPalingProduktif: _topKey(perHari),
     nutrisi: nutrisi,
+    tontonan: tontonan,
     sesiLari: lariPeriode.length,
     jarakLariMeter: jarakLari,
     lariTerjauhMeter: lariTerjauh,
@@ -301,6 +352,43 @@ NutritionRecap _recapNutrisi({
     rataProtein: totalProtein / hari.length,
     totalGelas: gelas,
     makananFavorit: favoritNama == null ? null : Highlight(favoritNama, favoritKey!.count),
+  );
+}
+
+WatchRecap _recapTontonan({
+  required WrappedRange range,
+  required List<MediaItem> media,
+}) {
+  final tamat = [
+    for (final item in media)
+      if (item.selesai && item.finishedOn != null && range.contains(item.finishedOn!)) item,
+  ];
+
+  if (tamat.isEmpty) return WatchRecap.empty;
+
+  final perAsal = <String, int>{};
+  final perBentuk = <String, int>{};
+  var totalNilai = 0;
+  var dinilai = 0;
+
+  for (final item in tamat) {
+    perAsal[item.origin.label] = (perAsal[item.origin.label] ?? 0) + 1;
+    perBentuk[item.kind.label] = (perBentuk[item.kind.label] ?? 0) + 1;
+
+    if (item.rating case final nilai?) {
+      totalNilai += nilai;
+      dinilai++;
+    }
+  }
+
+  return WatchRecap(
+    judulTamat: tamat.length,
+    asalTerbanyak: _topEntry(perAsal),
+    bentukTerbanyak: _topEntry(perBentuk),
+    // Rata-rata cuma dari yang dinilai, dan jumlahnya ikut dibawa supaya UI
+    // bisa menyebutkannya bersama angkanya.
+    rataNilai: dinilai == 0 ? null : totalNilai / dinilai,
+    jumlahDinilai: dinilai,
   );
 }
 
