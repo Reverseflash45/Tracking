@@ -66,7 +66,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(Icons.cloud_off_outlined,
-                      size: 20, color: AppColors.priorityMedium),
+                      size: 18, color: AppColors.priorityMedium),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
@@ -76,15 +76,15 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                           '${antrean.length} catatan belum terkirim',
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
                           'Tersimpan di HP dan aman. Akan terkirim sendiri '
                           'begitu sinyalnya ada.',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             height: 1.4,
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -97,19 +97,19 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
               const SizedBox(height: AppSpacing.sm),
               for (final item in antrean.take(4))
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: 3),
                   child: Row(
                     children: [
                       Icon(Icons.schedule,
                           size: 12, color: colorScheme.onSurfaceVariant),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           '${item.label}  ·  ${_timeFormat.format(item.queuedAt)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
@@ -124,7 +124,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                         child: Padding(
                           padding: const EdgeInsets.all(4),
                           child: Icon(Icons.close,
-                              size: 12, color: colorScheme.onSurfaceVariant),
+                              size: 13, color: colorScheme.onSurfaceVariant),
                         ),
                       ),
                     ],
@@ -133,7 +133,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
               if (antrean.length > 4)
                 Text(
                   'dan ${antrean.length - 4} lainnya',
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                 ),
               const SizedBox(height: 4),
               Align(

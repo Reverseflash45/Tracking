@@ -33,7 +33,7 @@ class OverloadStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: AppSpacing.sm),
-      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
       decoration: BoxDecoration(
         color: _workoutColor.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(12),
@@ -41,7 +41,7 @@ class OverloadStrip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(adviceIcon(suggestion.advice), size: 20, color: _workoutColor),
+          Icon(adviceIcon(suggestion.advice), size: 18, color: _workoutColor),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -52,7 +52,7 @@ class OverloadStrip extends StatelessWidget {
                   'Target: ${suggestion.targetLabel}',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                    fontSize: 13,
                     color: _workoutColor,
                   ),
                 ),
@@ -60,7 +60,7 @@ class OverloadStrip extends StatelessWidget {
                 Text(
                   'Terakhir ${suggestion.lastLabel}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -100,12 +100,19 @@ class OverloadCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(adviceIcon(suggestion.advice), size: 20, color: _workoutColor),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _workoutColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(adviceIcon(suggestion.advice), size: 18, color: _workoutColor),
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     adviceLabel(suggestion.advice),
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                 ),
               ],
@@ -122,7 +129,7 @@ class OverloadCard extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                  child: Icon(Icons.arrow_forward, size: 20, color: colorScheme.onSurfaceVariant),
+                  child: Icon(Icons.arrow_forward, size: 18, color: colorScheme.onSurfaceVariant),
                 ),
                 Expanded(
                   child: _TargetColumn(
@@ -136,7 +143,7 @@ class OverloadCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               suggestion.reason,
-              style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -161,7 +168,7 @@ class _TargetColumn extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
         Text(

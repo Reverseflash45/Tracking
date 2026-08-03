@@ -92,7 +92,7 @@ class SleepPage extends ConsumerWidget {
                   else
                     for (final log in logs)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.only(bottom: 6),
                         child: _SleepTile(log: log),
                       ),
                 ],
@@ -153,9 +153,9 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: _color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.bedtime, size: 20, color: _color),
+                  child: const Icon(Icons.bedtime, size: 18, color: _color),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
@@ -163,19 +163,19 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                     hariIni == null
                         ? 'Semalam tidur berapa jam?'
                         : 'Semalam: ${formatJamTidur(hariIni.hours)}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               hariIni == null
                   ? 'Dicatat di tanggal bangun, jadi begadang sampai subuh '
                       'tetap masuk hari ini.'
                   : 'Ketuk angka lain kalau mau dibetulkan.',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11.5,
                 height: 1.4,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -193,7 +193,7 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                     visualDensity: VisualDensity.compact,
                     selectedColor: _color.withValues(alpha: 0.18),
                     labelStyle: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w600,
                       color: hariIni?.hours == jam ? _color : colorScheme.onSurfaceVariant,
                     ),
@@ -227,7 +227,7 @@ class _RingkasanCard extends StatelessWidget {
             Text(
               formatJamTidur(ringkasan.rataJam),
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 30,
                 fontWeight: FontWeight.w900,
                 height: 1.1,
                 color: cukup ? AppColors.statusDone : AppColors.priorityMedium,
@@ -239,17 +239,17 @@ class _RingkasanCard extends StatelessWidget {
               '(anjuran umum ${kSleepTargetMin.round()}–${kSleepTargetMax.round()} jam). '
               '${ringkasan.persenCukup.round()}% di antaranya cukup.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 height: 1.45,
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               'Dihitung dari hari yang tercatat saja — hari yang lupa dicatat '
               'bukan hari kurang tidur.',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 height: 1.4,
                 fontStyle: FontStyle.italic,
                 color: colorScheme.onSurfaceVariant,
@@ -297,7 +297,7 @@ class _SleepTile extends ConsumerWidget {
             decoration: BoxDecoration(
               color: (cukup ? AppColors.statusDone : AppColors.priorityMedium)
                   .withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               cukup ? Icons.bedtime : Icons.nights_stay_outlined,
@@ -307,11 +307,11 @@ class _SleepTile extends ConsumerWidget {
           ),
           title: Text(
             formatJamTidur(log.hours),
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
           subtitle: Text(
             _dayFormat.format(log.loggedOn),
-            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
           ),
         ),
       ),

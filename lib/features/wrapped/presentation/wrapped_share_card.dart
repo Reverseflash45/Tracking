@@ -53,7 +53,7 @@ class WrappedShareCard extends StatelessWidget {
 
     return Container(
       width: 320,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -70,7 +70,7 @@ class WrappedShareCard extends StatelessWidget {
             'REKAP ${stats.period.label.toUpperCase()}',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 2,
             ),
@@ -81,33 +81,33 @@ class WrappedShareCard extends StatelessWidget {
             '${_rangeFormat.format(stats.range.end)}',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Text(
             stats.persona,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 34,
               fontWeight: FontWeight.w900,
               height: 1.05,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           for (final item in baris)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 children: [
                   Icon(item.icon, color: Colors.white.withValues(alpha: 0.85), size: 16),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       item.label,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                     ),
                   ),
@@ -115,7 +115,7 @@ class WrappedShareCard extends StatelessWidget {
                     item.value,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 17,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -128,7 +128,7 @@ class WrappedShareCard extends StatelessWidget {
               '${stats.persenTepatWaktu}% tugas selesai tepat waktu',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 14,
+                fontSize: 12,
               ),
             ),
           ],

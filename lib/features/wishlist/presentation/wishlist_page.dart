@@ -155,27 +155,27 @@ class _SurplusCard extends StatelessWidget {
               children: [
                 Icon(
                   negatif ? Icons.trending_down : Icons.trending_up,
-                  size: 20,
+                  size: 18,
                   color: negatif ? colorScheme.error : _color,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 const Expanded(
                   child: Text(
                     'Sisa uang per bulan',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
                   ),
                 ),
                 Text(
                   _rupiah.format(surplus),
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 16,
+                    fontSize: 15,
                     color: negatif ? colorScheme.error : _color,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               negatif
                   ? 'Dari $kBulanRiwayatSurplus bulan terakhir, pengeluaranmu '
@@ -185,14 +185,14 @@ class _SurplusCard extends StatelessWidget {
                   : 'Rata-rata $kBulanRiwayatSurplus bulan terakhir, tidak termasuk '
                       'bulan berjalan yang belum selesai. Inilah yang dipakai '
                       'memperkirakan kapan tiap barang terjangkau.',
-              style: TextStyle(fontSize: 12, height: 1.45, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 11.5, height: 1.45, color: colorScheme.onSurfaceVariant),
             ),
             if (ringkasan.tanpaHarga > 0) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 '${ringkasan.tanpaHarga} barang belum diisi harganya, jadi belum '
                 'ikut dihitung di total mana pun.',
-                style: TextStyle(fontSize: 12, height: 1.45, color: colorScheme.error),
+                style: TextStyle(fontSize: 11.5, height: 1.45, color: colorScheme.error),
               ),
             ],
           ],
@@ -251,7 +251,14 @@ class _WishCard extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Icon(iconUntuk(item), size: 16, color: _color),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(iconUntuk(item), size: 17, color: _color),
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
@@ -264,7 +271,7 @@ class _WishCard extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              fontSize: 14,
+                              fontSize: 14.5,
                               decoration: item.dibeli ? TextDecoration.lineThrough : null,
                               color: item.dibeli ? colorScheme.onSurfaceVariant : null,
                             ),
@@ -279,14 +286,14 @@ class _WishCard extends ConsumerWidget {
                             ].join('  ·  '),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                            style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
                     ),
                     if (item.url != null && item.url!.trim().isNotEmpty)
                       IconButton(
-                        icon: const Icon(Icons.open_in_new, size: 16),
+                        icon: const Icon(Icons.open_in_new, size: 17),
                         tooltip: 'Buka link',
                         onPressed: () => _bukaLink(context, item.url!),
                       ),
@@ -298,24 +305,24 @@ class _WishCard extends ConsumerWidget {
                     children: [
                       Text(
                         _rupiah.format(item.saved),
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                       ),
                       Text(
                         ' tersisih',
-                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                       ),
                       const Spacer(),
                       Text(
                         '${(persen * 100).round()}%',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(999),
                     child: LinearProgressIndicator(
@@ -330,13 +337,13 @@ class _WishCard extends ConsumerWidget {
                 Text(
                   _catatan(plan),
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     height: 1.4,
                     color: plan.telat ? colorScheme.error : colorScheme.onSurfaceVariant,
                   ),
                 ),
                 if (!item.dibeli) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       TextButton.icon(
@@ -347,7 +354,7 @@ class _WishCard extends ConsumerWidget {
                           visualDensity: VisualDensity.compact,
                         ),
                         icon: const Icon(Icons.add, size: 16),
-                        label: const Text('Nabung', style: TextStyle(fontSize: 14)),
+                        label: const Text('Nabung', style: TextStyle(fontSize: 12)),
                       ),
                       const SizedBox(width: 4),
                       TextButton.icon(
@@ -358,7 +365,7 @@ class _WishCard extends ConsumerWidget {
                           visualDensity: VisualDensity.compact,
                         ),
                         icon: const Icon(Icons.shopping_bag_outlined, size: 16),
-                        label: const Text('Sudah dibeli', style: TextStyle(fontSize: 14)),
+                        label: const Text('Sudah dibeli', style: TextStyle(fontSize: 12)),
                       ),
                     ],
                   ),
@@ -602,10 +609,10 @@ class _BeliSheetState extends State<_BeliSheet> {
             dense: true,
             value: _catat,
             activeColor: _color,
-            title: const Text('Catat sebagai pengeluaran', style: TextStyle(fontSize: 14)),
+            title: const Text('Catat sebagai pengeluaran', style: TextStyle(fontSize: 13.5)),
             subtitle: Text(
               'Masuk kategori ${widget.item.category.label}',
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
             ),
             onChanged: (value) => setState(() => _catat = value ?? true),
           ),
@@ -736,7 +743,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
             children: [
               Text(
                 _isEdit ? 'Edit Barang' : 'Barang Baru',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -777,7 +784,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
                 onChanged: (value) => setState(() => _category = value ?? _category),
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text('Prioritas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              const Text('Prioritas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               const SizedBox(height: AppSpacing.sm),
               SegmentedButton<WishPriority>(
                 segments: [
@@ -800,7 +807,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
                   );
                   if (picked != null) setState(() => _targetDate = picked);
                 },
-                icon: const Icon(Icons.event_outlined, size: 20),
+                icon: const Icon(Icons.event_outlined, size: 18),
                 label: Text(
                   _targetDate == null
                       ? 'Kapan ingin punya (opsional)'
@@ -812,7 +819,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
                   alignment: Alignment.centerLeft,
                   child: TextButton(
                     onPressed: () => setState(() => _targetDate = null),
-                    child: const Text('Hapus target', style: TextStyle(fontSize: 14)),
+                    child: const Text('Hapus target', style: TextStyle(fontSize: 12)),
                   ),
                 ),
               const SizedBox(height: 12),

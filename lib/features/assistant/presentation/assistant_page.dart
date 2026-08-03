@@ -191,7 +191,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               'Kalau angkanya terasa aneh, percaya catatanmu — bukan jawabannya.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10.5,
                 height: 1.35,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -224,7 +224,7 @@ class _Pembuka extends StatelessWidget {
               color: _color.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.forum_outlined, size: 32, color: _color),
+            child: const Icon(Icons.forum_outlined, size: 30, color: _color),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -240,12 +240,12 @@ class _Pembuka extends StatelessWidget {
         Text(
           'Coba salah satu ini:',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.md),
         for (final contoh in _contohPertanyaan)
           Padding(
-            padding: const EdgeInsets.only(bottom: 4),
+            padding: const EdgeInsets.only(bottom: 6),
             child: Card(
               margin: EdgeInsets.zero,
               clipBehavior: Clip.antiAlias,
@@ -253,7 +253,7 @@ class _Pembuka extends StatelessWidget {
                 dense: true,
                 enabled: siap,
                 onTap: () => onPick(contoh),
-                title: Text(contoh, style: const TextStyle(fontSize: 14)),
+                title: Text(contoh, style: const TextStyle(fontSize: 13)),
                 trailing: const Icon(Icons.north_east, size: 16),
               ),
             ),
@@ -280,19 +280,19 @@ class _TurnView extends StatelessWidget {
           child: Container(
             constraints: const BoxConstraints(maxWidth: 300),
             margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: _color,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
                 bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(12),
+                bottomRight: Radius.circular(4),
               ),
             ),
             child: Text(
               turn.question,
-              style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+              style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.4),
             ),
           ),
         ),
@@ -309,7 +309,7 @@ class _TurnView extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Membaca datamu...',
-                  style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -320,7 +320,7 @@ class _TurnView extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +331,7 @@ class _TurnView extends StatelessWidget {
                   child: Text(
                     turn.error!,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12.5,
                       height: 1.45,
                       color: colorScheme.onErrorContainer,
                     ),
@@ -345,7 +345,7 @@ class _TurnView extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.lg, left: 4, right: 24),
             child: Text(
               turn.answer!,
-              style: const TextStyle(fontSize: 14, height: 1.5),
+              style: const TextStyle(fontSize: 13.5, height: 1.5),
             ),
           ),
       ],

@@ -81,7 +81,7 @@ class _ExercisePicker extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, size: 20, color: _color),
+                const Icon(Icons.info_outline, size: 18, color: _color),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -92,7 +92,7 @@ class _ExercisePicker extends StatelessWidget {
                     'Lima gerakan ini dipilih karena sudutnya terbaca andal '
                     'dari satu kamera; bench press dan pull up tidak masuk '
                     'karena tubuhnya saling menutupi di tengah gerakan.',
-                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -112,14 +112,21 @@ class _ExercisePicker extends StatelessWidget {
                     builder: (_) => _LiveSessionPage(exercise: exercise),
                   ),
                 ),
-                leading: Icon(exercise.icon, size: 20, color: _color),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(exercise.icon, size: 18, color: _color),
+                ),
                 title: Text(
                   exercise.name,
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
                 subtitle: Text(
                   exercise.cue,
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                 ),
                 trailing: const Icon(Icons.chevron_right),
               ),
@@ -555,7 +562,7 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
                   style: FilledButton.styleFrom(
                     backgroundColor: _color,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   icon: const Icon(Icons.check),
                   label: Text(
@@ -596,7 +603,7 @@ class _Hud extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.55),
                 borderRadius: BorderRadius.circular(16),
@@ -614,23 +621,23 @@ class _Hud extends StatelessWidget {
                       height: 1,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                   const Padding(
-                    padding: EdgeInsets.only(bottom: 4),
+                    padding: EdgeInsets.only(bottom: 5),
                     child: Text(
                       'rep',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
                     ),
                   ),
                   if (angle != null) ...[
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.only(bottom: 5),
                       child: Text(
                         '${angle!.round()}°',
                         style: const TextStyle(
                           color: Colors.white70,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -677,21 +684,21 @@ class _Banner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.white),
+          Icon(icon, size: 18, color: Colors.white),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
             ),

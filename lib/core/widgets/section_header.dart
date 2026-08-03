@@ -28,12 +28,12 @@ class SectionHeader extends StatelessWidget {
     final warnaIkon = color ?? colorScheme.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.only(left: 2, bottom: 8),
+      padding: const EdgeInsets.only(left: 2, bottom: 10),
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 16, color: warnaIkon),
-            const SizedBox(width: 8),
+            Icon(icon, size: 15, color: warnaIkon),
+            const SizedBox(width: 7),
           ],
           Expanded(
             child: Text(
@@ -41,7 +41,7 @@ class SectionHeader extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.2,
                 color: colorScheme.onSurfaceVariant,

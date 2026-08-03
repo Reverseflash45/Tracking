@@ -235,7 +235,7 @@ class _CatatanPrivasi extends StatelessWidget {
                 'yang bisa dilihat lewat tautan. Hanya akunmu yang bisa '
                 'membukanya.',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11.5,
                   height: 1.45,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -283,7 +283,7 @@ class _PhotoTile extends ConsumerWidget {
               right: 0,
               bottom: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 color: Colors.black.withValues(alpha: 0.55),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +293,7 @@ class _PhotoTile extends ConsumerWidget {
                       _dateFormat.format(photo.takenOn),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 9.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -302,7 +302,7 @@ class _PhotoTile extends ConsumerWidget {
                         '${photo.weightKg!.toStringAsFixed(1)} kg',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 9,
                         ),
                       ),
                   ],
@@ -315,7 +315,7 @@ class _PhotoTile extends ConsumerWidget {
                 right: 4,
                 child: Icon(
                   dipilih ? Icons.check_circle : Icons.circle_outlined,
-                  size: 20,
+                  size: 18,
                   color: dipilih ? _color : colorScheme.surface,
                 ),
               ),
@@ -382,7 +382,7 @@ class _Perbandingan extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: _SisiBanding(photo: kiri, label: 'Sebelum')),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 Expanded(child: _SisiBanding(photo: kanan, label: 'Sesudah')),
               ],
             ),
@@ -395,7 +395,7 @@ class _Perbandingan extends StatelessWidget {
                       '${selisihBerat.toStringAsFixed(1)} kg',
               ].join('  ·  '),
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -421,7 +421,7 @@ class _SisiBanding extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 10.5,
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurfaceVariant,
           ),
@@ -430,19 +430,19 @@ class _SisiBanding extends StatelessWidget {
         AspectRatio(
           aspectRatio: 0.72,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             child: _PhotoImage(storagePath: photo.storagePath),
           ),
         ),
         const SizedBox(height: 4),
         Text(
           _dateFormat.format(photo.takenOn),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
         ),
         if (photo.weightKg != null)
           Text(
             '${photo.weightKg!.toStringAsFixed(1)} kg',
-            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
           ),
       ],
     );
@@ -485,7 +485,7 @@ Future<void> _bukaDetail(
                 if (photo.weightKg != null)
                   '${photo.weightKg!.toStringAsFixed(1)} kg',
               ].join('  ·  '),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.sm),
             Consumer(
@@ -501,7 +501,7 @@ Future<void> _bukaDetail(
                 style: TextButton.styleFrom(
                   foregroundColor: Theme.of(context).colorScheme.error,
                 ),
-                icon: const Icon(Icons.delete_outline, size: 20),
+                icon: const Icon(Icons.delete_outline, size: 18),
                 label: const Text('Hapus foto'),
               ),
             ),

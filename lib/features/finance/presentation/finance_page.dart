@@ -97,17 +97,17 @@ class FinancePage extends ConsumerWidget {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: _color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.event_repeat, size: 16, color: _color),
                         ),
                         title: const Text(
                           'Pengeluaran Rutin',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                         ),
                         subtitle: const Text(
                           'Kos, internet, langganan — disisihkan dari jatah harian',
-                          style: TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 11),
                         ),
                         trailing: const Icon(Icons.chevron_right, size: 20),
                       ),
@@ -139,7 +139,7 @@ class FinancePage extends ConsumerWidget {
                     else
                       for (final tx in transactions)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.only(bottom: 6),
                           child: _TxTile(tx: tx),
                         ),
                   ],
@@ -248,7 +248,7 @@ class FinancePage extends ConsumerWidget {
               Text(
                 'Tanggal uang bulanan datang',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -258,7 +258,7 @@ class FinancePage extends ConsumerWidget {
                 'Kalau kirimanmu datang tanggal 5, periode anggaranmu dihitung '
                 'dari tanggal 5 ke tanggal 4 — bukan per tanggal 1.',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   height: 1.4,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -273,7 +273,7 @@ class FinancePage extends ConsumerWidget {
                     selected: payday == null,
                     onSelected: (_) => setSheetState(() => payday = null),
                     selectedColor: _color.withValues(alpha: 0.18),
-                    labelStyle: const TextStyle(fontSize: 12),
+                    labelStyle: const TextStyle(fontSize: 11.5),
                   ),
                   for (final day in [5, 10, 15, 20, 25])
                     ChoiceChip(
@@ -281,7 +281,7 @@ class FinancePage extends ConsumerWidget {
                       selected: payday == day,
                       onSelected: (_) => setSheetState(() => payday = day),
                       selectedColor: _color.withValues(alpha: 0.18),
-                      labelStyle: const TextStyle(fontSize: 12),
+                      labelStyle: const TextStyle(fontSize: 11.5),
                     ),
                 ],
               ),
@@ -304,7 +304,7 @@ class FinancePage extends ConsumerWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: _color,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: const Text('Simpan'),
               ),
@@ -379,7 +379,7 @@ class _BudgetCard extends StatelessWidget {
           ),
           subtitle: const Text(
             'Supaya app bisa hitung jatah harianmu',
-            style: TextStyle(fontSize: 14),
+            style: TextStyle(fontSize: 12),
           ),
           trailing: const Icon(Icons.chevron_right),
         ),
@@ -408,7 +408,7 @@ class _BudgetCard extends StatelessWidget {
                   children: [
                     Text(
                       kebobolan ? 'Anggaran habis' : 'Jatah per hari',
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -416,7 +416,7 @@ class _BudgetCard extends StatelessWidget {
                           ? formatRupiah(summary.sisaBudget!.abs())
                           : formatRupiah(jatah),
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 26,
                         fontWeight: FontWeight.w900,
                         color: warna,
                         height: 1,
@@ -431,12 +431,12 @@ class _BudgetCard extends StatelessWidget {
                   children: [
                     Text(
                       kebobolan ? 'lebih dari anggaran' : '${summary.sisaHari} hari lagi',
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Sisa ${formatRupiahRingkas(summary.sisaBudget ?? 0)}',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -444,7 +444,7 @@ class _BudgetCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               child: LinearProgressIndicator(
                 value: (persen / 100).clamp(0, 1),
                 minHeight: 8,
@@ -452,11 +452,11 @@ class _BudgetCard extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation(warna),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               '${formatRupiah(summary.pengeluaran)} dari '
               '${formatRupiah(summary.budget!)} terpakai (${persen.round()}%)',
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
             ),
             // Uang yang sudah dipesan harus disebut, bukan cuma diam-diam
             // dipotong dari jatah harian — kalau tidak, angkanya terlihat
@@ -466,13 +466,13 @@ class _BudgetCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(Icons.lock_clock, size: 12, color: colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 5),
                   Expanded(
                     child: Text(
                       '${formatRupiah(summary.rutinBelumJatuhTempo)} disisihkan '
                       'untuk tagihan rutin yang belum jatuh tempo',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         height: 1.35,
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -508,24 +508,24 @@ class _CategoryBreakdown extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
-                  vertical: 8,
+                  vertical: 7,
                 ),
                 child: Row(
                   children: [
                     Icon(item.category.icon, size: 16, color: _color),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     SizedBox(
                       width: 84,
                       child: Text(
                         item.category.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                     ),
                     Expanded(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                         child: LinearProgressIndicator(
                           value: terbesar == 0 ? 0 : item.total / terbesar,
                           minHeight: 6,
@@ -534,10 +534,10 @@ class _CategoryBreakdown extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Text(
                       formatRupiahRingkas(item.total),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -598,7 +598,14 @@ class _TxTile extends ConsumerWidget {
         child: ListTile(
           onTap: () => showTransactionSheet(context, existing: tx),
           dense: true,
-          leading: Icon(tx.category.icon, size: 16, color: _color),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(tx.category.icon, size: 16, color: _color),
+          ),
           title: Row(
             children: [
               // Nama produk paling depan kalau ada — "Martabak telor" lebih
@@ -612,17 +619,17 @@ class _TxTile extends ConsumerWidget {
                           : tx.category.label),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                 ),
               ),
               if (tx.placeKind != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: 5),
                 Icon(tx.placeKind!.icon, size: 12, color: colorScheme.onSurfaceVariant),
               ],
               // Catatan hasil OCR ditandai: angkanya lebih mungkin meleset
               // daripada yang kamu ketik sendiri.
               if (tx.fromReceipt) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: 5),
                 Icon(
                   Icons.document_scanner_outlined,
                   size: 12,
@@ -642,13 +649,13 @@ class _TxTile extends ConsumerWidget {
             ].join(' · '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
           ),
           trailing: Text(
             '${masuk ? '+' : '-'}${formatRupiahRingkas(tx.amount)}',
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 14,
+              fontSize: 13,
               color: masuk ? AppColors.statusDone : colorScheme.onSurface,
             ),
           ),

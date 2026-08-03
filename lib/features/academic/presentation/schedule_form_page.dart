@@ -148,7 +148,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                 child: Text(
                   '• ${conflict.lawan.courseName} '
                   '(${conflict.lawan.timeRangeLabel}) — ${conflict.durasiLabel}',
-                  style: const TextStyle(fontSize: 14),
+                  style: const TextStyle(fontSize: 13),
                 ),
               ),
             const SizedBox(height: AppSpacing.sm),
@@ -431,7 +431,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                     children: [
                       Icon(
                         _isDurationValid ? Icons.timelapse : Icons.error_outline,
-                        size: 16,
+                        size: 14,
                         color: _isDurationValid
                             ? Theme.of(context).colorScheme.onSurfaceVariant
                             : Theme.of(context).colorScheme.error,
@@ -440,7 +440,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                       Text(
                         _durationLabel,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: _isDurationValid
                               ? Theme.of(context).colorScheme.onSurfaceVariant
@@ -475,9 +475,9 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: _academicColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.event_repeat, size: 20, color: _academicColor),
+                        child: const Icon(Icons.event_repeat, size: 18, color: _academicColor),
                       ),
                       title: const Text(
                         'Jadwal PHL',
@@ -500,10 +500,10 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: _academicColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.calendar_today,
-                              size: 20, color: _academicColor),
+                              size: 18, color: _academicColor),
                         ),
                         title: const Text('Tanggal PHL'),
                         subtitle: Text(
@@ -555,7 +555,7 @@ class _ConflictWarning extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.warning_amber_rounded, size: 20, color: colorScheme.error),
+          Icon(Icons.warning_amber_rounded, size: 18, color: colorScheme.error),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -567,7 +567,7 @@ class _ConflictWarning extends StatelessWidget {
                       : 'Bentrok dengan ${conflicts.length} jadwal lain',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 14,
+                    fontSize: 13,
                     color: colorScheme.onErrorContainer,
                   ),
                 ),
@@ -580,7 +580,7 @@ class _ConflictWarning extends StatelessWidget {
                       '${conflict.lawan.timeRangeLabel} · '
                       'menimpa ${conflict.durasiLabel}',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         height: 1.35,
                         color: colorScheme.onErrorContainer,
                       ),
@@ -609,13 +609,13 @@ class _DayChip extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
         width: 52,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: selected ? _academicColor : colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -624,7 +624,7 @@ class _DayChip extends StatelessWidget {
               weekDayName(day).substring(0, 3),
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 14,
+                fontSize: 13,
                 color: selected
                     ? Colors.white
                     : colorScheme.onSurfaceVariant.withValues(alpha: disabled ? 0.5 : 1),
@@ -651,7 +651,7 @@ class _TimeCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.radius),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppTheme.radius),
@@ -662,13 +662,13 @@ class _TimeCard extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 2),
             Text(
               '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: _academicColor,
                 height: 1.2,

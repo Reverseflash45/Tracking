@@ -235,7 +235,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
@@ -243,11 +243,11 @@ class _Badge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 13, color: color),
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
           ),
         ],
       ),
@@ -272,16 +272,16 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
+          Icon(icon, size: 18, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -291,7 +291,7 @@ class _InfoRow extends StatelessWidget {
               value,
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: valueColor,
               ),

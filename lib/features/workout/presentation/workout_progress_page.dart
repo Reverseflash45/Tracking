@@ -79,7 +79,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                     trailing: Text(
                       '${all.length} latihan',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -92,7 +92,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                           label: const Text('Semua'),
                           avatar: Icon(
                             Icons.grid_view,
-                            size: 16,
+                            size: 15,
                             color: _selectedKey == null
                                 ? _workoutColor
                                 : Theme.of(context).colorScheme.onSurfaceVariant,
@@ -269,17 +269,17 @@ class _SummaryCard extends StatelessWidget {
                             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: _workoutColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             progress.type.label,
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 9,
                               fontWeight: FontWeight.w700,
                               color: _workoutColor,
                             ),
@@ -294,7 +294,7 @@ class _SummaryCard extends StatelessWidget {
                       '  ·  ${_shortDateFormat.format(progress.lastDate)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -303,7 +303,7 @@ class _SummaryCard extends StatelessWidget {
                           delta > 0
                               ? Icons.trending_up
                               : (delta < 0 ? Icons.trending_down : Icons.trending_flat),
-                          size: 16,
+                          size: 14,
                           color: warna,
                         ),
                         const SizedBox(width: 4),
@@ -313,7 +313,7 @@ class _SummaryCard extends StatelessWidget {
                               : '${delta > 0 ? "+" : ""}${_trimNumber(delta)} '
                                   '${progress.metric.unit} sejak awal',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: warna,
                           ),
@@ -472,7 +472,7 @@ class _SingleSessionNote extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: _workoutColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
@@ -487,13 +487,13 @@ class _SingleSessionNote extends StatelessWidget {
                 children: [
                   Text(
                     '${_trimNumber(progress.latest)} ${progress.metric.unit}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Baru satu sesi (${_pointDateFormat.format(progress.lastDate)}). '
                     'Catat sekali lagi untuk melihat grafiknya.',
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -542,7 +542,7 @@ class _DeltaBanner extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: color, fontSize: 14),
+              style: TextStyle(fontWeight: FontWeight.w600, color: color, fontSize: 13),
             ),
           ),
         ],
@@ -636,10 +636,10 @@ class _LineChart extends StatelessWidget {
                 if (index < 0 || index >= points.length) return const SizedBox.shrink();
                 final date = points[index].date;
                 return Padding(
-                  padding: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     '${date.day}/${date.month}',
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
                   ),
                 );
               },
@@ -651,7 +651,7 @@ class _LineChart extends StatelessWidget {
               reservedSize: 42,
               getTitlesWidget: (value, meta) => Text(
                 _numberFormat.format(value.round()),
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
               ),
             ),
           ),
@@ -664,14 +664,14 @@ class _LineChart extends StatelessWidget {
               final point = points[spot.x.toInt()];
               return LineTooltipItem(
                 '${_numberFormat.format(_valueOf(point))}$satuan\n',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
                 children: [
                   TextSpan(
                     text: _pointDateFormat.format(point.date),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w400,
-                      fontSize: 12,
+                      fontSize: 11,
                     ),
                   ),
                 ],
