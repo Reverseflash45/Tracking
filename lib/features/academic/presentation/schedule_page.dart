@@ -21,8 +21,17 @@ class SchedulePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final schedulesAsync = ref.watch(classSchedulesProvider);
     final todayCount = ref.watch(todaySchedulesProvider).value?.length ?? 0;
-    final courseCount = ref.watch(coursesProvider).value?.length ?? 0;
     final totalCount = schedulesAsync.value?.length ?? 0;
+
+    // Mata kuliah yang punya jadwal = yang kamu jalani semester ini.
+    //
+    // Sengaja tidak memakai kolom `semester` di tabel courses: mata kuliah
+    // hasil import KRS tidak mengisinya, jadi menyaring lewat kolom itu akan
+    // menghasilkan nol untuk semester yang justru sedang berjalan. Jadwal
+    // kelas cuma ada untuk semester yang sedang diambil, dan itu bukti yang
+    // lebih dapat dipercaya daripada kolom yang sering kosong.
+    final matkulSemesterIni =
+        schedulesAsync.value?.map((s) => s.courseId).toSet().length ?? 0;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -78,8 +87,8 @@ class SchedulePage extends ConsumerWidget {
                 ),
                 HeroStatData(
                   icon: Icons.menu_book_outlined,
-                  value: '$courseCount',
-                  label: 'Mata Kuliah',
+                  value: '$matkulSemesterIni',
+                  label: 'Matkul Aktif',
                 ),
               ],
             ),

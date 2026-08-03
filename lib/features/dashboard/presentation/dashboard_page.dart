@@ -8,13 +8,13 @@ import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/offline/offline_banner.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../academic/data/models/class_schedule.dart';
 import '../../academic/data/models/task.dart';
 import '../../academic/presentation/academic_providers.dart';
-import '../../academic/presentation/quick_capture_sheet.dart';
 import '../../body/data/body_repository.dart';
 import '../../body/domain/calorie_calculator.dart';
 import '../../finance/data/finance_repository.dart';
@@ -36,13 +36,6 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showQuickCaptureSheet(context),
-        backgroundColor: AppColors.dashboard,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.bolt),
-        label: const Text('Catat Cepat'),
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(classSchedulesProvider);
@@ -57,12 +50,11 @@ class DashboardPage extends ConsumerWidget {
           children: [
             const _HeroHeader(),
             Padding(
-              // Bawahnya dilebihkan supaya kartu terakhir tidak tertutup FAB.
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.lg,
                 AppSpacing.md,
-                96,
+                AppSpacing.xl,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,14 +319,35 @@ class _AchievementsRow extends ConsumerWidget {
 }
 
 class _DashboardCard extends StatelessWidget {
-  const _DashboardCard({required this.child});
+  const _DashboardCard({required this.child, this.onTap});
 
   final Widget child;
 
+  /// Null berarti kartu ini memang tidak menuju ke mana-mana — dan kalau
+  /// begitu, jangan pasang efek tekan yang menjanjikan sesuatu yang tidak
+  /// terjadi.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Card(child: Padding(padding: const EdgeInsets.all(AppSpacing.md), child: child));
+    final isi = Padding(padding: const EdgeInsets.all(AppSpacing.md), child: child);
+
+    if (onTap == null) return Card(child: isi);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(onTap: onTap, child: isi),
+    );
   }
+}
+
+/// Pindah ke tab lain, bukan menumpuk halamannya di atas Beranda.
+///
+/// Kalau di-push, bar bawah tetap menunjuk Beranda padahal kamu sudah ada di
+/// Jadwal, dan tombol kembali jadi satu-satunya jalan keluar — dua hal yang
+/// tidak terjadi kalau kamu menekan tabnya langsung.
+void _keTab(BuildContext context, int tab) {
+  StatefulNavigationShell.of(context).goBranch(tab);
 }
 
 class _TodayScheduleCard extends ConsumerWidget {
@@ -344,6 +357,7 @@ class _TodayScheduleCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final schedules = ref.watch(todaySchedulesProvider);
     return _DashboardCard(
+      onTap: () => _keTab(context, kTabJadwal),
       child: schedules.when(
         data: (items) => items.isEmpty
             ? const EmptyState(
@@ -386,6 +400,7 @@ class _UpcomingDeadlinesCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final deadlines = ref.watch(upcomingDeadlinesProvider);
     return _DashboardCard(
+      onTap: () => _keTab(context, kTabTugas),
       child: deadlines.when(
         data: (items) => items.isEmpty
             ? const EmptyState(
@@ -434,7 +449,7 @@ class _FinanceCard extends ConsumerWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/finance'),
+        onTap: () => _keTab(context, kTabKeuangan),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: summaryAsync.when(
@@ -537,12 +552,13 @@ class _TodayNutritionCard extends ConsumerWidget {
         : calculateCalories(profile: profile, weightKg: weight, now: DateTime.now());
 
     return _DashboardCard(
+      // Nutrisi bukan akar tab, jadi halamannya memang di-push. Efek tekannya
+      // sekarang selebar kartu seperti yang lain, bukan cuma seluas isinya.
+      onTap: () => context.push('/workout/nutrition'),
       child: todayAsync.when(
-        data: (today) => InkWell(
-          onTap: () => context.push('/workout/nutrition'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        data: (today) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -602,7 +618,6 @@ class _TodayNutritionCard extends ConsumerWidget {
               ),
             ],
           ),
-        ),
         loading: () => const LinearProgressIndicator(),
         error: (error, stackTrace) => Text('Gagal memuat: $error'),
       ),
@@ -617,6 +632,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(todayWorkoutSessionProvider);
     return _DashboardCard(
+      onTap: () => _keTab(context, kTabWorkout),
       child: session.when(
         data: (data) => data == null
             ? const EmptyState(

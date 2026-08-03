@@ -49,11 +49,8 @@ class FinancePage extends ConsumerWidget {
                   : '${_rangeFormat.format(summary.start)} - '
                       '${_rangeFormat.format(summary.end)}',
               color: _color,
-              leading: HeroIconButton(
-                icon: Icons.arrow_back,
-                tooltip: 'Kembali',
-                onPressed: () => context.pop(),
-              ),
+              // Tanpa tombol kembali: ini akar tab, bukan halaman yang dibuka
+              // dari halaman lain.
               trailing: HeroIconButton(
                 icon: Icons.tune,
                 tooltip: 'Atur anggaran',
@@ -110,32 +107,6 @@ class FinancePage extends ConsumerWidget {
                         ),
                         subtitle: const Text(
                           'Kos, internet, langganan — disisihkan dari jatah harian',
-                          style: TextStyle(fontSize: 11),
-                        ),
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Card(
-                      margin: EdgeInsets.zero,
-                      clipBehavior: Clip.antiAlias,
-                      child: ListTile(
-                        onTap: () => context.push('/wishlist'),
-                        dense: true,
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: _color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.favorite_outline, size: 16, color: _color),
-                        ),
-                        title: const Text(
-                          'Wishlist',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                        ),
-                        subtitle: const Text(
-                          'Barang yang diincar, lengkap dengan perkiraan kapan terjangkau',
                           style: TextStyle(fontSize: 11),
                         ),
                         trailing: const Icon(Icons.chevron_right, size: 20),
