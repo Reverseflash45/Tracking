@@ -191,13 +191,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'new',
                   // ?from=<id> membuka form berisi salinan sesi tersebut.
-                  // ?exercise/&type/&reps diisi Latihan Terpandu setelah selesai.
+                  // ?exercise/&type/&sets/&reps diisi Latihan Terpandu setelah
+                  // selesai. `reps` bisa tidak ada kalau tiap setnya berbeda.
                   builder: (context, state) {
                     final query = state.uri.queryParameters;
                     return WorkoutFormPage(
                       repeatSessionId: query['from'],
                       prefillExerciseName: query['exercise'],
                       prefillType: query['type'],
+                      prefillSets: int.tryParse(query['sets'] ?? ''),
                       prefillReps: int.tryParse(query['reps'] ?? ''),
                     );
                   },

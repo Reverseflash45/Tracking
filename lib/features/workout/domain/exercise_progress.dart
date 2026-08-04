@@ -23,11 +23,41 @@ enum ProgressMetric {
       };
 }
 
+/// Ukuran kedua di samping [ProgressMetric]: berapa banyak kerja dalam satu
+/// sesi, bukan seberapa berat satu repetisinya.
+///
+/// Ini yang selama ini hilang. Metrik utama untuk bodyweight adalah jumlah rep
+/// per set, jadi 3 set x 10 rep dan 5 set x 10 rep sama-sama tergambar sebagai
+/// "10" — padahal yang kedua hampir dua kali lipat kerjanya. Setnya tercatat di
+/// database sejak awal, cuma tidak pernah ikut dihitung maupun ditampilkan.
+enum MetrikBeban {
+  volume('Volume', 'kg'),
+  totalRep('Total Rep', 'rep'),
+  totalTahanan('Total Tahanan', 'detik');
+
+  const MetrikBeban(this.label, this.unit);
+
+  final String label;
+  final String unit;
+
+  /// Null untuk cardio: durasinya sudah jadi metrik utama, dan mengalikannya
+  /// dengan set tidak berarti apa-apa.
+  static MetrikBeban? forType(ExerciseType type) => switch (type) {
+        ExerciseType.beban => MetrikBeban.volume,
+        ExerciseType.bodyweight => MetrikBeban.totalRep,
+        ExerciseType.isometrik => MetrikBeban.totalTahanan,
+        ExerciseType.cardio => null,
+      };
+}
+
 class ProgressPoint {
   const ProgressPoint({
     required this.date,
     required this.value,
     required this.volume,
+    this.sets,
+    this.reps,
+    this.bebanKerja,
   });
 
   final DateTime date;
@@ -37,6 +67,26 @@ class ProgressPoint {
 
   /// Beban x set x rep. Nol untuk latihan yang tidak memakai beban.
   final double volume;
+
+  /// Jumlah set yang tercatat. Null kalau memang tidak diisi — tidak ditebak
+  /// jadi 1, karena "satu set" dan "tidak dicatat" itu dua hal berbeda.
+  final int? sets;
+
+  /// Rep per set.
+  final int? reps;
+
+  /// Kerja total sesuai [MetrikBeban] latihannya. Null kalau angkanya belum
+  /// lengkap untuk dihitung.
+  final double? bebanKerja;
+
+  /// "3 x 10" untuk ditampilkan di samping angka utama. Null kalau setnya tidak
+  /// tercatat, supaya tidak ada kombinasi yang dikarang.
+  String? get ringkasSetRep {
+    final s = sets;
+    final r = reps;
+    if (s == null || r == null) return null;
+    return '$s x $r';
+  }
 }
 
 /// Riwayat satu nama latihan, sudah diurutkan dari yang terlama.
@@ -47,6 +97,7 @@ class ExerciseProgress {
     required this.metric,
     required this.points,
     required this.hasVolume,
+    this.metrikBeban,
   });
 
   final String name;
@@ -57,6 +108,9 @@ class ExerciseProgress {
   /// True kalau ada minimal satu catatan dengan beban > 0, jadi grafik volume
   /// layak ditampilkan. Bodyweight tanpa beban tambahan tidak punya volume.
   final bool hasVolume;
+
+  /// Ukuran kerja total yang cocok untuk tipe latihan ini. Null untuk cardio.
+  final MetrikBeban? metrikBeban;
 
   int get sessionCount => points.length;
 
@@ -70,6 +124,20 @@ class ExerciseProgress {
   double get delta => points.length < 2 ? 0 : points.last.value - points.first.value;
 
   DateTime get lastDate => points.last.date;
+
+  /// Titik yang setnya lengkap, jadi kerja totalnya bisa dihitung. Catatan lama
+  /// yang setnya kosong dilewati, bukan diisi nol — nol berarti "tidak latihan",
+  /// dan itu bukan yang terjadi.
+  List<ProgressPoint> get titikBeban =>
+      [for (final p in points) if (p.bebanKerja != null) p];
+
+  /// Grafik kerja total baru berarti kalau ada dua titik untuk dibandingkan.
+  bool get punyaBeban => metrikBeban != null && titikBeban.length >= 2;
+
+  double get bebanTerbaik =>
+      titikBeban.map((p) => p.bebanKerja!).reduce((a, b) => a > b ? a : b);
+
+  double? get bebanTerakhir => titikBeban.isEmpty ? null : titikBeban.last.bebanKerja;
 }
 
 /// Kumpulkan riwayat tiap nama latihan dari seluruh sesi.
@@ -97,6 +165,9 @@ List<ExerciseProgress> buildExerciseProgress(List<WorkoutSession> sessions) {
             date: session.sessionDate,
             value: value,
             volume: exercise.volume,
+            sets: exercise.sets,
+            reps: exercise.reps,
+            bebanKerja: _bebanKerja(exercise),
           ));
 
       // Sesi terbaru menang: kalau tipenya pernah diubah, yang terakhir dipakai.
@@ -116,12 +187,41 @@ List<ExerciseProgress> buildExerciseProgress(List<WorkoutSession> sessions) {
       metric: ProgressMetric.forType(type),
       points: list,
       hasVolume: punyaBeban[key] ?? false,
+      metrikBeban: MetrikBeban.forType(type),
     ));
   });
 
   // Latihan yang paling baru dicatat muncul lebih dulu.
   hasil.sort((a, b) => b.lastDate.compareTo(a.lastDate));
   return hasil;
+}
+
+/// Kerja total satu catatan, dihitung berbeda per tipe latihan.
+///
+/// Semuanya butuh [ExerciseEntry.sets]. Kalau setnya tidak diisi hasilnya null,
+/// bukan nol dan bukan satu: catatan lama yang setnya kosong memang tidak tahu
+/// berapa kali diulang, dan menebaknya akan membuat grafiknya berbohong.
+double? _bebanKerja(ExerciseEntry entry) {
+  final sets = entry.sets;
+  if (sets == null || sets <= 0) return null;
+
+  return switch (entry.type) {
+    // Untuk beban, ini sama dengan volume yang sudah dipakai di tempat lain:
+    // kilogram yang benar-benar diangkat sepanjang sesi.
+    ExerciseType.beban => switch ((entry.weightKg, entry.reps)) {
+        (final double w, final int r) when w > 0 && r > 0 => w * sets * r,
+        _ => null,
+      },
+    ExerciseType.bodyweight => switch (entry.reps) {
+        final int r when r > 0 => (sets * r).toDouble(),
+        _ => null,
+      },
+    ExerciseType.isometrik => switch (entry.durationSeconds) {
+        final int d when d > 0 => (sets * d).toDouble(),
+        _ => null,
+      },
+    ExerciseType.cardio => null,
+  };
 }
 
 double? _metricValue(ExerciseEntry entry) {

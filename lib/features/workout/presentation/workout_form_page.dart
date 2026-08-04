@@ -153,6 +153,7 @@ class WorkoutFormPage extends ConsumerStatefulWidget {
     this.repeatSessionId,
     this.prefillExerciseName,
     this.prefillType,
+    this.prefillSets,
     this.prefillReps,
   });
 
@@ -163,10 +164,15 @@ class WorkoutFormPage extends ConsumerStatefulWidget {
   /// ini. Tanggalnya tetap hari ini dan catatan sesinya tidak ikut disalin.
   final String? repeatSessionId;
 
-  /// Hasil dari Latihan Terpandu: nama, tipe, dan jumlah rep yang dihitung
-  /// kamera. Set sengaja dikosongkan supaya kamu sendiri yang menentukannya.
+  /// Hasil dari Latihan Terpandu: nama, tipe, jumlah set, dan rep per set.
+  ///
+  /// [prefillSets] dihitung dari berapa kali kamu menekan Istirahat di sana,
+  /// jadi ini angka yang benar-benar terjadi, bukan tebakan. [prefillReps] bisa
+  /// null kalau tiap setnya berbeda jumlah repnya — dan kalau begitu memang
+  /// tidak ada satu angka yang jujur mewakilinya.
   final String? prefillExerciseName;
   final String? prefillType;
+  final int? prefillSets;
   final int? prefillReps;
 
   @override
@@ -211,12 +217,17 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
     row.nameController.text = name;
     row.type = ExerciseType.fromDb(widget.prefillType);
 
+    if (!row.type.pakaiRep) return;
+
+    // Set sekarang ikut terisi. Dulu dikosongkan dengan alasan "kamera
+    // menghitung repetisi, bukan set" — dan itu benar selama tidak ada yang
+    // menandai batas antar set. Sekarang tombol Istirahat di Latihan Terpandu
+    // jadi penandanya, jadi angkanya dihitung dan bukan ditebak.
+    final sets = widget.prefillSets;
+    if (sets != null && sets > 0) row.setsController.text = '$sets';
+
     final reps = widget.prefillReps;
-    if (reps != null && reps > 0 && row.type.pakaiRep) {
-      row.repsController.text = '$reps';
-      // Kamera menghitung repetisi, bukan set. Set dibiarkan kosong supaya
-      // kamu isi sendiri, bukan ditebak jadi 1 dan diam-diam salah.
-    }
+    if (reps != null && reps > 0) row.repsController.text = '$reps';
   }
 
   Future<void> _loadDefaultRest() async {

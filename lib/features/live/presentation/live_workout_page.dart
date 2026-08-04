@@ -14,6 +14,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../domain/guided_exercise.dart';
 import '../domain/pose_geometry.dart';
+import '../../workout/presentation/rest_timer.dart';
 import '../domain/rep_counter.dart';
 import 'pose_painter.dart';
 
@@ -193,6 +194,25 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
 
   final Stopwatch _clock = Stopwatch();
 
+  /// Timer istirahat, dipakai bersama halaman form workout.
+  ///
+  /// Sebelumnya cuma form yang punya. Padahal justru di sini istirahatnya
+  /// paling terasa: kameranya sudah menghitung repetisi untukmu, tapi begitu
+  /// satu set selesai tidak ada apa pun yang memberi tahu kapan set berikutnya
+  /// mulai.
+  final RestTimerController _restTimer = RestTimerController();
+
+  /// Jumlah rep tiap set yang sudah diselesaikan di sesi ini.
+  ///
+  /// Ini juga yang membuat set akhirnya bisa ikut tercatat. Dulu form sengaja
+  /// mengosongkan set setelah Latihan Terpandu, dengan alasan "kamera menghitung
+  /// repetisi, bukan set". Itu benar selama tidak ada yang menandai batas antar
+  /// set — dan tombol Istirahat inilah penandanya. Sekarang setnya dihitung,
+  /// bukan ditebak.
+  final List<int> _setSelesai = [];
+
+  int _durasiIstirahat = kDefaultRestSeconds;
+
   @override
   void initState() {
     super.initState();
@@ -220,8 +240,31 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _restTimer.dispose();
     _stop();
     super.dispose();
+  }
+
+  /// Tandai satu set selesai: repetisinya disimpan, penghitung dinolkan, dan
+  /// istirahatnya langsung berjalan.
+  Future<void> _selesaikanSet() async {
+    final reps = _counter.reps;
+    if (reps == 0) return;
+
+    final detik = await showRestPicker(
+      context,
+      initialSeconds: _durasiIstirahat,
+      exerciseName: widget.exercise.name,
+    );
+    if (detik == null || !mounted) return;
+
+    setState(() {
+      _setSelesai.add(reps);
+      _durasiIstirahat = detik;
+      _counter.reset();
+      _lastFeedback = null;
+    });
+    _restTimer.start(detik, label: widget.exercise.name);
   }
 
   @override
@@ -463,7 +506,19 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
     });
   }
 
+  /// Semua set sesi ini, termasuk yang sedang berjalan kalau sudah ada repnya.
+  List<int> get _semuaSet => [..._setSelesai, if (_counter.reps > 0) _counter.reps];
+
   void _finish() {
+    final set = _semuaSet;
+    if (set.isEmpty) return;
+
+    // Rep dikirim hanya kalau semua set jumlahnya sama. Kalau berbeda-beda
+    // (12, 10, 8 — hal yang wajar saat latihan sampai gagal), tidak ada satu
+    // angka yang jujur mewakilinya, jadi kolomnya dibiarkan kosong untuk kamu
+    // isi sendiri. Setnya tetap dikirim: yang itu memang dihitung.
+    final seragam = set.toSet().length == 1;
+
     Navigator.of(context).pop();
     context.push(
       Uri(
@@ -471,7 +526,8 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
         queryParameters: {
           'exercise': widget.exercise.name,
           'type': widget.exercise.type.dbValue,
-          'reps': '${_counter.reps}',
+          'sets': '${set.length}',
+          if (seragam) 'reps': '${set.first}',
         },
       ).toString(),
     );
@@ -555,22 +611,62 @@ class _LiveSessionPageState extends State<_LiveSessionPage> with WidgetsBindingO
       bottomNavigationBar: _error != null
           ? null
           : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: FilledButton.icon(
-                  onPressed: _counter.reps == 0 ? null : _finish,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _color,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RestTimerBar(controller: _restTimer),
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_setSelesai.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: Text(
+                              'Set selesai: ${_setSelesai.join(" · ")} rep',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _counter.reps == 0 ? null : _selesaikanSet,
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                icon: const Icon(Icons.timer_outlined),
+                                label: const Text('Istirahat'),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: _semuaSet.isEmpty ? null : _finish,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: _color,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                icon: const Icon(Icons.check),
+                                label: Text(
+                                  _semuaSet.isEmpty
+                                      ? 'Belum ada rep'
+                                      : 'Simpan ${_semuaSet.length} set',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  icon: const Icon(Icons.check),
-                  label: Text(
-                    _counter.reps == 0
-                        ? 'Belum ada repetisi'
-                        : 'Simpan ${_counter.reps} rep ke catatan',
-                  ),
-                ),
+                ],
               ),
             ),
     );
