@@ -173,14 +173,22 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
           ),
           HeroStatData(
             icon: Icons.timeline,
-            value: '${_trimNumber(selected.latest)} ${selected.metric.unit}',
+            // "3 x 10" kalau setnya tercatat, angka tunggal kalau tidak.
+            value: selected.points.last.ringkasSetRep ?? _trimNumber(selected.latest),
             label: 'Terakhir',
           ),
-          HeroStatData(
-            icon: Icons.history,
-            value: '${selected.sessionCount}',
-            label: 'Sesi Tercatat',
-          ),
+          if (selected.metrikBeban case final beban? when selected.punyaBeban)
+            HeroStatData(
+              icon: Icons.bar_chart,
+              value: _trimNumber(selected.bebanTerakhir!),
+              label: beban.label,
+            )
+          else
+            HeroStatData(
+              icon: Icons.history,
+              value: '${selected.sessionCount}',
+              label: 'Sesi Tercatat',
+            ),
         ],
       );
     }
@@ -289,7 +297,10 @@ class _SummaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${_trimNumber(progress.latest)} ${progress.metric.unit}'
+                      // Set ikut ditulis di sini. Tanpa ini, "10 rep" pada 3 set
+                      // dan pada 5 set terbaca persis sama.
+                      '${progress.points.last.ringkasSetRep ?? _trimNumber(progress.latest)}'
+                      ' ${progress.metric.unit}'
                       '  ·  ${progress.sessionCount} sesi'
                       '  ·  ${_shortDateFormat.format(progress.lastDate)}',
                       maxLines: 1,
@@ -436,14 +447,36 @@ class _DetailView extends ConsumerWidget {
           _SingleSessionNote(progress: progress)
         else
           _ChartCard(points: progress.points, useVolume: false, metric: progress.metric),
-        if (progress.hasVolume && progress.sessionCount >= 2) ...[
+        // Grafik kedua: berapa banyak kerjanya, bukan seberapa berat satu
+        // repetisinya. Dulu ini cuma muncul untuk latihan berbeban, karena
+        // rumusnya beban x set x rep — dan untuk bodyweight bebannya nol, jadi
+        // hasilnya selalu nol dan grafiknya tidak pernah tampil. Sekarang tiap
+        // tipe punya ukuran kerjanya sendiri: total rep untuk bodyweight, total
+        // detik tahanan untuk isometrik, kilogram untuk beban.
+        if (progress.metrikBeban case final beban? when progress.punyaBeban) ...[
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader(
-            title: 'Volume Latihan',
+          SectionHeader(
+            title: '${beban.label} (${beban.unit})',
             icon: Icons.bar_chart,
             color: _workoutColor,
           ),
-          _ChartCard(points: progress.points, useVolume: true, metric: progress.metric),
+          _ChartCard(
+            points: progress.titikBeban,
+            useVolume: true,
+            metric: progress.metric,
+          ),
+          if (progress.titikBeban.length < progress.sessionCount)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: Text(
+                '${progress.sessionCount - progress.titikBeban.length} catatan lama '
+                'tidak ikut karena setnya belum diisi',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
         ],
       ],
     );
@@ -592,7 +625,11 @@ class _LineChart extends StatelessWidget {
   final bool useVolume;
   final ProgressMetric metric;
 
-  double _valueOf(ProgressPoint point) => useVolume ? point.volume : point.value;
+  /// Saat menggambar kerja total, angkanya diambil dari [ProgressPoint.bebanKerja]
+  /// — bukan dari `volume`, yang rumusnya beban x set x rep dan karenanya selalu
+  /// nol untuk latihan tanpa beban.
+  double _valueOf(ProgressPoint point) =>
+      useVolume ? (point.bebanKerja ?? point.volume) : point.value;
 
   @override
   Widget build(BuildContext context) {
