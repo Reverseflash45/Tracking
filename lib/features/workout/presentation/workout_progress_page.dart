@@ -22,6 +22,29 @@ final _shortDateFormat = DateFormat('d MMM', 'id_ID');
 String _trimNumber(double value) =>
     value == value.roundToDouble() ? value.round().toString() : value.toStringAsFixed(1);
 
+/// "10 rep · 3 set · 30 total" dari catatan terakhir.
+///
+/// Ketiganya diberi nama, bukan digabung jadi "3 x 10". Bentuk gabungan itu
+/// masih menuntut pembacanya menebak mana yang set dan mana yang rep, dan
+/// urutan penyebutannya memang berbeda-beda antar orang.
+///
+/// Bagian yang angkanya tidak tercatat dilewati, bukan ditulis nol.
+String _ringkasAngka(ExerciseProgress progress) {
+  final titik = progress.points.last;
+  final bagian = <String>[
+    if (titik.reps case final rep?) '$rep rep',
+    if (titik.sets case final set?) '$set set',
+    if (titik.bebanKerja case final total? when progress.metrikBeban != null)
+      '${_trimNumber(total)} ${progress.metrikBeban!.unit} total',
+  ];
+
+  // Cardio dan catatan lama yang set/repnya kosong tetap butuh satu angka.
+  if (bagian.isEmpty) {
+    return '${_trimNumber(progress.latest)} ${progress.metric.unit}';
+  }
+  return bagian.join('  ·  ');
+}
+
 class WorkoutProgressPage extends ConsumerStatefulWidget {
   const WorkoutProgressPage({super.key});
 
@@ -165,31 +188,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
         subtitle: '${selected.type.label} - progres ${selected.metric.label.toLowerCase()}',
         color: _workoutColor,
         leading: leading,
-        stats: [
-          HeroStatData(
-            icon: Icons.emoji_events_outlined,
-            value: '${_trimNumber(selected.best)} ${selected.metric.unit}',
-            label: 'Terbaik',
-          ),
-          HeroStatData(
-            icon: Icons.timeline,
-            // "3 x 10" kalau setnya tercatat, angka tunggal kalau tidak.
-            value: selected.points.last.ringkasSetRep ?? _trimNumber(selected.latest),
-            label: 'Terakhir',
-          ),
-          if (selected.metrikBeban case final beban? when selected.punyaBeban)
-            HeroStatData(
-              icon: Icons.bar_chart,
-              value: _trimNumber(selected.bebanTerakhir!),
-              label: beban.label,
-            )
-          else
-            HeroStatData(
-              icon: Icons.history,
-              value: '${selected.sessionCount}',
-              label: 'Sesi Tercatat',
-            ),
-        ],
+        stats: _statCatatanTerakhir(selected),
       );
     }
 
@@ -211,6 +210,59 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
         HeroStatData(icon: Icons.trending_up, value: '$naik', label: 'Sedang Naik'),
       ],
     );
+  }
+
+  /// Tiga angka dari catatan terakhir: rep, set, dan total.
+  ///
+  /// Ketiganya ditulis terpisah dan diberi nama masing-masing. Sebelumnya
+  /// hanya rep yang muncul, lalu sempat digabung jadi "3 x 10" — dan bentuk
+  /// gabungan itu masih menuntut kamu mengurai sendiri mana yang set dan mana
+  /// yang rep, apalagi karena urutan penyebutannya berbeda-beda antar orang.
+  ///
+  /// Kalau setnya tidak tercatat, slot Set dan Total diganti Terbaik dan Sesi
+  /// Tercatat. Header selalu berisi tiga angka, jadi tidak pernah ada petak
+  /// kosong.
+  static List<HeroStatData> _statCatatanTerakhir(ExerciseProgress p) {
+    final terakhir = p.points.last;
+    final rep = terakhir.reps;
+    final set = terakhir.sets;
+    final total = terakhir.bebanKerja;
+    final beban = p.metrikBeban;
+
+    return [
+      if (rep != null)
+        HeroStatData(
+          icon: Icons.repeat,
+          value: '$rep',
+          label: 'Rep per Set',
+        )
+      else
+        HeroStatData(
+          icon: Icons.timeline,
+          value: '${_trimNumber(p.latest)} ${p.metric.unit}',
+          label: p.metric.label,
+        ),
+      if (set != null)
+        HeroStatData(icon: Icons.layers_outlined, value: '$set', label: 'Set')
+      else
+        HeroStatData(
+          icon: Icons.emoji_events_outlined,
+          value: '${_trimNumber(p.best)} ${p.metric.unit}',
+          label: 'Terbaik',
+        ),
+      if (total != null && beban != null)
+        HeroStatData(
+          icon: Icons.functions,
+          value: '${_trimNumber(total)} ${beban.unit}',
+          label: 'Total',
+        )
+      else
+        HeroStatData(
+          icon: Icons.history,
+          value: '${p.sessionCount}',
+          label: 'Sesi Tercatat',
+        ),
+    ];
   }
 }
 
@@ -297,10 +349,10 @@ class _SummaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      // Set ikut ditulis di sini. Tanpa ini, "10 rep" pada 3 set
-                      // dan pada 5 set terbaca persis sama.
-                      '${progress.points.last.ringkasSetRep ?? _trimNumber(progress.latest)}'
-                      ' ${progress.metric.unit}'
+                      // Rep, set, dan total ditulis bertiga dan diberi nama
+                      // masing-masing, supaya tidak perlu masuk ke detail dulu
+                      // cuma untuk tahu tadi berapa set.
+                      '${_ringkasAngka(progress)}'
                       '  ·  ${progress.sessionCount} sesi'
                       '  ·  ${_shortDateFormat.format(progress.lastDate)}',
                       maxLines: 1,

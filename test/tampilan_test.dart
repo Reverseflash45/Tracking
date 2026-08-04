@@ -187,6 +187,28 @@ void main() {
     });
   });
 
+  group('statistik progres latihan', () {
+    testWidgets('rep, set, dan total muat bertiga di layar sempit', (tester) async {
+      expect(
+        await gambar(
+          tester,
+          const HeroHeader.sub(
+            title: 'Barbell Bench Press',
+            subtitle: 'Latihan Beban - progres beban',
+            color: AppColors.workout,
+            stats: [
+              HeroStatData(icon: Icons.repeat, value: '12', label: 'Rep per Set'),
+              HeroStatData(icon: Icons.layers_outlined, value: '5', label: 'Set'),
+              HeroStatData(icon: Icons.functions, value: '2400 kg', label: 'Total'),
+            ],
+          ),
+          skalaTeks: skalaBesar,
+        ),
+        isNull,
+      );
+    });
+  });
+
   group('SectionHeader', () {
     testWidgets('judul panjang dengan tombol di kanan tidak meluber', (tester) async {
       expect(
