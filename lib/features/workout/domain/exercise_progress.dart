@@ -134,6 +134,16 @@ class ExerciseProgress {
   /// Grafik kerja total baru berarti kalau ada dua titik untuk dibandingkan.
   bool get punyaBeban => metrikBeban != null && titikBeban.length >= 2;
 
+  /// Titik yang setnya tercatat.
+  ///
+  /// Set berhak atas grafiknya sendiri. Rep dan total saja tidak cukup: rep
+  /// bisa turun sementara setnya naik, dan hasilnya total yang nyaris tidak
+  /// bergerak — tiga angka yang bergerak sendiri-sendiri tidak bisa diwakili
+  /// dua garis.
+  List<ProgressPoint> get titikSet => [for (final p in points) if (p.sets != null) p];
+
+  bool get punyaSet => titikSet.length >= 2;
+
   double get bebanTerbaik =>
       titikBeban.map((p) => p.bebanKerja!).reduce((a, b) => a > b ? a : b);
 

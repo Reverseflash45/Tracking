@@ -286,6 +286,38 @@ void main() {
       expect(lari.punyaBeban, isFalse);
     });
 
+    test('set punya deretnya sendiri, karena rep dan total bisa menyembunyikannya', () {
+      // Angka nyata dari catatan Squat: rep turun, total nyaris datar, tapi
+      // setnya melonjak hampir dua kali lipat. Kalau cuma ada grafik rep dan
+      // grafik total, lonjakan set itu tidak muncul di mana pun.
+      final list = buildExerciseProgress([
+        _session(h1, [_entry('Squat', type: ExerciseType.bodyweight, sets: 12, reps: 4)]),
+        _session(h2, [_entry('Squat', type: ExerciseType.bodyweight, sets: 10, reps: 4)]),
+        _session(h3, [_entry('Squat', type: ExerciseType.bodyweight, sets: 20, reps: 2)]),
+      ]);
+
+      final squat = _find(list, 'Squat');
+
+      expect(squat.points.map((p) => p.value), [4, 4, 2], reason: 'rep menurun');
+      expect(squat.titikBeban.map((p) => p.bebanKerja), [48, 40, 40],
+          reason: 'total nyaris datar');
+
+      expect(squat.punyaSet, isTrue);
+      expect(squat.titikSet.map((p) => p.sets), [12, 10, 20],
+          reason: 'inilah satu-satunya deret yang menunjukkan perubahan terbesar');
+    });
+
+    test('set tanpa catatan yang cukup belum digrafikkan', () {
+      final list = buildExerciseProgress([
+        _session(h1, [_entry('Dip', type: ExerciseType.bodyweight, sets: 3, reps: 8)]),
+        _session(h2, [_entry('Dip', type: ExerciseType.bodyweight, reps: 8)]),
+      ]);
+
+      final dip = _find(list, 'Dip');
+      expect(dip.titikSet.length, 1, reason: 'yang setnya kosong tidak ikut');
+      expect(dip.punyaSet, isFalse, reason: 'satu titik tidak bisa dibandingkan');
+    });
+
     test('satu titik saja belum layak digrafikkan sebagai kerja total', () {
       final list = buildExerciseProgress([
         _session(h1, [_entry('Dip', type: ExerciseType.bodyweight, sets: 3, reps: 8)]),
