@@ -498,8 +498,38 @@ class _DetailView extends ConsumerWidget {
         if (progress.sessionCount < 2)
           _SingleSessionNote(progress: progress)
         else
-          _ChartCard(points: progress.points, useVolume: false, metric: progress.metric),
-        // Grafik kedua: berapa banyak kerjanya, bukan seberapa berat satu
+          _ChartCard(
+            points: progress.points,
+            deret: _Deret.utama,
+            satuan: progress.metric.unit,
+          ),
+
+        // Grafik kedua: SET.
+        //
+        // Ini yang sebelumnya hilang, dan hilangnya paling merugikan. Rep dan
+        // total saja bisa menyembunyikan perubahan terbesar: pada data Squat,
+        // rep turun 4 -> 4 -> 2 dan total nyaris datar 48 -> 40 -> 40, padahal
+        // setnya melonjak 12 -> 10 -> 20. Tanpa garis ini, lonjakan itu tidak
+        // muncul di mana pun.
+        if (progress.punyaSet) ...[
+          const SizedBox(height: AppSpacing.lg),
+          const SectionHeader(
+            title: 'Set',
+            icon: Icons.layers_outlined,
+            color: _workoutColor,
+          ),
+          _ChartCard(
+            points: progress.titikSet,
+            deret: _Deret.set,
+            satuan: 'set',
+          ),
+          _CatatanTitikTerlewat(
+            terpakai: progress.titikSet.length,
+            total: progress.sessionCount,
+          ),
+        ],
+
+        // Grafik ketiga: berapa banyak kerjanya, bukan seberapa berat satu
         // repetisinya. Dulu ini cuma muncul untuk latihan berbeban, karena
         // rumusnya beban x set x rep — dan untuk bodyweight bebannya nol, jadi
         // hasilnya selalu nol dan grafiknya tidak pernah tampil. Sekarang tiap
@@ -508,27 +538,19 @@ class _DetailView extends ConsumerWidget {
         if (progress.metrikBeban case final beban? when progress.punyaBeban) ...[
           const SizedBox(height: AppSpacing.lg),
           SectionHeader(
-            title: '${beban.label} (${beban.unit})',
-            icon: Icons.bar_chart,
+            title: 'Total (${beban.unit})',
+            icon: Icons.functions,
             color: _workoutColor,
           ),
           _ChartCard(
             points: progress.titikBeban,
-            useVolume: true,
-            metric: progress.metric,
+            deret: _Deret.total,
+            satuan: beban.unit,
           ),
-          if (progress.titikBeban.length < progress.sessionCount)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.sm),
-              child: Text(
-                '${progress.sessionCount - progress.titikBeban.length} catatan lama '
-                'tidak ikut karena setnya belum diisi',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
+          _CatatanTitikTerlewat(
+            terpakai: progress.titikBeban.length,
+            total: progress.sessionCount,
+          ),
         ],
       ],
     );
@@ -543,6 +565,35 @@ class _DetailView extends ConsumerWidget {
 }
 
 /// Satu titik tidak membentuk garis, jadi tampilkan angkanya saja.
+/// Keterangan kalau grafiknya memakai lebih sedikit titik daripada jumlah sesi.
+///
+/// Tanpa ini, grafik yang lebih pendek terlihat seperti data yang hilang.
+/// Catatan lama yang setnya kosong memang dilewati, bukan diisi nol — nol
+/// berarti "tidak latihan", dan itu bukan yang terjadi.
+class _CatatanTitikTerlewat extends StatelessWidget {
+  const _CatatanTitikTerlewat({required this.terpakai, required this.total});
+
+  final int terpakai;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final terlewat = total - terpakai;
+    if (terlewat <= 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Text(
+        '$terlewat catatan lama tidak ikut karena setnya belum diisi',
+        style: TextStyle(
+          fontSize: 11,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
 class _SingleSessionNote extends StatelessWidget {
   const _SingleSessionNote({required this.progress});
 
@@ -636,16 +687,27 @@ class _DeltaBanner extends StatelessWidget {
   }
 }
 
+/// Deret mana yang digambar.
+///
+/// Ketiganya dapat grafiknya sendiri karena ketiganya bergerak sendiri-sendiri.
+/// Contoh nyatanya ada di data Squat: rep turun 4 -> 4 -> 2 sementara setnya
+/// naik 12 -> 10 -> 20, dan totalnya justru nyaris datar di 48 -> 40 -> 40.
+/// Dua garis tidak bisa mewakili tiga angka, dan set adalah yang paling banyak
+/// bergerak di antara ketiganya.
+enum _Deret { utama, set, total }
+
 class _ChartCard extends StatelessWidget {
   const _ChartCard({
     required this.points,
-    required this.useVolume,
-    required this.metric,
+    required this.deret,
+    required this.satuan,
   });
 
   final List<ProgressPoint> points;
-  final bool useVolume;
-  final ProgressMetric metric;
+  final _Deret deret;
+
+  /// Satuan yang ditempel di angka pada tooltip, mis. "rep", "set", "kg".
+  final String satuan;
 
   @override
   Widget build(BuildContext context) {
@@ -659,7 +721,7 @@ class _ChartCard extends StatelessWidget {
         ),
         child: SizedBox(
           height: 190,
-          child: _LineChart(points: points, useVolume: useVolume, metric: metric),
+          child: _LineChart(points: points, deret: deret, satuan: satuan),
         ),
       ),
     );
@@ -669,19 +731,22 @@ class _ChartCard extends StatelessWidget {
 class _LineChart extends StatelessWidget {
   const _LineChart({
     required this.points,
-    required this.useVolume,
-    required this.metric,
+    required this.deret,
+    required this.satuan,
   });
 
   final List<ProgressPoint> points;
-  final bool useVolume;
-  final ProgressMetric metric;
+  final _Deret deret;
+  final String satuan;
 
-  /// Saat menggambar kerja total, angkanya diambil dari [ProgressPoint.bebanKerja]
-  /// — bukan dari `volume`, yang rumusnya beban x set x rep dan karenanya selalu
-  /// nol untuk latihan tanpa beban.
-  double _valueOf(ProgressPoint point) =>
-      useVolume ? (point.bebanKerja ?? point.volume) : point.value;
+  /// Kerja total diambil dari [ProgressPoint.bebanKerja] — bukan dari `volume`,
+  /// yang rumusnya beban x set x rep dan karenanya selalu nol untuk latihan
+  /// tanpa beban.
+  double _valueOf(ProgressPoint point) => switch (deret) {
+        _Deret.utama => point.value,
+        _Deret.set => (point.sets ?? 0).toDouble(),
+        _Deret.total => point.bebanKerja ?? point.volume,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -698,7 +763,7 @@ class _LineChart extends StatelessWidget {
 
     // Label sumbu X dibatasi supaya tidak tumpang tindih saat titiknya banyak.
     final labelInterval = (points.length / 4).ceil().toDouble().clamp(1.0, double.infinity);
-    final satuan = useVolume ? '' : ' ${metric.unit}';
+    final satuanTeks = satuan.isEmpty ? '' : ' $satuan';
 
     return LineChart(
       LineChartData(
@@ -752,7 +817,7 @@ class _LineChart extends StatelessWidget {
             getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
               final point = points[spot.x.toInt()];
               return LineTooltipItem(
-                '${_numberFormat.format(_valueOf(point))}$satuan\n',
+                '${_numberFormat.format(_valueOf(point))}$satuanTeks\n',
                 const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
                 children: [
                   TextSpan(
