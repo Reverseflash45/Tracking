@@ -112,7 +112,15 @@ String _normalizeTime(String hour, String minute) {
 /// Alternasi regex memilih yang pertama cocok, bukan yang terpanjang. Kalau
 /// `r` didahulukan, "Ruang A1" akan cocok di huruf R lalu menangkap
 /// "uang A1" sebagai nama ruangannya.
-const String _roomLabels = 'laboratorium|ruangan|ruang|kelas|lab|r';
+const String _roomLabels = 'laboratorium|ruangan|ruang|kelas|lab';
+
+/// "R" sendirian baru berarti ruangan kalau diikuti angka: R.301, R 12.
+///
+/// Sebelumnya `r` ikut jadi salah satu label bebas, dan akibatnya setiap kata
+/// berawalan R dianggap penanda ruangan. Pada KRS ini "Rabu Kuliah jam" terbaca
+/// sebagai ruangan bernama "abu Kuliah jam". Cacatnya tidak pernah terlihat
+/// selama tidak ada satu baris pun yang berhasil dibaca.
+final RegExp _roomSingkat = RegExp(r'\br\.?\s*:?\s*(\d[a-z0-9.\-]{0,8})', caseSensitive: false);
 
 /// Cari kode ruangan, mis. "R.301", "Ruang A1", "Lab Komputer".
 String? _findRoom(String line) {
@@ -125,6 +133,10 @@ String? _findRoom(String line) {
     final hasil = berlabel.group(1)!.trim();
     if (hasil.isNotEmpty) return hasil;
   }
+
+  final singkat = _roomSingkat.firstMatch(line);
+  if (singkat != null) return singkat.group(1)!.trim();
+
   return null;
 }
 
@@ -158,9 +170,20 @@ String _stripKnownParts(String line) {
     ),
     ' ',
   );
+  sisa = sisa.replaceAll(_roomSingkat, ' ');
 
   // Kode mata kuliah seperti "TIF3204" atau "MKU-101" bukan nama.
   sisa = sisa.replaceAll(RegExp(r'\b[A-Z]{2,4}[-\s]?\d{3,5}\b'), ' ');
+
+  // Kode kelas seperti "TI-C2" atau "T-C1". Bentuknya cukup khas — huruf,
+  // tanda hubung, huruf, angka — sehingga jarang bertabrakan dengan nama mata
+  // kuliah. Kalau ada nama yang ikut terpangkas, itu bagian yang memang
+  // diserahkan untuk kamu koreksi sebelum menyimpan.
+  sisa = sisa.replaceAll(RegExp(r'\b[A-Za-z]{1,3}-[A-Za-z]?\d{1,3}\b'), ' ');
+
+  // Kata sambungan yang selalu ada di kolom jadwal dan tidak pernah jadi nama.
+  // "Praktikum" sengaja tidak ikut: itu memang bagian dari nama mata kuliahnya.
+  sisa = sisa.replaceAll(RegExp(r'\b(?:kuliah|kliah|jam)\b', caseSensitive: false), ' ');
 
   // SKS dan sisa angka berdiri sendiri.
   sisa = sisa.replaceAll(RegExp(r'\b\d+\s*sks\b', caseSensitive: false), ' ');
@@ -174,11 +197,70 @@ String _cleanName(String raw) {
   return raw.replaceAll(RegExp(r'^[\s.,:;\-–—/]+|[\s.,:;\-–—/]+$'), '').trim();
 }
 
+/// Berapa banyak baris OCR yang boleh disatukan jadi satu baris jadwal.
+///
+/// Tiga sudah cukup untuk kasus terburuk yang pernah ditemui — nama, hari, dan
+/// jam terpecah bertiga — dan empat memberi satu baris cadangan. Lebih dari itu
+/// justru berbahaya: makin lebar jendelanya, makin besar peluang jam milik
+/// baris berikutnya ikut tertarik ke baris ini.
+const int kMaksBarisGabung = 4;
+
+/// Apakah baris ini jelas-jelas awal baris jadwal yang baru.
+///
+/// Bentuknya nomor urut lalu kode mata kuliah: "1  AGI401", "12 SIP375".
+/// Penjagaan ini yang mencegah jendela penggabungan menyeberang ke baris
+/// berikutnya dan mencuri jamnya.
+///
+/// Sengaja menuntut kode mata kuliah, bukan cuma angka di depan. Baris sambungan
+/// sering juga dimulai angka — "07 2 sks | 13:00" — dan kalau itu dianggap awal
+/// baris baru, justru penggabungannya yang tidak pernah terjadi.
+bool _awalBarisBaru(String line) =>
+    RegExp(r'^\d{1,2}[\s.)]+[A-Za-z]{2,4}\s?\d{3,5}\b').hasMatch(line);
+
+/// Baca satu baris utuh jadi satu jadwal. Null kalau harinya atau jamnya tidak
+/// lengkap.
+KrsEntry? _bacaBaris(String line) {
+  final day = _findDay(line.toLowerCase());
+  final time = _findTimeRange(line);
+  if (day == null || time == null) return null;
+
+  // Jam selesai sebelum jam mulai berarti salah baca.
+  if (time.end.compareTo(time.start) <= 0) return null;
+
+  final name = _cleanName(_stripKnownParts(line));
+  if (name.length < 3) return null;
+
+  return KrsEntry(
+    courseName: name,
+    dayOfWeek: day,
+    startTime: time.start,
+    endTime: time.end,
+    room: _findRoom(line),
+  );
+}
+
 /// Baca teks OCR jadi daftar jadwal.
 ///
 /// Baris yang tidak punya hari DAN jam sekaligus dilewati. Menebak dari salah
 /// satunya saja menghasilkan jadwal karangan yang lebih merepotkan untuk
 /// dibersihkan daripada diketik ulang.
+///
+/// Satu baris tabel tidak selalu jadi satu baris teks. Kolom JADWAL biasanya
+/// yang paling panjang, dan OCR memecahnya menurut apa yang terlihat di foto,
+/// bukan menurut struktur tabelnya:
+///
+///     1  AGI401  Agama Islam II  2  TI-C1  Rabu Kuliah jam
+///     07 2 sks | 13:00
+///     s/d 15:00
+///
+/// Hari ada di potongan pertama, jam mulai di kedua, jam selesai di ketiga.
+/// Dibaca per baris, tidak ada satu pun yang punya hari dan rentang jam
+/// sekaligus, jadi hasilnya nol — bukan karena OCR-nya gagal, tapi karena
+/// pembacanya menuntut keduanya berada di baris yang sama.
+///
+/// Karena itu baris digabung dulu. Jendelanya dimulai dari satu baris dan baru
+/// melebar kalau belum terbaca, jadi format yang memang sudah rapi tidak ikut
+/// terpengaruh.
 List<KrsEntry> parseKrs(String rawText) {
   final lines = rawText
       .split('\n')
@@ -187,27 +269,26 @@ List<KrsEntry> parseKrs(String rawText) {
       .toList();
 
   final entries = <KrsEntry>[];
+  var i = 0;
 
-  for (final line in lines) {
-    final lower = line.toLowerCase();
+  while (i < lines.length) {
+    KrsEntry? hasil;
+    var terpakai = 1;
 
-    final day = _findDay(lower);
-    final time = _findTimeRange(line);
-    if (day == null || time == null) continue;
+    for (var lebar = 1; lebar <= kMaksBarisGabung && i + lebar <= lines.length; lebar++) {
+      // Berhenti sebelum menelan baris yang jelas milik jadwal berikutnya.
+      if (lebar > 1 && _awalBarisBaru(lines[i + lebar - 1])) break;
 
-    // Jam selesai sebelum jam mulai berarti salah baca.
-    if (time.end.compareTo(time.start) <= 0) continue;
+      final entry = _bacaBaris(lines.sublist(i, i + lebar).join(' '));
+      if (entry != null) {
+        hasil = entry;
+        terpakai = lebar;
+        break;
+      }
+    }
 
-    final name = _cleanName(_stripKnownParts(line));
-    if (name.length < 3) continue;
-
-    entries.add(KrsEntry(
-      courseName: name,
-      dayOfWeek: day,
-      startTime: time.start,
-      endTime: time.end,
-      room: _findRoom(line),
-    ));
+    if (hasil != null) entries.add(hasil);
+    i += terpakai;
   }
 
   return entries;

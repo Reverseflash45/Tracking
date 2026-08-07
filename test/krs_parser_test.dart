@@ -2,6 +2,86 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/features/academic/domain/krs_parser.dart';
 
 void main() {
+  group('parseKrs — satu baris tabel terpecah beberapa baris OCR', () {
+    // Teks ini disalin apa adanya dari hasil OCR sebuah KRS, termasuk salah
+    // bacanya: "Kliah" untuk "Kuliah", "SI329" untuk "SII329", "T-C1" untuk
+    // "TI-C1", dan "Islam ||" untuk "Islam II".
+    //
+    // Sebelum baris digabung, teks ini menghasilkan nol jadwal — bukan karena
+    // OCR-nya gagal, tapi karena tidak ada satu baris pun yang memuat hari dan
+    // rentang jam sekaligus.
+    const ocrAsli = '''
+KODE  SKS
+NO.  NAMA MATA KULIAH  KELAS  JADWAL
+MTA  MTA
+1  AGI401  Agama Islam ||  2  T-C1  Rabu Kuliah jam
+07 2 sks | 13:00
+s/d 15:00
+2  SIC307  Pembelajaran Mesin  2  TI-C2  Rabu Kliah
+jam 01 2 sks | 07:00
+s/d 09:00
+3  SIC308  Pembelajaran Mesin (Praktikum)  1  TI-C7
+Kamis Kuliah jam 9 2 sks 15:00
+s/d 17:00
+4  SI329  Design Thinking  2  T-C2  Kamis Kuliah jam
+01 2 sks | 07:00
+s/d 09:00
+5  SIJ304  Keamanan Cyber  2  TI-C2  |Selasa Kuliah
+jam 09 2 sks |
+15:00 s/d 17:00
+6  SIJ305  Keamanan Cyber (Praktikum)  1  TI-C4
+Selasa Kuliah jam 07 2 sks|
+13:00 s/d 15:00''';
+
+    test('keenam baris jadwalnya terbaca', () {
+      expect(parseKrs(ocrAsli).length, 6);
+    });
+
+    test('hari dan jam diambil dari potongan yang berbeda', () {
+      final hasil = parseKrs(ocrAsli);
+
+      // Hari ada di potongan pertama, jam mulai di kedua, jam selesai di ketiga.
+      expect(hasil[0].dayOfWeek, 3, reason: 'Rabu');
+      expect(hasil[0].startTime, '13:00');
+      expect(hasil[0].endTime, '15:00');
+
+      expect(hasil[2].dayOfWeek, 4, reason: 'Kamis');
+      expect(hasil[2].startTime, '15:00');
+      expect(hasil[2].endTime, '17:00');
+
+      expect(hasil[4].dayOfWeek, 2, reason: 'Selasa');
+      expect(hasil[4].startTime, '15:00');
+      expect(hasil[4].endTime, '17:00');
+    });
+
+    test('jam milik baris berikutnya tidak tertarik ke baris sebelumnya', () {
+      final hasil = parseKrs(ocrAsli);
+
+      // Baris 2 berjam 07:00-09:00 dan baris 3 berjam 15:00-17:00. Kalau
+      // jendela penggabungan menyeberang, keduanya akan tertukar atau sama.
+      expect(hasil[1].startTime, '07:00');
+      expect(hasil[1].endTime, '09:00');
+      expect(hasil[2].startTime, '15:00');
+    });
+
+    test('nama mata kuliah bersih dari kode kelas dan kata "Kuliah"', () {
+      final nama = parseKrs(ocrAsli).map((e) => e.courseName).toList();
+
+      expect(nama[1], 'Pembelajaran Mesin');
+      expect(nama[2], 'Pembelajaran Mesin (Praktikum)');
+      expect(nama[3], 'Design Thinking');
+      expect(nama[4], 'Keamanan Cyber');
+    });
+
+    test('"Rabu" tidak dikira nama ruangan', () {
+      // "r" dulu ikut jadi label ruangan yang berdiri sendiri, jadi setiap kata
+      // berawalan R dianggap penanda ruangan.
+      for (final entry in parseKrs(ocrAsli)) {
+        expect(entry.room, isNull, reason: 'KRS ini memang tidak punya kolom ruangan');
+      }
+    });
+  });
+
   group('parseKrs — baris yang jelas', () {
     test('baris lengkap terbaca utuh', () {
       final hasil = parseKrs('Senin  07:30 - 09:10  Basis Data  R.301');
