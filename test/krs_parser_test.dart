@@ -82,6 +82,101 @@ Selasa Kuliah jam 07 2 sks|
     });
   });
 
+  group('parseKrs — kolom status menyelip di tengah rentang jam', () {
+    // KRS yang sama, difoto dengan kolom STATUS dan AKSI ikut terlihat. Kolom
+    // itu jatuh persis di antara jam mulai dan jam selesai:
+    //
+    //     2 sks | 13:00 Belum disetujui  Hapus
+    //     s/d 15:00  dosen
+    //
+    // Disalin apa adanya, termasuk salah bacanya: "Islam Il", "sld" untuk
+    // "s/d", dan dua nomor urut yang hilang (baris 2, 4, dan 8).
+    const ocrAsli = '''
+KODE  SKS
+NO.  NAMA MATA KULIAH  KELAS  JADWAL  STATUS  AKSI
+MTA  MTA
+1  AGI401  Agama Islam Il  TI-C1  Rabu Kuliah jam 07
+2 sks | 13:00 Belum disetujui  Hapus
+s/d 15:00  dosen
+SIC307  Pembelajaran Mesin  TI-C2  Rabu Kuliah jam 01
+2 sks | 07:00 Belum disetujui  Hapus
+s/d 09:00  dosen
+3  SIC308  Pembelajaran Mesin (Praktikum)  TI-C7
+Kamis Kuliah jam 09 2 sks| 15:00 Belum disetujui
+Hapus
+sld 17:00  dosen
+SII329  Design Thinking  TI-C2  Kamis Kuliah jam 01 2
+sks | 07:00 Belum disetujui  Hapus
+s/d 09:00  dosen
+5  SIJ304  Keamanan Cyber  2  TI-C2  Selasa Kuliah
+jam 09 2 sks |  Belum disetujui  Hapus
+15:00 s/d 17:00  dosen
+6  SIJ305  Keamanan Cyber (Praktikum)  TI-C4  Selasa
+Kuliah jam 07 2 sks |  Belum disetujui  Hapus
+13:00 s/d 15:00  dosen
+7  SIP374  Pemrograman Backend Lanjut  TI-C2  Kamis
+Kuliah jam 05 2 sks | 11:00 Belum disetujui  Hapus
+s/d 13:00  dosen
+SIP375  Pemrograman Backend Lanjut (Praktikum)  2  TI-
+C7  Senin Kuliah jam 08 4 sks | 14:00 Belum disetujui
+Hapus
+s/d 18:00  dosen
+9  SIR302  Proyek 1 (Analisa dan Desain PL)  2  TI-C2
+Rabu Kuliah jam 03 2 sks | 09:00 Belum disetujui
+Hapus
+s/d 11:00  dosen
+10  SIR303  Jaminan Kualitas Perangkat Lunak  2  TI-
+C2  Kamis Kuliah jam 03 2 sks | 09:00 Belum disetujui
+Hapus
+(Quality Assurance)  s/d 11:00  dosen
+11  SIR307  Kewirausahaan Bidang IT  2  TI-C2  Rabu
+Kuliah jam 11 2 sks | 17:00 Belum disetujui  Hapus
+s/d 19:00  dosen
+|Pesan Dosen :''';
+
+    test('kesebelas baris jadwalnya terbaca', () {
+      expect(parseKrs(ocrAsli).length, 11);
+    });
+
+    test('jam tetap benar walau kolom status menyelip di tengahnya', () {
+      final hasil = parseKrs(ocrAsli);
+
+      expect((hasil[0].startTime, hasil[0].endTime), ('13:00', '15:00'));
+      expect((hasil[1].startTime, hasil[1].endTime), ('07:00', '09:00'));
+      expect((hasil[6].startTime, hasil[6].endTime), ('11:00', '13:00'));
+      expect((hasil[7].startTime, hasil[7].endTime), ('14:00', '18:00'));
+      expect((hasil[10].startTime, hasil[10].endTime), ('17:00', '19:00'));
+    });
+
+    test('"sld" diterima sebagai salah baca dari "s/d"', () {
+      expect((parseKrs(ocrAsli)[2].startTime, parseKrs(ocrAsli)[2].endTime), ('15:00', '17:00'));
+    });
+
+    test('harinya benar semua', () {
+      expect(
+        parseKrs(ocrAsli).map((e) => e.dayOfWeek).toList(),
+        [3, 3, 4, 4, 2, 2, 4, 1, 3, 4, 3],
+        reason: 'Rabu, Rabu, Kamis, Kamis, Selasa, Selasa, Kamis, Senin, Rabu, Kamis, Rabu',
+      );
+    });
+
+    test('nama tidak kemasukan kolom STATUS dan AKSI', () {
+      expect(parseKrs(ocrAsli).map((e) => e.courseName).toList(), [
+        'Agama Islam Il',
+        'Pembelajaran Mesin',
+        'Pembelajaran Mesin (Praktikum)',
+        'Design Thinking',
+        'Keamanan Cyber',
+        'Keamanan Cyber (Praktikum)',
+        'Pemrograman Backend Lanjut',
+        'Pemrograman Backend Lanjut (Praktikum)',
+        'Proyek 1 (Analisa dan Desain PL)',
+        'Jaminan Kualitas Perangkat Lunak',
+        'Kewirausahaan Bidang IT',
+      ]);
+    });
+  });
+
   group('parseKrs — baris yang jelas', () {
     test('baris lengkap terbaca utuh', () {
       final hasil = parseKrs('Senin  07:30 - 09:10  Basis Data  R.301');

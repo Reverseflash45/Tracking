@@ -76,11 +76,39 @@ String _normalizeTime(String hour, String minute) {
   return '${h.toString().padLeft(2, '0')}:$minute';
 }
 
+/// Pemisah rentang jam.
+///
+/// "s/d" ditulis longgar karena garis miringnya tipis dan sering salah dibaca
+/// OCR — jadi "sld", "s|d", atau "s.d". Ketiganya diterima.
+const String _pemisahJam = r'(?:[-—–]|\bs\s*[/|l\\.]?\s*d\b|\bhingga\b)';
+
+/// Berapa banyak huruf yang boleh menyelip antara jam mulai dan pemisahnya.
+///
+/// Di KRS ini kolom STATUS dan AKSI jatuh persis di tengah rentang jamnya:
+///
+///     2 sks | 13:00 Belum disetujui  Hapus
+///     s/d 15:00  dosen
+///
+/// Setelah baris digabung, "13:00" dan "s/d 15:00" terpisah oleh "Belum
+/// disetujui  Hapus". Dulu di antara keduanya cuma boleh spasi, jadi rentangnya
+/// tidak pernah cocok — kecuali pada baris yang kebetulan jamnya utuh.
+///
+/// Yang menyelip tidak boleh mengandung angka. Itu penjagaannya: tanpa angka,
+/// pencarian ini mustahil melompati jam lain dan memasangkan jam mulai milik
+/// satu baris dengan jam selesai milik baris lain.
+const int _maksSelaJam = 60;
+
+final RegExp _rentangJam = RegExp(
+  r'(\d{1,2})[.:](\d{2})'
+  '[^0-9]{0,$_maksSelaJam}?'
+  '$_pemisahJam'
+  r'[^0-9]{0,10}(\d{1,2})[.:](\d{2})',
+  caseSensitive: false,
+);
+
 /// Cari rentang jam, mis. "07:30 - 09:10" atau "0730-0910".
 ({String start, String end})? _findTimeRange(String line) {
-  final berpemisah = RegExp(
-    r'(\d{1,2})[.:](\d{2})\s*(?:-|s/d|s\.d\.?|sd|hingga|—|–)\s*(\d{1,2})[.:](\d{2})',
-  ).firstMatch(line);
+  final berpemisah = _rentangJam.firstMatch(line);
 
   if (berpemisah != null) {
     return (
@@ -145,12 +173,7 @@ String? _findRoom(String line) {
 String _stripKnownParts(String line) {
   var sisa = line;
 
-  sisa = sisa.replaceAll(
-    RegExp(
-      r'(\d{1,2})[.:](\d{2})\s*(?:-|s/d|s\.d\.?|sd|hingga|—|–)\s*(\d{1,2})[.:](\d{2})',
-    ),
-    ' ',
-  );
+  sisa = sisa.replaceAll(_rentangJam, ' ');
   sisa = sisa.replaceAll(RegExp(r'\b\d{2}\d{2}\s*[-–—]\s*\d{2}\d{2}\b'), ' ');
 
   for (final aliases in _dayAliases.values) {
@@ -175,11 +198,7 @@ String _stripKnownParts(String line) {
   // Kode mata kuliah seperti "TIF3204" atau "MKU-101" bukan nama.
   sisa = sisa.replaceAll(RegExp(r'\b[A-Z]{2,4}[-\s]?\d{3,5}\b'), ' ');
 
-  // Kode kelas seperti "TI-C2" atau "T-C1". Bentuknya cukup khas — huruf,
-  // tanda hubung, huruf, angka — sehingga jarang bertabrakan dengan nama mata
-  // kuliah. Kalau ada nama yang ikut terpangkas, itu bagian yang memang
-  // diserahkan untuk kamu koreksi sebelum menyimpan.
-  sisa = sisa.replaceAll(RegExp(r'\b[A-Za-z]{1,3}-[A-Za-z]?\d{1,3}\b'), ' ');
+  sisa = sisa.replaceAll(_kodeKelas, ' ');
 
   // Kata sambungan yang selalu ada di kolom jadwal dan tidak pernah jadi nama.
   // "Praktikum" sengaja tidak ikut: itu memang bagian dari nama mata kuliahnya.
@@ -195,6 +214,86 @@ String _stripKnownParts(String line) {
 /// Bersihkan sisa tanda baca di ujung nama.
 String _cleanName(String raw) {
   return raw.replaceAll(RegExp(r'^[\s.,:;\-–—/]+|[\s.,:;\-–—/]+$'), '').trim();
+}
+
+/// Kode kelas seperti "TI-C2" atau "T-C1".
+///
+/// Spasi di sekitar tanda hubung diperbolehkan karena kolomnya sering terpotong
+/// tepat di situ — "TI-" di ujung satu baris dan "C7" di awal baris berikutnya —
+/// lalu tersambung jadi "TI- C7" setelah baris digabung.
+///
+/// Bentuknya cukup khas (paling banyak tiga huruf, tanda hubung, lalu angka)
+/// sehingga jarang bertabrakan dengan nama mata kuliah.
+final RegExp _kodeKelas = RegExp(r'\b[A-Za-z]{1,3}\s*-\s*[A-Za-z]?\d{1,3}\b');
+
+/// Potongan teks sebelum nama hari pertama, atau null kalau harinya di depan.
+String? _sebelumHari(String line) {
+  final lower = line.toLowerCase();
+  int? paling;
+
+  for (final aliases in _dayAliases.values) {
+    for (final alias in aliases) {
+      final cocok =
+          RegExp(r'(^|[^a-z])' + RegExp.escape(alias) + r'([^a-z]|$)').firstMatch(lower);
+      if (cocok == null) continue;
+      // group(1) bisa kosong di awal baris, jadi indeks harinya digeser.
+      final mulai = cocok.start + cocok.group(1)!.length;
+      if (paling == null || mulai < paling) paling = mulai;
+    }
+  }
+
+  if (paling == null || paling == 0) return null;
+  return line.substring(0, paling);
+}
+
+/// Tebak nama mata kuliah dari satu baris utuh.
+///
+/// Di tabel KRS, kolom NAMA MATA KULIAH selalu berada sebelum kolom JADWAL, dan
+/// kolom JADWAL selalu dimulai nama hari. Jadi potongan sebelum nama hari itulah
+/// nama mata kuliahnya — dan semua yang datang sesudahnya (jam, SKS, status,
+/// tombol aksi) bukan.
+///
+/// Ini lebih kokoh daripada mendaftar kata yang harus dibuang. Kolom STATUS dan
+/// AKSI berbeda-beda tiap kampus — "Belum disetujui dosen", "Hapus", "Batal",
+/// "Disetujui" — dan daftar seperti itu tidak akan pernah lengkap. Posisinya
+/// yang tetap, bukan kata-katanya.
+///
+/// Kalau harinya justru di paling depan ("Senin 07:30 - 09:10 Basis Data"),
+/// tidak ada potongan sebelumnya, dan seluruh baris dipakai seperti semula.
+String _guessName(String line) {
+  final awal = _sebelumHari(line);
+  if (awal != null) {
+    final nama = _cleanName(_bersihkanKolomNama(awal));
+    if (nama.length >= 3) return nama;
+  }
+  return _cleanName(_stripKnownParts(line));
+}
+
+/// Bersihkan potongan "NO | KODE | NAMA | SKS | KELAS" jadi namanya saja.
+///
+/// Berbeda dari [_stripKnownParts], di sini angka tidak dibuang membabi buta.
+/// Nama mata kuliah sering memuat angka yang memang bagian dari namanya —
+/// "Proyek 1", "Agama Islam II", "Kalkulus 2" — dan aturan "buang semua angka
+/// berdiri sendiri" memakan angka itu juga.
+///
+/// Yang dimanfaatkan di sini posisinya. Nomor urut selalu di paling depan, dan
+/// jumlah SKS selalu di paling belakang setelah kode mata kuliah dan kode kelas
+/// dibuang. Angka di tengah dibiarkan, karena di situlah namanya.
+String _bersihkanKolomNama(String awal) {
+  var sisa = awal;
+
+  // Nomor urut di depan.
+  sisa = sisa.replaceFirst(RegExp(r'^\s*\d{1,2}[\s.)]+'), ' ');
+
+  // Kode mata kuliah dan kode kelas.
+  sisa = sisa.replaceAll(RegExp(r'\b[A-Z]{2,4}[-\s]?\d{3,5}\b'), ' ');
+  sisa = sisa.replaceAll(_kodeKelas, ' ');
+
+  sisa = sisa.replaceAll(RegExp(r'\b\d+\s*sks\b', caseSensitive: false), ' ');
+  sisa = sisa.replaceAll(RegExp(r'[|\t]+'), ' ').replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+
+  // Jumlah SKS: angka berdiri sendiri yang tersisa di paling belakang.
+  return sisa.replaceFirst(RegExp(r'\s\d{1,2}$'), '').trim();
 }
 
 /// Berapa banyak baris OCR yang boleh disatukan jadi satu baris jadwal.
@@ -227,7 +326,7 @@ KrsEntry? _bacaBaris(String line) {
   // Jam selesai sebelum jam mulai berarti salah baca.
   if (time.end.compareTo(time.start) <= 0) return null;
 
-  final name = _cleanName(_stripKnownParts(line));
+  final name = _guessName(line);
   if (name.length < 3) return null;
 
   return KrsEntry(
