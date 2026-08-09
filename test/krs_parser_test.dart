@@ -271,6 +271,32 @@ Total SKS  19''';
       expect(hasil.map((e) => e.dayOfWeek).toList(), [2, 3, 5, 1, 4, 2, 4, 1, 2, 4]);
     });
 
+    test('kode mata kuliah dan kode kelas ikut tersimpan', () {
+      final hasil = parseKrs(ocrAsli);
+
+      expect(hasil.map((e) => e.courseCode).toList(), [
+        'SIC204',
+        'SIC311', // huruf pertamanya terbaca kecil, dinaikkan jadi huruf besar
+        'SI332',
+        'SIP245',
+        'SIP246',
+        'SIR207',
+        'SIR208',
+        'SIR209',
+        'SIR210',
+        'SIR311',
+      ]);
+
+      expect(hasil.map((e) => e.classCode).toSet(), {'TI-B2', 'TI-B6'});
+    });
+
+    test('kode tidak diambil dari kolom Ruang yang juga berangka', () {
+      // "C. R. Kuliah 203" datang sesudah nama hari dan bentuknya mirip kode.
+      final pertama = parseKrs(ocrAsli).first;
+      expect(pertama.courseCode, 'SIC204');
+      expect(pertama.classCode, 'TI-B2');
+    });
+
     test('"Total SKS 19" tidak dianggap jadwal', () {
       expect(parseKrs(ocrAsli).any((e) => e.courseName.contains('Total')), isFalse);
     });

@@ -12,6 +12,7 @@ import '../../features/academic/presentation/task_form_page.dart';
 import '../../features/academic/presentation/tasks_page.dart';
 import '../../features/assistant/presentation/assistant_page.dart';
 import '../../features/assistant/presentation/preset_answers_page.dart';
+import '../../features/attendance/presentation/attendance_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/register_page.dart';
 import '../../features/body/presentation/body_profile_form_page.dart';
@@ -125,6 +126,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'calendar',
                   builder: (context, state) => const CalendarPage(),
+                ),
+                GoRoute(
+                  // Absensi tinggal di cabang Jadwal, bukan Tugas: yang dicatat
+                  // di sini adalah pertemuan kuliah, dan pertemuan itu datang
+                  // dari jadwal.
+                  path: 'attendance',
+                  builder: (context, state) => const AttendancePage(),
                 ),
                 GoRoute(
                   path: 'import',

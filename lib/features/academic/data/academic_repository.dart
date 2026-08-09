@@ -45,21 +45,32 @@ class AcademicRepository {
     required String userId,
     required String name,
     String? lecturer,
+    String? code,
   }) async {
     final trimmed = name.trim();
 
     final existing = await _client
         .from('courses')
-        .select('id')
+        .select('id, code')
         .eq('user_id', userId)
         .ilike('name', trimmed)
         .maybeSingle();
 
-    if (existing != null) return existing['id'] as String;
+    if (existing != null) {
+      final id = existing['id'] as String;
+
+      // Kode diisi hanya kalau sebelumnya kosong. Impor ulang KRS tidak boleh
+      // menimpa kode yang sudah kamu betulkan sendiri — OCR lebih sering salah
+      // daripada kamu.
+      if (code != null && (existing['code'] as String?) == null) {
+        await _client.from('courses').update({'code': code}).eq('id', id);
+      }
+      return id;
+    }
 
     final created = await _client
         .from('courses')
-        .insert({'user_id': userId, 'name': trimmed, 'lecturer': lecturer})
+        .insert({'user_id': userId, 'name': trimmed, 'lecturer': lecturer, 'code': code})
         .select('id')
         .single();
 
@@ -90,6 +101,25 @@ class AcademicRepository {
         .update({
           if (!(pertahankanSksLama && sks == null)) 'sks': sks,
           'semester': semester,
+        })
+        .eq('id', id);
+  }
+
+  /// Jumlah pertemuan dan batas ketidakhadiran satu mata kuliah.
+  ///
+  /// Keduanya boleh dikosongkan lagi, dan mengosongkannya memang mengembalikan
+  /// keadaan "jatah tidak masuk belum bisa dihitung" — bukan diam-diam kembali
+  /// ke angka bawaan.
+  Future<void> setCourseAbsensi({
+    required String id,
+    int? totalMeetings,
+    int? maxAbsencePercent,
+  }) {
+    return _client
+        .from('courses')
+        .update({
+          'total_meetings': totalMeetings,
+          'max_absence_percent': maxAbsencePercent,
         })
         .eq('id', id);
   }
@@ -152,7 +182,7 @@ class AcademicRepository {
       remote: () async =>
           ((await _client
                       .from('class_schedules')
-                      .select('*, courses(name, lecturer)')
+                      .select('*, courses(name, code, lecturer)')
                       .eq('user_id', userId)
                       .order('day_of_week')
                       .order('start_time'))
@@ -169,6 +199,7 @@ class AcademicRepository {
     required String startTime,
     required String endTime,
     String? room,
+    String? classCode,
     bool isPhl = false,
     DateTime? specificDate,
   }) {
@@ -179,6 +210,7 @@ class AcademicRepository {
       'start_time': startTime,
       'end_time': endTime,
       'room': room,
+      'class_code': classCode,
       'is_phl': isPhl,
       'specific_date': specificDate?.toIso8601String().substring(0, 10),
     });
@@ -191,6 +223,7 @@ class AcademicRepository {
     required String startTime,
     required String endTime,
     String? room,
+    String? classCode,
     bool isPhl = false,
     DateTime? specificDate,
   }) {
@@ -202,6 +235,7 @@ class AcademicRepository {
           'start_time': startTime,
           'end_time': endTime,
           'room': room,
+          'class_code': classCode,
           'is_phl': isPhl,
           'specific_date': specificDate?.toIso8601String().substring(0, 10),
         })
@@ -235,6 +269,7 @@ class AcademicRepository {
     String? description,
     required DateTime deadline,
     required TaskPriority priority,
+    TaskKind kind = TaskKind.kuliah,
   }) {
     return _client.from('tasks').insert({
       'user_id': userId,
@@ -244,6 +279,7 @@ class AcademicRepository {
       'deadline': deadline.toIso8601String(),
       'priority': priority.dbValue,
       'status': TaskStatus.todo.dbValue,
+      'kind': kind.dbValue,
     });
   }
 
@@ -254,6 +290,7 @@ class AcademicRepository {
     String? description,
     required DateTime deadline,
     required TaskPriority priority,
+    TaskKind kind = TaskKind.kuliah,
   }) {
     return _client
         .from('tasks')
@@ -263,6 +300,7 @@ class AcademicRepository {
           'description': description,
           'deadline': deadline.toIso8601String(),
           'priority': priority.dbValue,
+          'kind': kind.dbValue,
         })
         .eq('id', id);
   }

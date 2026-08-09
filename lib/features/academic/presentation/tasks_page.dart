@@ -50,6 +50,8 @@ String _countdownLabel(DateTime deadline) {
 
 enum _TaskFilter {
   all('Semua'),
+  kuliah('Kuliah'),
+  pribadi('Pribadi'),
   todo('Belum'),
   inProgress('Proses'),
   done('Selesai');
@@ -61,6 +63,10 @@ enum _TaskFilter {
     switch (this) {
       case _TaskFilter.all:
         return true;
+      case _TaskFilter.kuliah:
+        return task.kind == TaskKind.kuliah;
+      case _TaskFilter.pribadi:
+        return task.kind == TaskKind.pribadi;
       case _TaskFilter.todo:
         return task.status == TaskStatus.todo;
       case _TaskFilter.inProgress:

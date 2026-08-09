@@ -35,6 +35,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
   final _descriptionController = TextEditingController();
 
   String? _courseId;
+  TaskKind _kind = TaskKind.kuliah;
   TaskPriority _priority = TaskPriority.medium;
   DateTime _deadline = DeadlinePreset.satuMinggu.resolve();
   bool _saving = false;
@@ -73,6 +74,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
     _titleController.text = task.title;
     _descriptionController.text = task.description ?? '';
     _courseId = task.courseId;
+    _kind = task.kind;
     _priority = task.priority;
     _deadline = task.deadline;
     _prefilled = true;
@@ -111,6 +113,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
         await repository.updateTask(
           id: widget.taskId!,
           courseId: _courseId,
+          kind: _kind,
           title: _titleController.text.trim(),
           description: description,
           deadline: _deadline,
@@ -120,6 +123,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
         await repository.addTask(
           userId: userId,
           courseId: _courseId,
+          kind: _kind,
           title: _titleController.text.trim(),
           description: description,
           deadline: _deadline,
@@ -257,6 +261,37 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   const SectionHeader(
+                    title: 'Jenis',
+                    icon: Icons.label_outline,
+                    color: _deadlineColor,
+                  ),
+                  SegmentedButton<TaskKind>(
+                    segments: const [
+                      ButtonSegment(
+                        value: TaskKind.kuliah,
+                        icon: Icon(Icons.school_outlined, size: 18),
+                        label: Text('Kuliah'),
+                      ),
+                      ButtonSegment(
+                        value: TaskKind.pribadi,
+                        icon: Icon(Icons.person_outline, size: 18),
+                        label: Text('Pribadi'),
+                      ),
+                    ],
+                    selected: {_kind},
+                    onSelectionChanged: (v) => setState(() {
+                      _kind = v.first;
+                      // Tugas pribadi tidak punya mata kuliah. Kalau sebelumnya
+                      // terisi lalu dipindah ke pribadi, mata kuliahnya ikut
+                      // dilepas — bukan disimpan diam-diam dan muncul lagi saat
+                      // dipindah balik.
+                      if (_kind == TaskKind.pribadi) _courseId = null;
+                    }),
+                    showSelectedIcon: false,
+                  ),
+                  if (_kind == TaskKind.kuliah) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  const SectionHeader(
                     title: 'Mata Kuliah',
                     icon: Icons.menu_book_outlined,
                     color: _deadlineColor,
@@ -279,6 +314,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
                     loading: () => const LinearProgressIndicator(),
                     error: (error, stackTrace) => Text('Gagal memuat mata kuliah: $error'),
                   ),
+                  ],
                 ],
               ),
             ),

@@ -26,9 +26,18 @@ class KrsEntry {
     required this.endTime,
     this.room,
     this.lecturer,
+    this.courseCode,
+    this.classCode,
   });
 
   final String courseName;
+
+  /// Kode mata kuliah, mis. "SIC204". Huruf besar semua, karena OCR sering
+  /// salah pada satu huruf dan "sIC311" itu kode yang sama dengan "SIC311".
+  final String? courseCode;
+
+  /// Kode kelas, mis. "TI-B2".
+  final String? classCode;
 
   /// 1 = Senin ... 7 = Minggu.
   final int dayOfWeek;
@@ -47,6 +56,8 @@ class KrsEntry {
     String? endTime,
     String? room,
     String? lecturer,
+    String? courseCode,
+    String? classCode,
   }) {
     return KrsEntry(
       courseName: courseName ?? this.courseName,
@@ -55,6 +66,8 @@ class KrsEntry {
       endTime: endTime ?? this.endTime,
       room: room ?? this.room,
       lecturer: lecturer ?? this.lecturer,
+      courseCode: courseCode ?? this.courseCode,
+      classCode: classCode ?? this.classCode,
     );
   }
 }
@@ -345,12 +358,24 @@ KrsEntry? _bacaBaris(String line) {
   final name = _guessName(line);
   if (name.length < 3) return null;
 
+  // Kode dicari di potongan sebelum nama hari, bukan di seluruh baris. Kolom
+  // Ruang sering memuat angka ("C. R. Kuliah 203") yang bentuknya mirip kode,
+  // dan kolom itu selalu datang sesudah hari.
+  final kolomDepan = _sebelumHari(line) ?? line;
+
   return KrsEntry(
     courseName: name,
     dayOfWeek: day,
     startTime: time.start,
     endTime: time.end,
     room: _findRoom(line),
+    courseCode: _kodeMk.firstMatch(kolomDepan)?.group(0)?.toUpperCase(),
+    classCode: _kodeKelas
+        .firstMatch(kolomDepan)
+        ?.group(0)
+        // "TI- C7" yang terpotong antar baris dirapikan jadi "TI-C7".
+        ?.replaceAll(RegExp(r'\s*-\s*'), '-')
+        .toUpperCase(),
   );
 }
 

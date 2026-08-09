@@ -33,6 +33,7 @@ const Map<String, String> _tables = {
   'vehicles': 'created_at',
   'vehicle_services': 'done_on',
   'documents': 'created_at',
+  'attendance': 'meeting_date',
 };
 
 class ExportResult {
