@@ -94,6 +94,10 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
           userId: userId,
           name: entry.courseName,
           lecturer: entry.lecturer,
+          // Kode mata kuliah menempel di mata kuliahnya — sama di kelas mana
+          // pun. Pembaca KRS sebenarnya sudah menemukannya sejak dulu; dia
+          // harus menemukannya justru untuk bisa membuangnya dari nama.
+          code: entry.courseCode,
         );
 
         await repo.addSchedule(
@@ -104,6 +108,9 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
           startTime: '${entry.startTime}:00',
           endTime: '${entry.endTime}:00',
           room: entry.room,
+          // Kode kelas menempel di jadwalnya: satu mata kuliah bisa dibuka
+          // untuk beberapa kelas, dan barisnya di jadwal yang membedakan.
+          classCode: entry.classCode,
         );
       }
 

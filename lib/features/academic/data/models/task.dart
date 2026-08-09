@@ -24,12 +24,32 @@ enum TaskStatus {
       TaskStatus.values.firstWhere((e) => e.dbValue == value, orElse: () => TaskStatus.todo);
 }
 
+/// Tugas kuliah atau urusan pribadi.
+///
+/// Kolom sendiri, bukan disimpulkan dari mata kuliahnya kosong. Keduanya bukan
+/// hal yang sama: tugas kuliah yang mata kuliahnya belum sempat dipilih juga
+/// punya courseId kosong, dan kalau disimpulkan, dia akan diam-diam berpindah
+/// ke daftar pribadi.
+enum TaskKind {
+  kuliah('kuliah', 'Kuliah'),
+  pribadi('pribadi', 'Pribadi');
+
+  const TaskKind(this.dbValue, this.label);
+
+  final String dbValue;
+  final String label;
+
+  static TaskKind fromDb(String? value) =>
+      TaskKind.values.firstWhere((e) => e.dbValue == value, orElse: () => TaskKind.kuliah);
+}
+
 class AcademicTask {
   const AcademicTask({
     required this.id,
     required this.userId,
     this.courseId,
     this.courseName,
+    this.kind = TaskKind.kuliah,
     required this.title,
     this.description,
     required this.deadline,
@@ -45,6 +65,7 @@ class AcademicTask {
   final String userId;
   final String? courseId;
   final String? courseName;
+  final TaskKind kind;
   final String title;
   final String? description;
   final DateTime deadline;
@@ -72,6 +93,7 @@ class AcademicTask {
         userId: map['user_id'] as String,
         courseId: map['course_id'] as String?,
         courseName: (map['courses'] as Map<String, dynamic>?)?['name'] as String?,
+        kind: TaskKind.fromDb(map['kind'] as String?),
         title: map['title'] as String,
         description: map['description'] as String?,
         deadline: DateTime.parse(map['deadline'] as String),

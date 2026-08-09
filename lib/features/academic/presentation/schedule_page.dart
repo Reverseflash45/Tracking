@@ -60,6 +60,12 @@ class SchedulePage extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   HeroIconButton(
+                    icon: Icons.how_to_reg_outlined,
+                    tooltip: 'Absensi',
+                    onPressed: () => context.push('/academic/schedule/attendance'),
+                  ),
+                  const SizedBox(width: 6),
+                  HeroIconButton(
                     icon: Icons.workspace_premium_outlined,
                     tooltip: 'Nilai & IPK',
                     onPressed: () => context.push('/academic/schedule/grades'),
@@ -353,6 +359,15 @@ class _ScheduleTile extends ConsumerWidget {
                         schedule.courseName,
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                       ),
+                      // Kode mata kuliah dan kode kelas ditaruh sebaris di
+                      // bawah nama. Keduanya yang dipakai saat mencocokkan
+                      // dengan portal kampus, absensi, atau grup kelas — dan
+                      // nama mata kuliah saja sering tidak cukup membedakan
+                      // kalau satu mata kuliah dibuka untuk beberapa kelas.
+                      if (_kodeGabungan(schedule) case final kode?) ...[
+                        const SizedBox(height: 2),
+                        _MetaLine(icon: Icons.tag, text: kode),
+                      ],
                       const SizedBox(height: 4),
                       _MetaLine(
                         icon: Icons.place_outlined,
@@ -429,4 +444,14 @@ class _MetaLine extends StatelessWidget {
       ],
     );
   }
+}
+
+/// "SIC204 · TI-B2", atau salah satunya saja kalau yang lain kosong.
+/// Null kalau dua-duanya belum ada, supaya tidak ada baris kosong menggantung.
+String? _kodeGabungan(ClassSchedule schedule) {
+  final bagian = [
+    if (schedule.courseCode case final kode? when kode.trim().isNotEmpty) kode.trim(),
+    if (schedule.classCode case final kode? when kode.trim().isNotEmpty) kode.trim(),
+  ];
+  return bagian.isEmpty ? null : bagian.join('  ·  ');
 }

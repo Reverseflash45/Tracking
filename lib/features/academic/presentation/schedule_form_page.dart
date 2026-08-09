@@ -33,6 +33,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
   final _newCourseController = TextEditingController();
   final _lecturerController = TextEditingController();
   final _roomController = TextEditingController();
+  final _classCodeController = TextEditingController();
 
   String? _selectedCourseId;
   int _dayOfWeek = DateTime.now().weekday;
@@ -59,6 +60,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
     _newCourseController.dispose();
     _lecturerController.dispose();
     _roomController.dispose();
+    _classCodeController.dispose();
     super.dispose();
   }
 
@@ -79,6 +81,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
     _selectedCourseId = schedule.courseId;
     _lecturerController.text = schedule.lecturer ?? '';
     _roomController.text = schedule.room ?? '';
+    _classCodeController.text = schedule.classCode ?? '';
     _dayOfWeek = schedule.dayOfWeek;
     _startTime = _parseTime(schedule.startTime);
     _endTime = _parseTime(schedule.endTime);
@@ -232,6 +235,8 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
       final lecturer =
           _lecturerController.text.trim().isEmpty ? null : _lecturerController.text.trim();
       final room = _roomController.text.trim().isEmpty ? null : _roomController.text.trim();
+      final kodeKelas = _classCodeController.text.trim().toUpperCase();
+      final classCode = kodeKelas.isEmpty ? null : kodeKelas;
       var courseId = _selectedCourseId;
 
       if (courseId == null && _newCourseController.text.trim().isNotEmpty) {
@@ -260,6 +265,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
           startTime: _formatTime(_startTime),
           endTime: _formatTime(_endTime),
           room: room,
+          classCode: classCode,
           isPhl: _isPhl,
           specificDate: _isPhl ? _specificDate : null,
         );
@@ -271,6 +277,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
           startTime: _formatTime(_startTime),
           endTime: _formatTime(_endTime),
           room: room,
+          classCode: classCode,
           isPhl: _isPhl,
           specificDate: _isPhl ? _specificDate : null,
         );
@@ -466,6 +473,23 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                       labelText: 'Ruangan (opsional)',
                       hintText: 'Misal: GD-301',
                       prefixIcon: Icon(Icons.place_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Kode kelas menempel di jadwalnya, bukan di mata kuliahnya:
+                  // satu mata kuliah bisa dibuka untuk beberapa kelas, dan yang
+                  // membedakan justru barisnya di jadwal.
+                  //
+                  // Kode mata kuliah tidak ada di sini karena tempatnya di mata
+                  // kuliah — diisi otomatis saat impor KRS, dan sama di kelas
+                  // mana pun.
+                  TextFormField(
+                    controller: _classCodeController,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: const InputDecoration(
+                      labelText: 'Kode kelas (opsional)',
+                      hintText: 'Misal: TI-B2',
+                      prefixIcon: Icon(Icons.groups_outlined),
                     ),
                   ),
                   const SizedBox(height: 12),
