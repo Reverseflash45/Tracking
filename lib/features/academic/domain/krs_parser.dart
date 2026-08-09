@@ -196,7 +196,7 @@ String _stripKnownParts(String line) {
   sisa = sisa.replaceAll(_roomSingkat, ' ');
 
   // Kode mata kuliah seperti "TIF3204" atau "MKU-101" bukan nama.
-  sisa = sisa.replaceAll(RegExp(r'\b[A-Z]{2,4}[-\s]?\d{3,5}\b'), ' ');
+  sisa = sisa.replaceAll(_kodeMk, ' ');
 
   sisa = sisa.replaceAll(_kodeKelas, ' ');
 
@@ -286,7 +286,7 @@ String _bersihkanKolomNama(String awal) {
   sisa = sisa.replaceFirst(RegExp(r'^\s*\d{1,2}[\s.)]+'), ' ');
 
   // Kode mata kuliah dan kode kelas.
-  sisa = sisa.replaceAll(RegExp(r'\b[A-Z]{2,4}[-\s]?\d{3,5}\b'), ' ');
+  sisa = sisa.replaceAll(_kodeMk, ' ');
   sisa = sisa.replaceAll(_kodeKelas, ' ');
 
   sisa = sisa.replaceAll(RegExp(r'\b\d+\s*sks\b', caseSensitive: false), ' ');
@@ -304,17 +304,33 @@ String _bersihkanKolomNama(String awal) {
 /// baris berikutnya ikut tertarik ke baris ini.
 const int kMaksBarisGabung = 4;
 
+/// Kode mata kuliah, mis. "AGI401", "SIC204", "MKU-101".
+///
+/// Tidak peduli huruf besar-kecil, karena OCR sering salah pada satu huruf
+/// saja: "SIC311" terbaca "sIC311". Kalau polanya menuntut huruf besar semua,
+/// satu huruf yang meleset membuat kodenya ikut terbawa jadi bagian nama.
+final RegExp _kodeMk = RegExp(r'\b[A-Za-z]{2,4}[-\s]?\d{3,5}\b');
+
 /// Apakah baris ini jelas-jelas awal baris jadwal yang baru.
 ///
-/// Bentuknya nomor urut lalu kode mata kuliah: "1  AGI401", "12 SIP375".
 /// Penjagaan ini yang mencegah jendela penggabungan menyeberang ke baris
 /// berikutnya dan mencuri jamnya.
 ///
-/// Sengaja menuntut kode mata kuliah, bukan cuma angka di depan. Baris sambungan
-/// sering juga dimulai angka — "07 2 sks | 13:00" — dan kalau itu dianggap awal
-/// baris baru, justru penggabungannya yang tidak pernah terjadi.
+/// Penandanya kode mata kuliah di awal baris. Nomor urut di depannya boleh ada
+/// boleh tidak — dan itu perbaikan yang penting: versi sebelumnya mewajibkannya,
+/// padahal banyak KRS tidak punya kolom nomor sama sekali dan barisnya langsung
+/// dimulai kode. Di KRS seperti itu penjagaannya tidak pernah aktif, jadi baris
+/// header ikut tertelan ke jadwal pertama, dan sisa kolom Ruang yang turun baris
+/// ("Rekayasa Perangkat Lunak", "Bahasa 2") bocor jadi awalan nama berikutnya.
+///
+/// Garis tabel di tepi kiri sering terbaca sebagai "|" atau "[", jadi keduanya
+/// dilewati dulu.
+///
+/// Yang tetap dituntut adalah kode mata kuliahnya, bukan sekadar angka di depan.
+/// Baris sambungan pun sering dimulai angka — "07 2 sks | 13:00" — dan kalau itu
+/// dianggap awal baris baru, justru penggabungannya yang tidak pernah terjadi.
 bool _awalBarisBaru(String line) =>
-    RegExp(r'^\d{1,2}[\s.)]+[A-Za-z]{2,4}\s?\d{3,5}\b').hasMatch(line);
+    RegExp(r'^\s*[|\[]?\s*(?:\d{1,2}[\s.)]+)?[A-Za-z]{2,4}\s?\d{3,5}\b').hasMatch(line);
 
 /// Baca satu baris utuh jadi satu jadwal. Null kalau harinya atau jamnya tidak
 /// lengkap.
