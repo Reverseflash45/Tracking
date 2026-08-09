@@ -177,6 +177,105 @@ s/d 19:00  dosen
     });
   });
 
+  group('parseKrs — KRS tanpa kolom nomor urut', () {
+    // Format ketiga: tidak ada kolom NO. sama sekali, barisnya langsung dimulai
+    // kode mata kuliah. Kolom Ruang juga panjang dan turun baris, jadi ada
+    // potongan menggantung seperti "Rekayasa Perangkat" / "Lunak" di antara dua
+    // jadwal.
+    //
+    // Disalin apa adanya, termasuk "sIC311" yang huruf pertamanya terbaca
+    // kecil, "SI332" yang kehilangan satu huruf, dan garis tabel yang terbaca
+    // sebagai "|".
+    const ocrAsli = '''
+Kode MK  Nama Mata Kuliah  sks  Kelas  Hari  Jam
+Ruang
+|SIC204  Kecerdasan Buatan  2  TI-B2  Selasa
+13.00-15:00  C. R. Kuliah 203
+|sIC311  Kecerdasan Buatan (Praktikum)  1  TI-B2
+Rabu  13:00-15:00  C. Lab. Intelegence
+SI332  Workshop Desain Ul  2  TI-B2  Jumat
+07:00-09:00  |C. Lab. Komputer
+Rekayasa Perangkat
+Lunak
+SIP245  Aplikasi Mobile  2  TI-B2  Senin  15:00-17:00
+C. R. Kuliah 202
+SIP246  Aplikasi Mobile (Praktikum)  2  TI-B2  Kamis
+07:00-09:00  C. Lab. Komputer
+Rekayasa Perangkat
+Lunak
+SIR207  Manajemen Proyek Perangkat Lunak  2  TI-B2
+Selasa  |09:00-11:00  C.R. Kuliah 202
+|SIR208  Manajemen Proyek Perangkat Lunak (Praktikum)
+2  TI-B2  |Kamis  15:00-17:00  C. Lab. Komputer
+Bahasa 2
+SIR209  Pengujian Perangkat Lunak  2  TI-B2  Senin
+13:00-15:00
+| SIR210  Pengujian Perangkat Lunak (Praktikum)  2
+TI-B2  Selasa  11:00-13:00  C. Lab. Intelegence
+SIR311 Workshop Pengembangan Perangkat Lunak WEB
+(Framework)  2  TI-B6  Kamis  13:00-15:00  |C. Lab.
+Komputer
+Praktikum  Rekayasa Perangkat
+Lunak
+Total SKS  19''';
+
+    test('kesepuluh baris jadwalnya terbaca', () {
+      expect(parseKrs(ocrAsli).length, 10);
+    });
+
+    test('baris header tidak ikut jadi jadwal', () {
+      final nama = parseKrs(ocrAsli).map((e) => e.courseName);
+      expect(nama.any((n) => n.contains('Nama Mata Kuliah')), isFalse);
+    });
+
+    test('mata kuliah pertama tidak tertelan baris header', () {
+      // Tanpa penjagaan awal baris, jendela penggabungan berangkat dari header,
+      // melahap dua baris berikutnya, lalu berhenti begitu menemukan hari dan
+      // jam milik SIC204 — jadwal pertamanya hilang dan tergantikan header.
+      final pertama = parseKrs(ocrAsli).first;
+      expect(pertama.courseName, 'Kecerdasan Buatan');
+      expect(pertama.dayOfWeek, 2);
+      expect((pertama.startTime, pertama.endTime), ('13:00', '15:00'));
+    });
+
+    test('sisa kolom Ruang yang turun baris tidak bocor ke nama berikutnya', () {
+      final nama = parseKrs(ocrAsli).map((e) => e.courseName).toList();
+
+      // "Rekayasa Perangkat Lunak" dan "Bahasa 2" adalah ekor nama ruangan di
+      // baris sebelumnya, bukan awalan nama mata kuliah.
+      expect(nama[3], 'Aplikasi Mobile');
+      expect(nama[5], 'Manajemen Proyek Perangkat Lunak');
+      expect(nama[7], 'Pengujian Perangkat Lunak');
+    });
+
+    test('kode yang huruf besarnya salah baca tetap dibuang dari nama', () {
+      expect(parseKrs(ocrAsli)[1].courseName, 'Kecerdasan Buatan (Praktikum)');
+    });
+
+    test('seluruh nama dan harinya benar', () {
+      final hasil = parseKrs(ocrAsli);
+
+      expect(hasil.map((e) => e.courseName).toList(), [
+        'Kecerdasan Buatan',
+        'Kecerdasan Buatan (Praktikum)',
+        'Workshop Desain Ul',
+        'Aplikasi Mobile',
+        'Aplikasi Mobile (Praktikum)',
+        'Manajemen Proyek Perangkat Lunak',
+        'Manajemen Proyek Perangkat Lunak (Praktikum)',
+        'Pengujian Perangkat Lunak',
+        'Pengujian Perangkat Lunak (Praktikum)',
+        'Workshop Pengembangan Perangkat Lunak WEB (Framework)',
+      ]);
+
+      expect(hasil.map((e) => e.dayOfWeek).toList(), [2, 3, 5, 1, 4, 2, 4, 1, 2, 4]);
+    });
+
+    test('"Total SKS 19" tidak dianggap jadwal', () {
+      expect(parseKrs(ocrAsli).any((e) => e.courseName.contains('Total')), isFalse);
+    });
+  });
+
   group('parseKrs — baris yang jelas', () {
     test('baris lengkap terbaca utuh', () {
       final hasil = parseKrs('Senin  07:30 - 09:10  Basis Data  R.301');
