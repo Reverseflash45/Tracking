@@ -8,7 +8,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../academic/data/academic_repository.dart';
+import '../../academic/data/models/class_schedule.dart';
 import '../../academic/data/models/course.dart';
+import '../../academic/domain/matkul_aktif.dart';
 import '../../academic/presentation/academic_providers.dart';
 import '../data/attendance_repository.dart';
 import '../domain/attendance.dart';
@@ -30,8 +32,23 @@ class AttendancePage extends ConsumerWidget {
     final coursesAsync = ref.watch(coursesProvider);
     final catatanAsync = ref.watch(attendanceProvider);
 
-    final courses = coursesAsync.value ?? const <Course>[];
+    final semuaCourses = coursesAsync.value ?? const <Course>[];
     final catatan = catatanAsync.value ?? const <Attendance>[];
+    final jadwal = ref.watch(classSchedulesProvider).value ?? const <ClassSchedule>[];
+
+    // Hanya mata kuliah semester ini. Daftar `courses` menumpuk terus karena
+    // mata kuliah lama tidak pernah dihapus — nilainya masih dipakai menghitung
+    // IPK — jadi tanpa saringan ini halamannya berisi puluhan mata kuliah yang
+    // sudah tamat dan absensinya tidak lagi bisa berubah.
+    //
+    // Yang sudah punya catatan tetap ikut walau jadwalnya sudah lewat: kalau
+    // tidak, catatan kehadiran semester lalu jadi tidak bisa dibuka lagi.
+    final courses = matkulAktif(
+      semuaCourses,
+      jadwal,
+      tetap: {for (final c in catatan) c.courseId},
+    );
+    final tersembunyi = semuaCourses.length - courses.length;
 
     final nama = {for (final c in courses) c.id: c.name};
     final rekap = urutkanRekap(
@@ -55,6 +72,7 @@ class AttendancePage extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(attendanceProvider);
           ref.invalidate(coursesProvider);
+          ref.invalidate(classSchedulesProvider);
         },
         child: ListView(
           padding: EdgeInsets.zero,
@@ -118,11 +136,38 @@ class AttendancePage extends ConsumerWidget {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                         ],
+                        if (tersembunyi > 0) _CatatanSemesterLama(jumlah: tersembunyi),
                       ],
                     ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Keterangan bahwa daftarnya memang tidak memuat seluruh mata kuliah.
+///
+/// Tanpa ini, hilangnya puluhan mata kuliah dari daftar terbaca sebagai data
+/// yang rusak. Yang dijelaskan bukan cuma "disembunyikan", tapi dasarnya:
+/// jadwal kelas.
+class _CatatanSemesterLama extends StatelessWidget {
+  const _CatatanSemesterLama({required this.jumlah});
+
+  final int jumlah;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+      child: Text(
+        '$jumlah mata kuliah semester lalu tidak ditampilkan — yang muncul di '
+        'sini hanya yang punya jadwal kelas semester ini. Yang sudah terlanjur '
+        'punya catatan kehadiran tetap ikut.',
+        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant, height: 1.4),
       ),
     );
   }
