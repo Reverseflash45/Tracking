@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/core/theme/app_colors.dart';
 import 'package:tracking/core/theme/app_theme.dart';
@@ -6,6 +7,10 @@ import 'package:tracking/core/widgets/empty_state.dart';
 import 'package:tracking/core/widgets/hero_header.dart';
 import 'package:tracking/core/widgets/menu_list.dart';
 import 'package:tracking/core/widgets/section_header.dart';
+import 'package:tracking/features/academic/data/models/class_schedule.dart';
+import 'package:tracking/features/academic/data/models/task.dart';
+import 'package:tracking/features/academic/presentation/schedule_page.dart';
+import 'package:tracking/features/academic/presentation/task_tile.dart';
 
 /// Uji tampilan untuk widget yang dipakai bersama seluruh halaman.
 ///
@@ -433,6 +438,116 @@ void main() {
               'jadi kartunya tidak terpisah dari latarnya',
         );
       }
+    });
+  });
+
+  group('kartu jadwal', () {
+    ClassSchedule jadwal({String? room, String? courseCode, String? classCode, String? lecturer}) {
+      return ClassSchedule(
+        id: 'j1',
+        userId: 'u1',
+        courseId: 'c1',
+        courseName: 'Pemrograman Backend Lanjut (Praktikum)',
+        courseCode: courseCode,
+        classCode: classCode,
+        lecturer: lecturer,
+        dayOfWeek: 1,
+        startTime: '07:00:00',
+        endTime: '11:00:00',
+        room: room,
+      );
+    }
+
+    // Ruangan dan kode berbagi satu baris. Yang paling mudah rusak dari susunan
+    // itu adalah keduanya sama-sama panjang: sebelum ini tiap baris meta
+    // melebar penuh, jadi menaruh dua di satu baris pasti meluber.
+    testWidgets('ruangan dan kode sebaris tetap muat walau dua-duanya panjang', (tester) async {
+      final hasil = await gambar(
+        tester,
+        ProviderScope(
+          child: ScheduleTile(
+            schedule: jadwal(
+              room: 'LABORATORIUM BAHASA GEDUNG C LANTAI 3',
+              courseCode: 'SIC20401',
+              classCode: 'TI-C7',
+              lecturer: 'Anugrah Nur Rahmanto, S.Kom., M.Kom.',
+            ),
+          ),
+        ),
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('muat saat huruf diperbesar 1.3x', (tester) async {
+      final hasil = await gambar(
+        tester,
+        ProviderScope(
+          child: ScheduleTile(
+            schedule: jadwal(room: 'LAB BAHASA 1', courseCode: 'SIC204', classCode: 'TI-C7'),
+          ),
+        ),
+        skalaTeks: skalaBesar,
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('tanpa kode, ruangan sendirian juga tidak meluber', (tester) async {
+      final hasil = await gambar(
+        tester,
+        ProviderScope(child: ScheduleTile(schedule: jadwal(room: 'C. 203'))),
+      );
+      expect(hasil, isNull);
+    });
+  });
+
+  group('baris tugas', () {
+    AcademicTask tugas({
+      TaskKind kind = TaskKind.kuliah,
+      String? courseName = 'Keamanan Cyber',
+      TaskStatus status = TaskStatus.todo,
+    }) {
+      return AcademicTask(
+        id: 't1',
+        userId: 'u1',
+        courseId: courseName == null ? null : 'c1',
+        courseName: courseName,
+        kind: kind,
+        title: judulPanjang,
+        deadline: DateTime.now().add(const Duration(days: 3)),
+        priority: TaskPriority.high,
+        status: status,
+        createdAt: DateTime.now(),
+      );
+    }
+
+    testWidgets('judul panjang, pil matkul, dan lencana status muat bersama', (tester) async {
+      final hasil = await gambar(
+        tester,
+        ProviderScope(child: TaskTile(task: tugas())),
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('muat saat huruf diperbesar 1.3x', (tester) async {
+      final hasil = await gambar(
+        tester,
+        ProviderScope(child: TaskTile(task: tugas(status: TaskStatus.inProgress))),
+        skalaTeks: skalaBesar,
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('daftar pribadi tidak menuliskan mata kuliah', (tester) async {
+      await gambar(
+        tester,
+        ProviderScope(
+          child: TaskTile(
+            task: tugas(kind: TaskKind.pribadi, courseName: null),
+            tampilkanMatkul: false,
+          ),
+        ),
+      );
+      expect(find.text('Umum'), findsNothing);
     });
   });
 }

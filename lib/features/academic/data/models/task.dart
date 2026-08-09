@@ -88,6 +88,28 @@ class AcademicTask {
   /// Selesai tepat waktu: statusnya done dan diselesaikan sebelum/sama dengan deadline.
   bool get isOnTime => isDone && completedAt != null && !completedAt!.isAfter(deadline);
 
+  /// Salinan dengan status berbeda, untuk menampilkan perubahan yang sudah
+  /// dikirim tapi belum dikonfirmasi server.
+  ///
+  /// `completedAt` ikut disesuaikan persis seperti yang ditulis repository,
+  /// supaya bayangannya tidak berbeda dari hasil sebenarnya nanti.
+  AcademicTask denganStatus(TaskStatus status) => AcademicTask(
+        id: id,
+        userId: userId,
+        courseId: courseId,
+        courseName: courseName,
+        kind: kind,
+        title: title,
+        description: description,
+        deadline: deadline,
+        priority: priority,
+        status: status,
+        createdAt: createdAt,
+        completedAt: status == TaskStatus.done ? (completedAt ?? DateTime.now()) : null,
+        recurringId: recurringId,
+        recurringOn: recurringOn,
+      );
+
   factory AcademicTask.fromMap(Map<String, dynamic> map) => AcademicTask(
         id: map['id'] as String,
         userId: map['user_id'] as String,
