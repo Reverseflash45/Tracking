@@ -155,7 +155,7 @@ class SchedulePage extends ConsumerWidget {
         widgets.add(
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _ScheduleTile(
+            child: ScheduleTile(
               schedule: schedule,
               conflicts: bentrok[schedule.id] ?? const [],
             ),
@@ -269,8 +269,10 @@ class _DayHeader extends StatelessWidget {
   }
 }
 
-class _ScheduleTile extends ConsumerWidget {
-  const _ScheduleTile({required this.schedule, this.conflicts = const []});
+/// Satu baris jadwal. Publik supaya tata letaknya bisa digambar langsung di
+/// test tampilan tanpa perlu menghidupkan seluruh halaman beserta Supabase-nya.
+class ScheduleTile extends ConsumerWidget {
+  const ScheduleTile({super.key, required this.schedule, this.conflicts = const []});
 
   final ClassSchedule schedule;
   final List<ScheduleConflict> conflicts;
@@ -311,7 +313,10 @@ class _ScheduleTile extends ConsumerWidget {
         child: InkWell(
           onTap: () => context.push('/academic/schedule/${schedule.id}/edit'),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm + 4,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -359,19 +364,27 @@ class _ScheduleTile extends ConsumerWidget {
                         schedule.courseName,
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                       ),
-                      // Kode mata kuliah dan kode kelas ditaruh sebaris di
-                      // bawah nama. Keduanya yang dipakai saat mencocokkan
-                      // dengan portal kampus, absensi, atau grup kelas — dan
-                      // nama mata kuliah saja sering tidak cukup membedakan
-                      // kalau satu mata kuliah dibuka untuk beberapa kelas.
-                      if (_kodeGabungan(schedule) case final kode?) ...[
-                        const SizedBox(height: 2),
-                        _MetaLine(icon: Icons.tag, text: kode),
-                      ],
                       const SizedBox(height: 4),
-                      _MetaLine(
-                        icon: Icons.place_outlined,
-                        text: schedule.room ?? 'Ruangan belum diatur',
+                      // Ruangan dan kode berbagi satu baris. Keduanya pendek,
+                      // dan menaruhnya sendiri-sendiri membuat kartunya tinggi
+                      // tanpa menambah apa pun yang bisa dibaca.
+                      Row(
+                        children: [
+                          Flexible(
+                            child: _MetaLine(
+                              icon: Icons.place_outlined,
+                              text: schedule.room ?? 'Ruangan belum diatur',
+                            ),
+                          ),
+                          // Kode mata kuliah dan kode kelas yang dipakai saat
+                          // mencocokkan dengan portal kampus atau grup kelas.
+                          // Nama mata kuliah saja sering tidak cukup kalau satu
+                          // mata kuliah dibuka untuk beberapa kelas.
+                          if (_kodeGabungan(schedule) case final kode?) ...[
+                            const SizedBox(width: 10),
+                            Flexible(child: _MetaLine(icon: Icons.tag, text: kode)),
+                          ],
+                        ],
                       ),
                       if (schedule.lecturer != null && schedule.lecturer!.trim().isNotEmpty) ...[
                         const SizedBox(height: 2),
@@ -429,11 +442,15 @@ class _MetaLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = this.color ?? Theme.of(context).colorScheme.onSurfaceVariant;
+    // Menyusut mengikuti isinya, bukan melebar memenuhi baris: dua baris meta
+    // bisa berdampingan tanpa yang pertama mendorong yang kedua keluar layar.
+    // Teksnya tetap dipotong dengan elipsis kalau ruangnya memang kurang.
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 13, color: color),
         const SizedBox(width: 3),
-        Expanded(
+        Flexible(
           child: Text(
             text,
             maxLines: 1,

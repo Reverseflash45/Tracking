@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/academic/data/models/task.dart';
 import '../../features/academic/presentation/grades_page.dart';
 import '../../features/academic/presentation/khs_import_page.dart';
 import '../../features/academic/presentation/krs_import_page.dart';
+import '../../features/academic/presentation/personal_tasks_page.dart';
 import '../../features/academic/presentation/recurring_tasks_page.dart';
 import '../../features/academic/presentation/schedule_form_page.dart';
 import '../../features/academic/presentation/schedule_page.dart';
@@ -166,8 +168,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 // Rute literal harus dideklarasikan sebelum rute berparameter
                 // supaya tidak ikut tertangkap sebagai ':id'.
                 GoRoute(
+                  // ?kind=pribadi dipakai halaman Tugas Pribadi supaya tugas
+                  // yang dibuat dari sana tidak lahir sebagai tugas kuliah dan
+                  // langsung hilang dari daftar tempat tombolnya ditekan.
                   path: 'new',
-                  builder: (context, state) => const TaskFormPage(),
+                  builder: (context, state) => TaskFormPage(
+                    kindAwal: TaskKind.fromDb(state.uri.queryParameters['kind']),
+                  ),
+                ),
+                GoRoute(
+                  // Tugas pribadi punya halaman sendiri, bukan saringan di
+                  // daftar tugas kuliah: keduanya dibuka pada saat yang berbeda.
+                  path: 'pribadi',
+                  builder: (context, state) => const PersonalTasksPage(),
                 ),
                 GoRoute(
                   path: 'recurring',

@@ -10,7 +10,7 @@ import '../../../core/widgets/section_header.dart';
 import '../data/academic_repository.dart';
 import '../data/models/task.dart';
 import 'academic_providers.dart';
-import 'tasks_page.dart' show priorityColor;
+import 'task_tile.dart' show priorityColor, ubahStatusTugas;
 
 final _fullFormat = DateFormat('EEEE, d MMMM y - HH:mm', 'id_ID');
 
@@ -21,7 +21,7 @@ class TaskDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tasksAsync = ref.watch(tasksProvider);
+    final tasksAsync = ref.watch(tasksTampilProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -130,12 +130,8 @@ class _TaskDetailBody extends ConsumerWidget {
               .toList(),
           selected: {task.status},
           showSelectedIcon: false,
-          onSelectionChanged: (selection) async {
-            await ref
-                .read(academicRepositoryProvider)
-                .updateTaskStatus(task.id, selection.first);
-            ref.invalidate(tasksProvider);
-          },
+          onSelectionChanged: (selection) =>
+              ubahStatusTugas(context, ref, task.id, selection.first),
         ),
         const SizedBox(height: AppSpacing.lg),
         const SectionHeader(

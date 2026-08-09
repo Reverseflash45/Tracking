@@ -12,18 +12,24 @@ import '../../../core/widgets/section_header.dart';
 import '../data/academic_repository.dart';
 import '../data/models/task.dart';
 import '../domain/date_presets.dart';
+import '../domain/matkul_aktif.dart';
 import 'academic_providers.dart';
-import 'tasks_page.dart' show priorityColor;
+import 'task_tile.dart' show priorityColor;
 
 const _deadlineColor = AppColors.deadline;
 final _deadlineFormat = DateFormat('EEEE, d MMM y', 'id_ID');
 final _timeFormat = DateFormat('HH:mm', 'id_ID');
 
 class TaskFormPage extends ConsumerStatefulWidget {
-  const TaskFormPage({super.key, this.taskId});
+  const TaskFormPage({super.key, this.taskId, this.kindAwal = TaskKind.kuliah});
 
   /// Kalau diisi, form berjalan dalam mode edit.
   final String? taskId;
+
+  /// Jenis yang terpilih saat form dibuka. Dipakai halaman Tugas Pribadi supaya
+  /// tombol tambahnya tidak melahirkan tugas kuliah yang langsung hilang dari
+  /// daftar tempat kamu menekannya.
+  final TaskKind kindAwal;
 
   @override
   ConsumerState<TaskFormPage> createState() => _TaskFormPageState();
@@ -35,17 +41,22 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
   final _descriptionController = TextEditingController();
 
   String? _courseId;
-  TaskKind _kind = TaskKind.kuliah;
+  late TaskKind _kind;
   TaskPriority _priority = TaskPriority.medium;
   DateTime _deadline = DeadlinePreset.satuMinggu.resolve();
   bool _saving = false;
   bool _prefilled = false;
+
+  /// Membuka kembali seluruh daftar mata kuliah, termasuk semester yang sudah
+  /// lewat. Mati secara bawaan.
+  bool _semuaMatkul = false;
 
   bool get _isEdit => widget.taskId != null;
 
   @override
   void initState() {
     super.initState();
+    _kind = widget.kindAwal;
     // Data biasanya sudah ada di cache provider karena user datang dari daftar
     // tugas; kalau belum (mis. halaman di-refresh langsung), diisi lewat
     // ref.listen di build saat datanya tiba.
@@ -144,7 +155,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final coursesAsync = ref.watch(coursesProvider);
+    final matkulAsync = ref.watch(daftarMatkulProvider);
 
     if (_isEdit) {
       ref.listen(tasksProvider, (previous, next) {
@@ -296,21 +307,65 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
                     icon: Icons.menu_book_outlined,
                     color: _deadlineColor,
                   ),
-                  coursesAsync.when(
-                    data: (courses) => DropdownButtonFormField<String?>(
-                      initialValue: _courseId,
-                      decoration: const InputDecoration(
-                        labelText: 'Mata kuliah (opsional)',
-                        prefixIcon: Icon(Icons.school_outlined),
-                      ),
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('Umum')),
-                        ...courses.map(
-                          (course) => DropdownMenuItem(value: course.id, child: Text(course.name)),
-                        ),
-                      ],
-                      onChanged: (value) => setState(() => _courseId = value),
-                    ),
+                  matkulAsync.when(
+                    data: (daftar) {
+                      final aktif = pilihanMatkul(
+                        daftar.semua,
+                        daftar.jadwal,
+                        dipakai: _courseId,
+                      );
+                      final tersembunyi = daftar.semua.length - aktif.length;
+                      final pilihan = _semuaMatkul ? daftar.semua : aktif;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DropdownButtonFormField<String?>(
+                            // Kunci ikut berubah bersama nilainya supaya isian
+                            // yang datang belakangan — mode edit, atau daftar
+                            // yang baru dibuka lebar — benar-benar terpasang.
+                            key: ValueKey('matkul-$_courseId-$_semuaMatkul'),
+                            initialValue: _courseId,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Mata kuliah (opsional)',
+                              prefixIcon: Icon(Icons.school_outlined),
+                            ),
+                            items: [
+                              const DropdownMenuItem(value: null, child: Text('Umum')),
+                              ...pilihan.map(
+                                (course) => DropdownMenuItem(
+                                  value: course.id,
+                                  child: Text(course.name, overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) => setState(() => _courseId = value),
+                          ),
+                          if (tersembunyi > 0) ...[
+                            const SizedBox(height: 4),
+                            TextButton.icon(
+                              onPressed: () => setState(() => _semuaMatkul = !_semuaMatkul),
+                              icon: Icon(
+                                _semuaMatkul ? Icons.filter_list : Icons.history,
+                                size: 16,
+                              ),
+                              label: Text(
+                                _semuaMatkul
+                                    ? 'Tampilkan yang ada jadwalnya saja'
+                                    : 'Tampilkan $tersembunyi mata kuliah semester lalu',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              style: TextButton.styleFrom(
+                                foregroundColor: _deadlineColor,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                     loading: () => const LinearProgressIndicator(),
                     error: (error, stackTrace) => Text('Gagal memuat mata kuliah: $error'),
                   ),
