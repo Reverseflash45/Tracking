@@ -54,6 +54,35 @@ void main() {
 
       expect(hasil, isEmpty);
     });
+
+    test('yang ada di tetap ikut walau jadwalnya sudah lewat', () {
+      // Halaman absensi memakai ini: mata kuliah semester lalu yang sudah
+      // terlanjur punya catatan kehadiran tidak boleh jadi tidak bisa dibuka.
+      final hasil = matkulAktif(semua, [jadwal('c3')], tetap: {'c1'});
+
+      expect(hasil.map((c) => c.id), ['c1', 'c3']);
+    });
+
+    test('urutannya tetap urutan daftar aslinya, bukan yang disisipkan di ujung', () {
+      final hasil = matkulAktif(semua, [jadwal('c4')], tetap: {'c2'});
+
+      expect(hasil.map((c) => c.id), ['c2', 'c4']);
+    });
+
+    test('tetap tidak menghidupkan id yang sudah tidak ada di daftar', () {
+      final hasil = matkulAktif(semua, [jadwal('c3')], tetap: {'sudah-dihapus'});
+
+      expect(hasil.map((c) => c.id), ['c3']);
+    });
+
+    test('tanpa jadwal, tetap tidak mempersempit daftar jadi isi tetap saja', () {
+      // Kalau tidak begini, halaman yang belum punya jadwal cuma menampilkan
+      // mata kuliah yang sudah tercatat — dan mata kuliah lain tidak akan
+      // pernah bisa mulai dicatat.
+      final hasil = matkulAktif(semua, const [], tetap: {'c1'});
+
+      expect(hasil, semua);
+    });
   });
 
   group('pilihanMatkul', () {
@@ -63,7 +92,7 @@ void main() {
       // melepas mata kuliahnya.
       final hasil = pilihanMatkul(semua, [jadwal('c3')], dipakai: 'c1');
 
-      expect(hasil.map((c) => c.id), ['c3', 'c1']);
+      expect(hasil.map((c) => c.id), ['c1', 'c3']);
     });
 
     test('tidak menggandakan kalau yang dipakai memang masih aktif', () {

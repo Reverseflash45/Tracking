@@ -15,12 +15,21 @@ import '../data/models/course.dart';
 /// Kalau belum ada satu jadwal pun, seluruh daftar dikembalikan apa adanya —
 /// tidak ada dasar untuk menyaring, dan menyembunyikan semuanya cuma membuat
 /// form tugas mustahil dipakai sebelum jadwal diisi.
-List<Course> matkulAktif(List<Course> semua, List<ClassSchedule> jadwal) {
+///
+/// [tetap] berisi id yang harus ikut walau jadwalnya sudah tidak ada. Dipakai
+/// untuk hal yang terlanjur menunjuk mata kuliah lama: tugas semester lalu,
+/// atau catatan kehadiran yang sudah masuk. Menyembunyikannya bukan cuma
+/// merapikan daftar — datanya jadi tidak bisa dibuka lagi.
+List<Course> matkulAktif(
+  List<Course> semua,
+  List<ClassSchedule> jadwal, {
+  Set<String> tetap = const {},
+}) {
   final aktif = {for (final item in jadwal) item.courseId};
   if (aktif.isEmpty) return semua;
   return [
     for (final course in semua)
-      if (aktif.contains(course.id)) course,
+      if (aktif.contains(course.id) || tetap.contains(course.id)) course,
   ];
 }
 
@@ -37,12 +46,5 @@ List<Course> pilihanMatkul(
   bool semuanya = false,
 }) {
   if (semuanya) return semua;
-
-  final hasil = matkulAktif(semua, jadwal);
-  if (dipakai == null || hasil.any((c) => c.id == dipakai)) return hasil;
-
-  for (final course in semua) {
-    if (course.id == dipakai) return [...hasil, course];
-  }
-  return hasil;
+  return matkulAktif(semua, jadwal, tetap: {?dipakai});
 }
