@@ -93,6 +93,12 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                   ),
                   const SizedBox(width: 6),
                   HeroIconButton(
+                    icon: Icons.inventory_2_outlined,
+                    tooltip: 'Arsip per mata kuliah',
+                    onPressed: () => context.push('/academic/tasks/arsip'),
+                  ),
+                  const SizedBox(width: 6),
+                  HeroIconButton(
                     icon: Icons.event_repeat,
                     tooltip: 'Tugas berulang',
                     onPressed: () async {

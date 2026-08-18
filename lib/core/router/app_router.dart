@@ -9,6 +9,7 @@ import '../../features/academic/presentation/personal_tasks_page.dart';
 import '../../features/academic/presentation/recurring_tasks_page.dart';
 import '../../features/academic/presentation/schedule_form_page.dart';
 import '../../features/academic/presentation/schedule_page.dart';
+import '../../features/academic/presentation/task_archive_page.dart';
 import '../../features/academic/presentation/task_detail_page.dart';
 import '../../features/academic/presentation/task_form_page.dart';
 import '../../features/academic/presentation/tasks_page.dart';
@@ -181,6 +182,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   // daftar tugas kuliah: keduanya dibuka pada saat yang berbeda.
                   path: 'pribadi',
                   builder: (context, state) => const PersonalTasksPage(),
+                ),
+                GoRoute(
+                  // Arsip menjawab pertanyaan yang berbeda dari daftar tugas:
+                  // bukan "apa berikutnya" tapi "mata kuliah ini sudah apa
+                  // saja". Susunannya per mata kuliah, bukan per deadline.
+                  path: 'arsip',
+                  builder: (context, state) => const TaskArchivePage(),
                 ),
                 GoRoute(
                   path: 'recurring',

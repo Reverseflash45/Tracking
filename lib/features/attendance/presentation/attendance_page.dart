@@ -207,7 +207,7 @@ class _CatatanJatah extends StatelessWidget {
   }
 }
 
-class _KartuMataKuliah extends ConsumerWidget {
+class _KartuMataKuliah extends ConsumerStatefulWidget {
   const _KartuMataKuliah({
     required this.rekap,
     required this.nama,
@@ -218,24 +218,38 @@ class _KartuMataKuliah extends ConsumerWidget {
   final String nama;
   final List<Attendance> catatan;
 
-  Color _warnaStatus(ColorScheme scheme) => switch (rekap.statusJatah) {
+  @override
+  ConsumerState<_KartuMataKuliah> createState() => _KartuMataKuliahState();
+}
+
+class _KartuMataKuliahState extends ConsumerState<_KartuMataKuliah> {
+  /// Menampilkan seluruh catatan, bukan tiga terakhir saja. Tanpa ini catatan
+  /// yang salah dari dua minggu lalu tidak bisa dijangkau untuk dikoreksi.
+  bool _semua = false;
+
+  static const _ringkas = 3;
+
+  Color _warnaStatus(ColorScheme scheme) => switch (widget.rekap.statusJatah) {
         StatusJatah.lewat => AppColors.priorityHigh,
         StatusJatah.hampir => AppColors.priorityMedium,
         StatusJatah.aman => AppColors.priorityLow,
         StatusJatah.belumDiketahui => scheme.onSurfaceVariant,
       };
 
-  String _labelJatah() => switch (rekap.statusJatah) {
+  String _labelJatah() => switch (widget.rekap.statusJatah) {
         StatusJatah.belumDiketahui => 'Jumlah pertemuan belum diisi',
-        StatusJatah.lewat => 'Lewat ${-rekap.sisaJatah!} pertemuan dari batas',
-        _ => 'Sisa jatah ${rekap.sisaJatah} pertemuan',
+        StatusJatah.lewat => 'Lewat ${-widget.rekap.sisaJatah!} pertemuan dari batas',
+        _ => 'Sisa jatah ${widget.rekap.sisaJatah} pertemuan',
       };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final rekap = widget.rekap;
+    final catatan = widget.catatan;
     final warna = _warnaStatus(colorScheme);
     final persen = rekap.persenKehadiran;
+    final tampil = _semua ? catatan : catatan.take(_ringkas).toList();
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -248,7 +262,7 @@ class _KartuMataKuliah extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    nama,
+                    widget.nama,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
@@ -257,7 +271,7 @@ class _KartuMataKuliah extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   tooltip: 'Atur jumlah pertemuan',
-                  onPressed: () => _aturPertemuan(context, ref),
+                  onPressed: _aturPertemuan,
                 ),
               ],
             ),
@@ -288,21 +302,37 @@ class _KartuMataKuliah extends ConsumerWidget {
             if (catatan.isNotEmpty) ...[
               const SizedBox(height: 12),
               const Divider(height: 1),
-              const SizedBox(height: 8),
-              for (final item in catatan.take(3)) _BarisCatatan(item: item),
-              if (catatan.length > 3)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    '+${catatan.length - 3} pertemuan lain',
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+              const SizedBox(height: 6),
+              Text(
+                'Ketuk satu baris untuk mengoreksi atau menghapusnya.',
+                style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 2),
+              for (final item in tampil)
+                _BarisCatatan(item: item, onTap: () => _koreksiPertemuan(item)),
+              if (catatan.length > _ringkas)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => setState(() => _semua = !_semua),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      visualDensity: VisualDensity.compact,
+                      foregroundColor: _color,
+                    ),
+                    child: Text(
+                      _semua
+                          ? 'Ringkas lagi'
+                          : 'Lihat ${catatan.length - _ringkas} pertemuan lain',
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
                 ),
             ],
 
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () => _catatPertemuan(context, ref),
+              onPressed: _catatPertemuan,
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Catat pertemuan'),
             ),
@@ -312,20 +342,28 @@ class _KartuMataKuliah extends ConsumerWidget {
     );
   }
 
-  Future<void> _catatPertemuan(BuildContext context, WidgetRef ref) async {
+  Future<void> _catatPertemuan() => _bukaForm(null);
+
+  Future<void> _koreksiPertemuan(Attendance item) => _bukaForm(item);
+
+  Future<void> _bukaForm(Attendance? awal) async {
     final hasil = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _FormPertemuan(courseId: rekap.courseId, nama: nama),
+      builder: (_) => _FormPertemuan(
+        courseId: widget.rekap.courseId,
+        nama: widget.nama,
+        awal: awal,
+      ),
     );
     if (hasil == true) ref.invalidate(attendanceProvider);
   }
 
-  Future<void> _aturPertemuan(BuildContext context, WidgetRef ref) async {
+  Future<void> _aturPertemuan() async {
     final hasil = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _FormPertemuanSemester(rekap: rekap, nama: nama),
+      builder: (_) => _FormPertemuanSemester(rekap: widget.rekap, nama: widget.nama),
     );
     if (hasil == true) ref.invalidate(coursesProvider);
   }
@@ -360,16 +398,19 @@ class _Angka extends StatelessWidget {
 }
 
 class _BarisCatatan extends StatelessWidget {
-  const _BarisCatatan({required this.item});
+  const _BarisCatatan({required this.item, required this.onTap});
 
   final Attendance item;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -399,28 +440,42 @@ class _BarisCatatan extends StatelessWidget {
               style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
             ),
           ),
+          Icon(Icons.chevron_right, size: 14, color: colorScheme.onSurfaceVariant),
         ],
       ),
+    ),
     );
   }
 }
 
-/// Form catat satu pertemuan.
+/// Form catat satu pertemuan, sekaligus form koreksinya.
+///
+/// Satu form untuk keduanya, bukan dua: yang bisa kamu isi saat mencatat harus
+/// persis sama dengan yang bisa kamu betulkan setelahnya — termasuk tanggalnya,
+/// karena salah tanggal justru kesalahan yang paling sering terjadi.
 class _FormPertemuan extends ConsumerStatefulWidget {
-  const _FormPertemuan({required this.courseId, required this.nama});
+  const _FormPertemuan({required this.courseId, required this.nama, this.awal});
 
   final String courseId;
   final String nama;
+
+  /// Catatan yang sedang dikoreksi. Null berarti mencatat pertemuan baru.
+  final Attendance? awal;
 
   @override
   ConsumerState<_FormPertemuan> createState() => _FormPertemuanState();
 }
 
+bool _tanggalSama(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
 class _FormPertemuanState extends ConsumerState<_FormPertemuan> {
-  DateTime _tanggal = DateTime.now();
-  StatusKehadiran _status = StatusKehadiran.hadir;
-  final _catatan = TextEditingController();
+  late DateTime _tanggal = widget.awal?.meetingDate ?? DateTime.now();
+  late StatusKehadiran _status = widget.awal?.status ?? StatusKehadiran.hadir;
+  late final _catatan = TextEditingController(text: widget.awal?.note ?? '');
   bool _menyimpan = false;
+
+  bool get _mengoreksi => widget.awal != null;
 
   @override
   void dispose() {
@@ -434,19 +489,62 @@ class _FormPertemuanState extends ConsumerState<_FormPertemuan> {
 
     setState(() => _menyimpan = true);
     try {
-      await ref.read(attendanceRepositoryProvider).simpan(
-            userId: userId,
-            courseId: widget.courseId,
-            meetingDate: _tanggal,
-            status: _status,
-            note: _catatan.text,
-          );
+      final repo = ref.read(attendanceRepositoryProvider);
+      await repo.simpan(
+        userId: userId,
+        courseId: widget.courseId,
+        meetingDate: _tanggal,
+        status: _status,
+        scheduleId: widget.awal?.scheduleId,
+        note: _catatan.text,
+      );
+
+      // Kalau tanggalnya ikut diganti, baris lama harus dihapus. Kuncinya
+      // (user, mata kuliah, tanggal), jadi menyimpan ke tanggal baru membuat
+      // baris baru dan yang salah tetap tertinggal — satu kesalahan berubah
+      // jadi dua pertemuan.
+      if (widget.awal case final awal? when !_tanggalSama(awal.meetingDate, _tanggal)) {
+        await repo.hapus(awal.id);
+      }
+
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _menyimpan = false);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+    }
+  }
+
+  Future<void> _hapus() async {
+    final awal = widget.awal;
+    if (awal == null) return;
+
+    final yakin = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus catatan?'),
+        content: Text(
+          'Pertemuan ${_tanggalPanjang.format(awal.meetingDate)} akan dihapus, '
+          'dan kembali terhitung sebagai pertemuan yang belum dicatat.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
+        ],
+      ),
+    );
+    if (yakin != true || !mounted) return;
+
+    setState(() => _menyimpan = true);
+    try {
+      await ref.read(attendanceRepositoryProvider).hapus(awal.id);
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _menyimpan = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Gagal menghapus: $e')));
     }
   }
 
@@ -466,6 +564,14 @@ class _FormPertemuanState extends ConsumerState<_FormPertemuan> {
           Text(
             widget.nama,
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            _mengoreksi ? 'Koreksi pertemuan' : 'Catat pertemuan',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
 
@@ -509,10 +615,22 @@ class _FormPertemuanState extends ConsumerState<_FormPertemuan> {
             onPressed: _menyimpan ? null : _simpan,
             child: Text(_menyimpan ? 'Menyimpan...' : 'Simpan'),
           ),
+          if (_mengoreksi)
+            TextButton.icon(
+              onPressed: _menyimpan ? null : _hapus,
+              icon: const Icon(Icons.delete_outline, size: 18),
+              label: const Text('Hapus catatan ini'),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+            ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Mencatat tanggal yang sama berarti mengoreksi catatan sebelumnya, '
-            'bukan menambah pertemuan kedua.',
+            _mengoreksi
+                ? 'Mengganti tanggal memindahkan catatan ini, bukan menyalinnya '
+                    '— catatan di tanggal lamanya ikut hilang.'
+                : 'Mencatat tanggal yang sama berarti mengoreksi catatan '
+                    'sebelumnya, bukan menambah pertemuan kedua.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11,

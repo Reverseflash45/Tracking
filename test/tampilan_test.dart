@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:tracking/core/theme/app_colors.dart';
 import 'package:tracking/core/theme/app_theme.dart';
 import 'package:tracking/core/widgets/empty_state.dart';
@@ -9,7 +10,9 @@ import 'package:tracking/core/widgets/menu_list.dart';
 import 'package:tracking/core/widgets/section_header.dart';
 import 'package:tracking/features/academic/data/models/class_schedule.dart';
 import 'package:tracking/features/academic/data/models/task.dart';
+import 'package:tracking/features/academic/domain/arsip_tugas.dart';
 import 'package:tracking/features/academic/presentation/schedule_page.dart';
+import 'package:tracking/features/academic/presentation/task_archive_page.dart';
 import 'package:tracking/features/academic/presentation/task_tile.dart';
 
 /// Uji tampilan untuk widget yang dipakai bersama seluruh halaman.
@@ -29,6 +32,11 @@ import 'package:tracking/features/academic/presentation/task_tile.dart';
 /// - skala teks 1.3, setelan "ukuran huruf besar" di Android
 /// - teks panjang, karena judul dan label di app ini datang dari isian pengguna
 void main() {
+  // Widget yang menampilkan tanggal memakai DateFormat berlokal id_ID, dan di
+  // test datanya tidak dimuat sendiri seperti di app. Tanpa ini widgetnya
+  // melempar saat digambar, dan errornya mudah tertukar dengan luber.
+  setUpAll(() => initializeDateFormatting('id_ID', null));
+
   const lebarSempit = 320.0;
   const skalaBesar = 1.3;
 
@@ -548,6 +556,69 @@ void main() {
         ),
       );
       expect(find.text('Umum'), findsNothing);
+    });
+  });
+
+  group('kartu arsip mata kuliah', () {
+    AcademicTask arsipTugasContoh(String id, TaskStatus status) => AcademicTask(
+          id: id,
+          userId: 'u1',
+          courseId: 'c1',
+          courseName: 'Keamanan Cyber',
+          title: judulPanjang,
+          deadline: DateTime.now().add(const Duration(days: 2)),
+          priority: TaskPriority.medium,
+          status: status,
+          createdAt: DateTime.now(),
+        );
+
+    final matkul = ArsipMatkul(
+      courseId: 'c1',
+      nama: 'Praktikum Pemrograman Berorientasi Objek Lanjut',
+      tugas: [
+        arsipTugasContoh('a', TaskStatus.todo),
+        arsipTugasContoh('b', TaskStatus.inProgress),
+        arsipTugasContoh('c', TaskStatus.done),
+      ],
+    );
+
+    testWidgets('nama panjang dan tiga hitungan muat di layar sempit', (tester) async {
+      final hasil = await gambar(
+        tester,
+        KartuArsipMatkul(matkul: matkul, tampil: matkul.tugas),
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('muat saat huruf diperbesar 1.3x', (tester) async {
+      final hasil = await gambar(
+        tester,
+        KartuArsipMatkul(matkul: matkul, tampil: matkul.tugas),
+        skalaTeks: skalaBesar,
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('daftar tugasnya sendiri tidak meluber saat terbuka', (tester) async {
+      // labelSaring bukan null berarti kartunya terbuka sejak awal, jadi baris
+      // tugasnya benar-benar digambar — bukan cuma judul kartunya.
+      final hasil = await gambar(
+        tester,
+        KartuArsipMatkul(matkul: matkul, tampil: matkul.tugas, labelSaring: 'Belum'),
+        skalaTeks: skalaBesar,
+      );
+
+      expect(find.text(judulPanjang), findsWidgets);
+      expect(hasil, isNull);
+    });
+
+    testWidgets('mata kuliah tanpa tugas tidak menggambar batang progres', (tester) async {
+      const kosong = ArsipMatkul(courseId: 'c9', nama: 'Aljabar Linier', tugas: []);
+      final hasil = await gambar(tester, const KartuArsipMatkul(matkul: kosong, tampil: []));
+
+      expect(hasil, isNull);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(find.text('Belum ada tugas'), findsOneWidget);
     });
   });
 }
