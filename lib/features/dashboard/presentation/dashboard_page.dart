@@ -284,6 +284,13 @@ class _PintasanLainnya extends StatelessWidget {
 
   static const _isi = [
     MenuItemData(
+      icon: Icons.sticky_note_2_outlined,
+      label: 'Catatan',
+      rute: '/notes',
+      warna: AppColors.note,
+      keterangan: 'Apa pun yang perlu diingat',
+    ),
+    MenuItemData(
       icon: Icons.flag_outlined,
       label: 'Target',
       rute: '/goals',

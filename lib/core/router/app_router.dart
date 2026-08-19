@@ -33,6 +33,8 @@ import '../../features/run/presentation/run_tracker_page.dart';
 import '../../features/sleep/presentation/sleep_page.dart';
 import '../../features/muscle/presentation/muscle_builder_page.dart';
 import '../../features/muscle/presentation/muscle_detail_page.dart';
+import '../../features/note/presentation/note_editor_page.dart';
+import '../../features/note/presentation/note_page.dart';
 import '../../features/nutrition/presentation/nutrition_page.dart';
 import '../../features/progress/presentation/progress_dashboard_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
@@ -100,6 +102,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'documents',
                   builder: (context, state) => const DocumentPage(),
+                ),
+                GoRoute(
+                  // Catatan tinggal di cabang Beranda, bukan di bawah Tugas.
+                  // Isinya justru hal yang bukan tugas — menaruhnya di sana
+                  // berarti mengatakan sebaliknya.
+                  path: 'notes',
+                  builder: (context, state) => const NotePage(),
+                  routes: [
+                    // Rute literal sebelum yang berparameter, supaya 'new'
+                    // tidak ikut tertangkap sebagai ':id'.
+                    GoRoute(
+                      path: 'new',
+                      builder: (context, state) => const NoteEditorPage(),
+                    ),
+                    GoRoute(
+                      path: ':id',
+                      builder: (context, state) =>
+                          NoteEditorPage(noteId: state.pathParameters['id']),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: 'vehicle',

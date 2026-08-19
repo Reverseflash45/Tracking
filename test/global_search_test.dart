@@ -4,6 +4,7 @@ import 'package:tracking/features/academic/data/models/task.dart';
 import 'package:tracking/features/document/domain/document.dart';
 import 'package:tracking/features/finance/domain/transaction.dart';
 import 'package:tracking/features/goals/domain/goal.dart';
+import 'package:tracking/features/note/domain/note.dart';
 import 'package:tracking/features/nutrition/domain/food_log.dart';
 import 'package:tracking/features/search/domain/global_search.dart';
 import 'package:tracking/features/vehicle/domain/vehicle.dart';
@@ -13,6 +14,15 @@ import 'package:tracking/features/workout/data/models/exercise_entry.dart';
 import 'package:tracking/features/workout/data/models/workout_session.dart';
 
 final _now = DateTime(2026, 8, 1);
+
+Note _catatan(String isi, {String? judul}) => Note(
+      id: 'n-$isi',
+      userId: 'u',
+      title: judul,
+      body: isi,
+      createdAt: _now,
+      updatedAt: _now,
+    );
 
 AcademicTask _tugas(String judul, {String? deskripsi, DateTime? selesai}) =>
     AcademicTask(
@@ -285,6 +295,24 @@ void main() {
 
       final lewatNama = searchAll(query: 'ktp', documents: [_dokumen('KTP', nomor: nomor)]);
       expect(lewatNama.single.subtitle, isNot(contains('3578')));
+    });
+
+    test('catatan dicari lewat judul maupun isinya', () {
+      final lewatJudul = searchAll(
+        query: 'wifi',
+        notes: [_catatan('kosanpakdhe2024', judul: 'Wifi kos')],
+      );
+      expect(lewatJudul.single.kind, SearchKind.catatan);
+
+      // Ini yang paling penting untuk catatan bebas: judulnya sering memang
+      // tidak pernah diisi, jadi kalau isinya tidak ikut dicari, catatannya
+      // praktis tidak bisa ditemukan lagi.
+      final lewatIsi = searchAll(
+        query: 'rekening',
+        notes: [_catatan('Nomor rekening Rian\n1234567890 BCA')],
+      );
+      expect(lewatIsi.single.title, 'Nomor rekening Rian');
+      expect(lewatIsi.single.tujuan, startsWith('/notes/'));
     });
 
     test('target dicari lewat judul, yang diarsipkan dilewati', () {

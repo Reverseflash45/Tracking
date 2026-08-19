@@ -355,6 +355,7 @@ void main() {
       'Watchlist': AppColors.watchlist,
       'Kendaraan': AppColors.vehicle,
       'Dokumen': AppColors.document,
+      'Catatan': AppColors.note,
       'Prioritas tinggi': AppColors.priorityHigh,
       'Prioritas sedang': AppColors.priorityMedium,
       'Prioritas rendah': AppColors.priorityLow,

@@ -15,6 +15,7 @@ import '../../academic/data/models/task.dart';
 import '../../document/domain/document.dart';
 import '../../finance/domain/transaction.dart';
 import '../../goals/domain/goal.dart';
+import '../../note/domain/note.dart';
 import '../../nutrition/domain/food_log.dart';
 import '../../vehicle/domain/vehicle.dart';
 import '../../watchlist/domain/watchlist.dart';
@@ -40,6 +41,7 @@ enum SearchKind {
   tontonan('Watchlist', Icons.movie_outlined, '/watchlist'),
   kendaraan('Kendaraan', Icons.two_wheeler, '/vehicle'),
   dokumen('Dokumen', Icons.badge_outlined, '/documents'),
+  catatan('Catatan', Icons.sticky_note_2_outlined, '/notes'),
   target('Target', Icons.flag_outlined, '/goals');
 
   const SearchKind(this.label, this.icon, this.route);
@@ -104,6 +106,7 @@ List<SearchHit> searchAll({
   List<Vehicle> vehicles = const [],
   List<ServiceLog> services = const [],
   List<Document> documents = const [],
+  List<Note> notes = const [],
   List<Goal> goals = const [],
 }) {
   final cari = query.trim().toLowerCase();
@@ -260,6 +263,23 @@ List<SearchHit> searchAll({
       title: doc.name,
       subtitle: doc.kind.label,
       date: doc.expiresOn,
+    ));
+  }
+
+  for (final note in notes) {
+    if (!_cocok(note.title, cari) && !_cocok(note.body, cari)) continue;
+    // Isinya ikut ditampilkan, tidak seperti nomor dokumen yang sengaja
+    // disembunyikan dari hasil pencarian. Catatan memang ditulis untuk dibaca
+    // ulang, dan judulnya sering tidak pernah diisi sama sekali — tanpa
+    // cuplikan isinya, hasilnya jadi daftar "Tanpa judul" yang tidak menolong.
+    hasil[SearchKind.catatan]!.add(SearchHit(
+      kind: SearchKind.catatan,
+      title: note.judul,
+      subtitle: note.cuplikan.isEmpty
+          ? _tanggalPendek(note.updatedAt)
+          : note.cuplikan,
+      date: note.updatedAt,
+      route: '/notes/${note.id}',
     ));
   }
 

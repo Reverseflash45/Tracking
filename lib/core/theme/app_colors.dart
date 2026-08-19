@@ -66,6 +66,11 @@ class AppColors {
   /// Biru abu, 209°, kroma rendah. Kendaraan.
   static const Color vehicle = Color(0xFF5E7F9E);
 
+  /// Olive, 72°, kroma rendah. Catatan. Rona ini satu-satunya yang belum
+  /// dipakai di celah lebar antara amber Dokumen (32°) dan hijau Keuangan
+  /// (128°), jadi dia tidak perlu berdesakan dengan yang sudah ada.
+  static const Color note = Color(0xFF74862F);
+
   /// Amber tua, 32°, kroma rendah. Dokumen. Dulu cokelat #6D4C41 yang di layar
   /// kecil tidak terbaca sebagai warna, cuma sebagai abu-abu kotor.
   static const Color document = Color(0xFFB07C42);
