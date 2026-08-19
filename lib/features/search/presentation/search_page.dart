@@ -11,6 +11,7 @@ import '../../academic/presentation/academic_providers.dart';
 import '../../document/data/document_repository.dart';
 import '../../finance/data/finance_repository.dart';
 import '../../goals/data/goal_repository.dart';
+import '../../note/data/note_repository.dart';
 import '../../nutrition/data/nutrition_repository.dart';
 import '../../vehicle/data/vehicle_repository.dart';
 import '../../watchlist/data/watchlist_repository.dart';
@@ -55,6 +56,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       vehicles: ref.watch(vehiclesProvider).value ?? const [],
       services: ref.watch(vehicleServicesProvider).value ?? const [],
       documents: ref.watch(documentsProvider).value ?? const [],
+      notes: ref.watch(notesProvider).value ?? const [],
       goals: ref.watch(goalsProvider).value ?? const [],
     );
     final grouped = groupHits(hits);
