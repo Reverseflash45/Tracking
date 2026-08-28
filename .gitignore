@@ -46,3 +46,6 @@ app.*.map.json
 
 # Environment secrets
 .env
+
+# Isi awal yang berisi data pribadi (user id, jadwal harian)
+supabase/seed/
