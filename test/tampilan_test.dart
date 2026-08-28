@@ -14,6 +14,8 @@ import 'package:tracking/features/academic/domain/arsip_tugas.dart';
 import 'package:tracking/features/academic/presentation/schedule_page.dart';
 import 'package:tracking/features/academic/presentation/task_archive_page.dart';
 import 'package:tracking/features/academic/presentation/task_tile.dart';
+import 'package:tracking/features/routine/domain/routine.dart';
+import 'package:tracking/features/routine/presentation/routine_page.dart';
 
 /// Uji tampilan untuk widget yang dipakai bersama seluruh halaman.
 ///
@@ -620,6 +622,60 @@ void main() {
       expect(hasil, isNull);
       expect(find.byType(LinearProgressIndicator), findsNothing);
       expect(find.text('Belum ada tugas'), findsOneWidget);
+    });
+  });
+
+  group('baris rutinitas', () {
+    testWidgets('jam, ikon, judul panjang, dan durasi muat bersama', (tester) async {
+      final hasil = await gambar(
+        tester,
+        const BarisRutinitas(
+          baris: BarisHarian(
+            judul: 'Siapkan bekal Kamis (2 roti keju + pisang + UHT)',
+            mulai: '21:30',
+            selesai: '22:00',
+            keterangan: 'sudah disiapkan Minggu malam',
+            kategori: KategoriRutinitas.lainnya,
+            routineId: 'r1',
+          ),
+        ),
+        skalaTeks: skalaBesar,
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('kegiatan sesaat tanpa jam selesai tidak meluber', (tester) async {
+      final hasil = await gambar(
+        tester,
+        const BarisRutinitas(
+          baris: BarisHarian(
+            judul: 'Bangun, timbang badan (sebelum makan)',
+            mulai: '05:45',
+            kategori: KategoriRutinitas.bangun,
+            routineId: 'r2',
+          ),
+        ),
+        skalaTeks: skalaBesar,
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('baris kelas ditandai gembok, bukan durasi', (tester) async {
+      await gambar(
+        tester,
+        const BarisRutinitas(
+          baris: BarisHarian(
+            judul: 'Pemrograman Backend Lanjut (Praktikum)',
+            mulai: '07:00',
+            selesai: '11:00',
+            keterangan: 'LAB BAHASA 1',
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+      expect(find.text('4j'), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 }

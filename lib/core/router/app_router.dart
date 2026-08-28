@@ -28,6 +28,7 @@ import '../../features/finance/presentation/recurring_page.dart';
 import '../../features/goals/presentation/goals_page.dart';
 import '../../features/insight/presentation/insight_page.dart';
 import '../../features/live/presentation/live_workout_page.dart';
+import '../../features/routine/presentation/routine_page.dart';
 import '../../features/run/presentation/run_history_page.dart';
 import '../../features/run/presentation/run_tracker_page.dart';
 import '../../features/sleep/presentation/sleep_page.dart';
@@ -122,6 +123,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                           NoteEditorPage(noteId: state.pathParameters['id']),
                     ),
                   ],
+                ),
+                GoRoute(
+                  // Rutinitas tinggal di cabang Beranda, bukan di bawah Jadwal
+                  // Kuliah. Isinya justru hidupmu di luar kelas; kelas cuma
+                  // ikut ditampilkan supaya harinya terbaca utuh.
+                  path: 'routine',
+                  builder: (context, state) => const RoutinePage(),
                 ),
                 GoRoute(
                   path: 'vehicle',
