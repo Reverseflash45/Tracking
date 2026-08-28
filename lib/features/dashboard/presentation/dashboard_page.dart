@@ -284,6 +284,13 @@ class _PintasanLainnya extends StatelessWidget {
 
   static const _isi = [
     MenuItemData(
+      icon: Icons.schedule_outlined,
+      label: 'Rutinitas',
+      rute: '/routine',
+      warna: AppColors.dashboard,
+      keterangan: 'Jadwal harian di luar kuliah',
+    ),
+    MenuItemData(
       icon: Icons.sticky_note_2_outlined,
       label: 'Catatan',
       rute: '/notes',
