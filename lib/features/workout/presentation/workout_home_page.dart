@@ -132,6 +132,13 @@ class WorkoutHomePage extends ConsumerWidget {
                         keterangan: 'Dipandu hitungan dan waktu istirahat',
                       ),
                       const MenuItemData(
+                        icon: Icons.trending_up,
+                        label: 'Program Naik Berat',
+                        rute: '/workout/program',
+                        warna: AppColors.workout,
+                        keterangan: 'Latihan di kos, versi punya kursi & tanpa kursi',
+                      ),
+                      const MenuItemData(
                         icon: Icons.sports_gymnastics,
                         label: 'Muscle Builder',
                         rute: '/workout/muscle',
