@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -12,6 +13,8 @@ import '../../workout/data/workout_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../data/program_repository.dart';
 import '../domain/bulk_program.dart';
+import '../domain/pose_gerakan.dart';
+import 'diagram_gerakan.dart';
 
 const _color = AppColors.workout;
 
@@ -525,13 +528,27 @@ class _BarisGerakan extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final diagram = diagramGerakan(gerakan.nama);
 
-    return Padding(
+    return InkWell(
+      onTap: diagram == null ? null : () => bukaDetailGerakan(context, gerakan, diagram),
+      child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(_ikon, size: 16, color: colorScheme.onSurfaceVariant),
+          // Gambar pose akhir sebagai ikon. Kalau gerakannya belum digambar,
+          // ikon tipe latihan yang dipakai — bukan gambar gerakan lain yang
+          // mirip, karena gambar yang salah lebih menyesatkan daripada tidak
+          // ada gambar.
+          if (diagram != null)
+            IkonGerakan(diagram: diagram, ukuran: 38)
+          else
+            SizedBox(
+              width: 38,
+              height: 38,
+              child: Icon(_ikon, size: 16, color: colorScheme.onSurfaceVariant),
+            ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -595,8 +612,111 @@ class _BarisGerakan extends StatelessWidget {
               ],
             ),
           ),
+          if (diagram != null)
+            Icon(Icons.chevron_right, size: 16, color: colorScheme.onSurfaceVariant),
         ],
+      ),
       ),
     );
   }
+}
+
+/// Gambar gerakan ukuran penuh beserta keterangannya.
+///
+/// Dibuka lewat ketukan, bukan ditampilkan langsung di daftar: enam gambar
+/// sekaligus membuat satu kartu sesi jadi sepanjang tiga layar, dan yang kamu
+/// perlukan saat membaca jadwal cuma nama beserta takarannya.
+Future<void> bukaDetailGerakan(
+  BuildContext context,
+  GerakanProgram gerakan,
+  DiagramGerakan diagram,
+) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) {
+      final colorScheme = Theme.of(context).colorScheme;
+
+      return Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+          bottom: MediaQuery.of(context).padding.bottom + AppSpacing.lg,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      gerakan.nama,
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    gerakan.takaran,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      color: _color,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              GambarGerakan(diagram: diagram),
+              const SizedBox(height: AppSpacing.md),
+
+              Text(
+                gerakan.cue,
+                style: TextStyle(fontSize: 13, height: 1.5, color: colorScheme.onSurface),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Istirahat ${gerakan.istirahatLabel} antar set.',
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+              ),
+              if (gerakan.ganti case final ganti?) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Terlalu berat? $ganti',
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.45,
+                    fontStyle: FontStyle.italic,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.md),
+
+              // Gambarnya skematik: dia menunjukkan bentuk badan, bukan
+              // kecepatan, napas, atau sudut yang tepat. Untuk itu video tetap
+              // lebih jujur, dan tautannya berupa pencarian — bukan satu video
+              // tetap yang bisa dihapus pemiliknya kapan saja.
+              OutlinedButton.icon(
+                onPressed: () => _bukaVideo(gerakan.nama),
+                icon: const Icon(Icons.play_circle_outline, size: 18),
+                label: const Text('Cari video gerakannya'),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _bukaVideo(String nama) async {
+  final url = Uri.parse(
+    'https://www.youtube.com/results?search_query='
+    '${Uri.encodeQueryComponent("cara $nama yang benar")}',
+  );
+  await launchUrl(url, mode: LaunchMode.externalApplication);
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracking/features/program/domain/bulk_program.dart';
+import 'package:tracking/features/program/domain/pose_gerakan.dart';
 import 'package:tracking/features/workout/data/models/exercise_entry.dart';
 import 'package:tracking/features/workout/domain/bodyweight_progression.dart';
 
@@ -185,6 +186,96 @@ void main() {
       expect(VariasiAlat.fromDb(null), VariasiAlat.tanpaKursi);
       expect(VariasiAlat.fromDb('entah'), VariasiAlat.tanpaKursi);
       expect(VariasiAlat.fromDb('kursi'), VariasiAlat.denganKursi);
+    });
+  });
+
+  group('gambar gerakan', () {
+    test('tiap gerakan di kedua program punya gambarnya', () {
+      // Ini penjaga yang sebenarnya. Gerakan tanpa gambar tidak melempar error
+      // apa pun — dia cuma muncul sebagai ikon polos, dan itu baru ketahuan
+      // setelah APK terpasang di HP.
+      final tanpaGambar = <String>[];
+      for (final program in [kursi, tanpa]) {
+        for (final sesi in program.sesi) {
+          for (final g in sesi.gerakan) {
+            if (diagramGerakan(g.nama) == null) tanpaGambar.add(g.nama);
+          }
+        }
+      }
+      expect(tanpaGambar, isEmpty,
+          reason: 'gerakan berikut belum digambar: ${tanpaGambar.join(", ")}');
+    });
+
+    test('gerakan pengganti yang disebut juga punya gambarnya', () {
+      // "Terlalu berat? Push Up biasa" tidak berguna kalau Push Up sendiri
+      // tidak ada di katalog gambar.
+      expect(diagramGerakan('Push Up'), isNotNull);
+      expect(diagramGerakan('Split Squat'), isNotNull);
+    });
+
+    test('tiap pose mengisi kesebelas sendinya', () {
+      // Sendi yang kosong jatuh ke tengah kanvas, dan hasilnya anggota badan
+      // yang menempel ke titik acak — salah, tapi tetap tergambar.
+      for (final nama in gerakanBergambar) {
+        final diagram = diagramGerakan(nama)!;
+        for (final pose in [diagram.mulai, diagram.akhir]) {
+          expect(pose.titik.keys.toSet(), Sendi.values.toSet(),
+              reason: '$nama punya sendi yang belum diisi');
+        }
+      }
+    });
+
+    test('semua titik berada di dalam kanvas', () {
+      for (final nama in gerakanBergambar) {
+        final diagram = diagramGerakan(nama)!;
+        for (final pose in [diagram.mulai, diagram.akhir]) {
+          for (final entry in pose.titik.entries) {
+            expect(entry.value.dx, inInclusiveRange(0.0, 1.0),
+                reason: '$nama: ${entry.key.name} keluar kanvas mendatar');
+            expect(entry.value.dy, inInclusiveRange(0.0, 1.0),
+                reason: '$nama: ${entry.key.name} keluar kanvas tegak');
+          }
+        }
+      }
+    });
+
+    test('tidak ada kaki yang tenggelam di bawah lantai', () {
+      // Lantai ada di y = 0.90. Kaki yang lebih rendah dari itu terbaca seperti
+      // berdiri di dalam tanah.
+      for (final nama in gerakanBergambar) {
+        final diagram = diagramGerakan(nama)!;
+        for (final pose in [diagram.mulai, diagram.akhir]) {
+          for (final sendi in [Sendi.kakiKiri, Sendi.kakiKanan]) {
+            expect(pose[sendi].dy, lessThanOrEqualTo(0.901), reason: '$nama: ${sendi.name}');
+          }
+        }
+      }
+    });
+
+    test('gerakan berkursi memang menggambar kursinya', () {
+      for (final nama in ['Bulgarian Split Squat', 'Step Up', 'Tricep Dip', 'Hip Thrust']) {
+        final diagram = diagramGerakan(nama)!;
+        expect(diagram.mulai.props, contains(Prop.kursi), reason: nama);
+      }
+    });
+
+    test('gerakan tanpa alat tidak menggambar kursi', () {
+      for (final nama in ['Split Squat', 'Pike Push Up', 'Glute Bridge', 'Plank']) {
+        final diagram = diagramGerakan(nama)!;
+        expect(diagram.mulai.props, isNot(contains(Prop.kursi)), reason: nama);
+      }
+    });
+
+    test('gerakan bodyweight tidak menggambar dumbbell', () {
+      for (final program in [kursi, tanpa]) {
+        for (final sesi in program.sesi) {
+          for (final g in sesi.gerakan) {
+            if (g.tipe != ExerciseType.bodyweight) continue;
+            final diagram = diagramGerakan(g.nama)!;
+            expect(diagram.mulai.props, isNot(contains(Prop.beban)), reason: g.nama);
+          }
+        }
+      }
     });
   });
 }

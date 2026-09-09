@@ -15,7 +15,9 @@ import 'package:tracking/features/academic/presentation/schedule_page.dart';
 import 'package:tracking/features/academic/presentation/task_archive_page.dart';
 import 'package:tracking/features/academic/presentation/task_tile.dart';
 import 'package:tracking/features/program/domain/bulk_program.dart';
+import 'package:tracking/features/program/domain/pose_gerakan.dart';
 import 'package:tracking/features/program/presentation/bulk_program_page.dart';
+import 'package:tracking/features/program/presentation/diagram_gerakan.dart';
 import 'package:tracking/features/routine/domain/routine.dart';
 import 'package:tracking/features/routine/presentation/routine_page.dart';
 
@@ -701,5 +703,54 @@ void main() {
         });
       }
     }
+  });
+
+  group('gambar gerakan', () {
+    testWidgets('kedua pose berdampingan muat di layar sempit', (tester) async {
+      for (final nama in gerakanBergambar) {
+        final hasil = await gambar(
+          tester,
+          GambarGerakan(diagram: diagramGerakan(nama)!),
+        );
+        expect(hasil, isNull, reason: nama);
+      }
+    });
+
+    testWidgets('keterangan pose panjang tidak meluber saat huruf 1.3x', (tester) async {
+      // Label seperti "Kaki belakang di kursi" duduk di bawah gambar yang cuma
+      // selebar setengah layar.
+      for (final nama in ['Bulgarian Split Squat', 'Romanian Deadlift', 'Step Up']) {
+        final hasil = await gambar(
+          tester,
+          GambarGerakan(diagram: diagramGerakan(nama)!),
+          skalaTeks: skalaBesar,
+        );
+        expect(hasil, isNull, reason: nama);
+      }
+    });
+
+    testWidgets('ikon kecil di daftar tergambar tanpa error', (tester) async {
+      final hasil = await gambar(
+        tester,
+        Row(
+          children: [
+            for (final nama in gerakanBergambar.take(6))
+              IkonGerakan(diagram: diagramGerakan(nama)!, ukuran: 38),
+          ],
+        ),
+      );
+      expect(hasil, isNull);
+    });
+
+    testWidgets('tergambar di tema gelap juga', (tester) async {
+      // Warnanya diambil dari tema saat menggambar, bukan ditanam di datanya —
+      // ini yang membuktikan satu definisi pose cukup untuk dua tema.
+      final hasil = await gambar(
+        tester,
+        GambarGerakan(diagram: diagramGerakan('Goblet Squat')!),
+        kecerahan: Brightness.dark,
+      );
+      expect(hasil, isNull);
+    });
   });
 }
