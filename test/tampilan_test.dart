@@ -14,6 +14,8 @@ import 'package:tracking/features/academic/domain/arsip_tugas.dart';
 import 'package:tracking/features/academic/presentation/schedule_page.dart';
 import 'package:tracking/features/academic/presentation/task_archive_page.dart';
 import 'package:tracking/features/academic/presentation/task_tile.dart';
+import 'package:tracking/features/program/domain/bulk_program.dart';
+import 'package:tracking/features/program/presentation/bulk_program_page.dart';
 import 'package:tracking/features/routine/domain/routine.dart';
 import 'package:tracking/features/routine/presentation/routine_page.dart';
 
@@ -677,5 +679,27 @@ void main() {
       expect(find.text('4j'), findsNothing);
       expect(tester.takeException(), isNull);
     });
+  });
+
+  group('kartu sesi program', () {
+    // Baris gerakan menaruh nama dan takaran ("3 x 12 / sisi") di satu baris,
+    // dan takaran itu yang paling mudah terdorong keluar layar.
+    for (final variasi in VariasiAlat.values) {
+      for (final sesi in programNaikBerat(variasi).sesi) {
+        testWidgets('${variasi.label} — ${sesi.nama} muat di layar sempit', (tester) async {
+          final hasil = await gambar(tester, KartuSesiProgram(sesi: sesi));
+          expect(hasil, isNull);
+        });
+
+        testWidgets('${variasi.label} — ${sesi.nama} muat saat huruf 1.3x', (tester) async {
+          final hasil = await gambar(
+            tester,
+            KartuSesiProgram(sesi: sesi),
+            skalaTeks: skalaBesar,
+          );
+          expect(hasil, isNull);
+        });
+      }
+    }
   });
 }

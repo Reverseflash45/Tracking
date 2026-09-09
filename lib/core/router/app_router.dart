@@ -37,6 +37,7 @@ import '../../features/muscle/presentation/muscle_detail_page.dart';
 import '../../features/note/presentation/note_editor_page.dart';
 import '../../features/note/presentation/note_page.dart';
 import '../../features/nutrition/presentation/nutrition_page.dart';
+import '../../features/program/presentation/bulk_program_page.dart';
 import '../../features/progress/presentation/progress_dashboard_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
@@ -304,6 +305,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'stats',
                   builder: (context, state) => const ProgressDashboardPage(),
+                ),
+                GoRoute(
+                  // Program tinggal di cabang Workout dan memakai mesin yang
+                  // sudah ada di sana: template, rest timer, saran overload.
+                  path: 'program',
+                  builder: (context, state) => const BulkProgramPage(),
                 ),
                 GoRoute(
                   path: 'muscle',

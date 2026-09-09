@@ -36,6 +36,7 @@ const Map<String, String> _tables = {
   'attendance': 'meeting_date',
   'notes': 'created_at',
   'routines': 'day_of_week',
+  'workout_programs': 'user_id',
 };
 
 class ExportResult {
