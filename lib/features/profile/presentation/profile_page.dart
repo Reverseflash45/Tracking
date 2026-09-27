@@ -11,7 +11,7 @@ import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_controller.dart';
-import '../../../core/widgets/hero_header.dart';
+import '../../../core/widgets/daftar_bergaris.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../data/export_repository.dart';
@@ -36,21 +36,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       final result = await ref.read(exportRepositoryProvider).buildExport(email: email);
       final fileName = exportFileName(DateTime.now());
 
-      await shareExport(
-        json: result.json,
-        fileName: fileName,
-        subject: 'Cadangan data Tracking',
-      );
+      await shareExport(json: result.json, fileName: fileName, subject: 'Cadangan data Tracking');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${result.totalRows} baris data disiapkan')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${result.totalRows} baris data disiapkan')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Gagal menyiapkan cadangan: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menyiapkan cadangan: $e')));
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -69,16 +66,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     try {
       final bytes = await picked.readAsBytes();
       final ext = picked.name.contains('.') ? picked.name.split('.').last : 'jpg';
-      await ref.read(profileRepositoryProvider).uploadAvatar(
-            userId: userId,
-            bytes: bytes,
-            fileExt: ext,
-          );
+      await ref
+          .read(profileRepositoryProvider)
+          .uploadAvatar(userId: userId, bytes: bytes, fileExt: ext);
       ref.invalidate(profileProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Gagal unggah foto: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal unggah foto: $e')));
       }
     } finally {
       if (mounted) setState(() => _uploadingAvatar = false);
@@ -93,8 +89,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     final fullName = profile?.fullName;
-    final displayName =
-        (fullName != null && fullName.trim().isNotEmpty) ? fullName.trim() : 'Mahasiswa';
+    final displayName = (fullName != null && fullName.trim().isNotEmpty)
+        ? fullName.trim()
+        : 'Mahasiswa';
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
     final avatarUrl = profile?.avatarUrl;
 
@@ -102,96 +99,108 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          Container(
-            width: double.infinity,
+          // Kartu identitas di atas latar polos. Dulu blok gradien ungu
+          // selebar layar — satu-satunya gradien yang tersisa di app, dan
+          // justru di halaman yang paling jarang dibuka.
+          Padding(
             padding: EdgeInsets.fromLTRB(
+              AppSpacing.sm,
+              MediaQuery.of(context).padding.top + AppSpacing.sm,
               AppSpacing.md,
-              MediaQuery.of(context).padding.top + AppSpacing.lg,
-              AppSpacing.md,
-              AppSpacing.xl,
+              0,
             ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: HeroHeader.gradientFor(AppColors.profile),
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(28),
-              ),
-            ),
-            child: Column(
+            child: Row(
               children: [
-                // Profil bukan tab lagi, jadi dia butuh jalan pulang sendiri.
-                // Gradient di sini tetap dipertahankan: ini kartu identitas,
-                // bukan header halaman — pola yang sama dipakai hampir semua
-                // app yang punya layar akun.
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: HeroIconButton(
-                    icon: Icons.arrow_back,
-                    tooltip: 'Kembali',
-                    // Kalau halaman ini yang pertama dibuka (mis. dari tautan),
-                    // tidak ada yang bisa dilepas — pulang ke Beranda.
-                    onPressed: () =>
-                        context.canPop() ? context.pop() : context.go('/'),
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: 'Kembali',
+                  // Kalau halaman ini yang pertama dibuka (mis. dari tautan),
+                  // tidak ada yang bisa dilepas — pulang ke Beranda.
+                  onPressed: () => context.canPop() ? context.pop() : context.go('/'),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                GestureDetector(
-                  onTap: _uploadingAvatar ? null : _changeAvatar,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      CircleAvatar(
-                        radius: 44,
-                        backgroundColor: Colors.white.withValues(alpha: 0.25),
-                        backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                        child: _uploadingAvatar
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : (avatarUrl == null
-                                ? Text(
-                                    initial,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 32,
-                                    ),
-                                  )
-                                : null),
-                      ),
-                      Positioned(
-                        right: -2,
-                        bottom: -2,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.profile,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  displayName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  user?.email ?? '-',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13),
+                const SizedBox(width: 4),
+                const Text(
+                  'Profil',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5),
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+            child: Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: _uploadingAvatar ? null : _changeAvatar,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          CircleAvatar(
+                            radius: 34,
+                            backgroundColor: AppColors.profile,
+                            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                            child: _uploadingAvatar
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : (avatarUrl == null
+                                      ? Text(
+                                          initial,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 26,
+                                          ),
+                                        )
+                                      : null),
+                          ),
+                          Positioned(
+                            right: -4,
+                            bottom: -4,
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: colorScheme.onSurface,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: colorScheme.surface, width: 2),
+                              ),
+                              child: Icon(Icons.camera_alt, size: 13, color: colorScheme.surface),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 19),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            user?.email ?? '-',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13.5),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Ketuk foto untuk menggantinya',
+                            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           Padding(
@@ -248,31 +257,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   icon: Icons.auto_awesome,
                   color: AppColors.profile,
                 ),
-                _MenuTile(
-                  icon: Icons.auto_awesome,
-                  color: AppColors.profile,
-                  title: 'Wrapped',
-                  subtitle: 'Rekap mingguan, bulanan, dan tahunanmu',
-                  onTap: () => context.push('/profile/wrapped'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _MenuTile(
-                  icon: Icons.insights,
-                  color: AppColors.dashboard,
-                  title: 'Pola',
-                  subtitle: 'Hubungan antara olahraga dan tugasmu',
-                  onTap: () => context.push('/profile/insight'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _MenuTile(
-                  icon: Icons.help_outline,
-                  color: AppColors.dashboard,
-                  title: 'Tanya data',
-                  // Dihitung dari katalog, bukan ditulis manual — angka yang
-                  // dipatok akan basi begitu ada pertanyaan baru.
-                  subtitle: '${questionCatalog.length} pertanyaan siap pakai '
-                      'tentang catatanmu',
-                  onTap: () => context.push('/profile/tanya'),
+                DaftarBergaris(
+                  indentGaris: 62,
+                  children: [
+                    _MenuTile(
+                      icon: Icons.auto_awesome,
+                      color: AppColors.profile,
+                      title: 'Wrapped',
+                      subtitle: 'Rekap mingguan, bulanan, dan tahunanmu',
+                      onTap: () => context.push('/profile/wrapped'),
+                    ),
+                    _MenuTile(
+                      icon: Icons.insights,
+                      color: AppColors.dashboard,
+                      title: 'Pola',
+                      subtitle: 'Hubungan antara olahraga dan tugasmu',
+                      onTap: () => context.push('/profile/insight'),
+                    ),
+                    _MenuTile(
+                      icon: Icons.help_outline,
+                      color: AppColors.dashboard,
+                      title: 'Tanya data',
+                      // Dihitung dari katalog, bukan ditulis manual — angka yang
+                      // dipatok akan basi begitu ada pertanyaan baru.
+                      subtitle:
+                          '${questionCatalog.length} pertanyaan siap pakai '
+                          'tentang catatanmu',
+                      onTap: () => context.push('/profile/tanya'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
@@ -280,13 +293,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   icon: Icons.backup_outlined,
                   color: AppColors.profile,
                 ),
-                _MenuTile(
-                  icon: Icons.download_outlined,
-                  color: AppColors.profile,
-                  title: _exporting ? 'Menyiapkan...' : 'Export Data',
-                  subtitle: 'Simpan seluruh datamu sebagai satu berkas JSON',
-                  busy: _exporting,
-                  onTap: _exporting ? null : _exportData,
+                DaftarBergaris(
+                  children: [
+                    _MenuTile(
+                      icon: Icons.download_outlined,
+                      color: AppColors.finance,
+                      title: _exporting ? 'Menyiapkan...' : 'Ekspor data',
+                      subtitle: 'Simpan seluruh datamu sebagai satu berkas JSON',
+                      busy: _exporting,
+                      onTap: _exporting ? null : _exportData,
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
@@ -336,65 +353,54 @@ class _MenuTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          // Padding sendiri, bukan ListTile: subjudul dua baris di ListTile
-          // menempel ke tepi kartu dan bikin sesak.
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: 14,
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: busy
-                    ? SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: color),
-                      )
-                    : Icon(icon, size: 18, color: color),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        height: 1.2,
-                      ),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        // Padding sendiri, bukan ListTile: subjudul dua baris di ListTile
+        // menempel ke tepi kartu dan bikin sesak.
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+              child: busy
+                  ? const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Icon(icon, size: 18, color: Colors.white),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, height: 1.2),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.35,
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.35,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              if (!busy) ...[
-                const SizedBox(width: AppSpacing.sm),
-                Icon(Icons.chevron_right, size: 20, color: colorScheme.onSurfaceVariant),
-              ],
+            ),
+            if (!busy) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Icon(Icons.chevron_right, size: 20, color: colorScheme.onSurfaceVariant),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -416,9 +422,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
         child: ListTile(
           leading: Icon(Icons.notifications_off_outlined, color: colorScheme.onSurfaceVariant),
           title: const Text('Tidak tersedia di web'),
-          subtitle: const Text(
-            'Pengingat deadline hanya berjalan di aplikasi Android/iOS',
-          ),
+          subtitle: const Text('Pengingat deadline hanya berjalan di aplikasi Android/iOS'),
         ),
       );
     }
@@ -435,10 +439,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
               ),
               child: const Icon(Icons.alarm, size: 18, color: AppColors.profile),
             ),
-            title: const Text(
-              'Pengingat',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
+            title: const Text('Pengingat', style: TextStyle(fontWeight: FontWeight.w700)),
             subtitle: const Text('Saklar utama untuk semua jenis di bawah'),
             activeThumbColor: AppColors.profile,
             value: settings.aktif,
@@ -466,10 +467,7 @@ class _NotificationSettingsCard extends ConsumerWidget {
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             onTap: () async {
-              final picked = await showTimePicker(
-                context: context,
-                initialTime: settings.jam,
-              );
+              final picked = await showTimePicker(context: context, initialTime: settings.jam);
               if (picked != null) await controller.setJam(picked);
             },
           ),
@@ -478,15 +476,17 @@ class _NotificationSettingsCard extends ConsumerWidget {
             SwitchListTile(
               secondary: SizedBox(width: 34, child: Icon(kind.icon, size: 18)),
               title: Text(kind.label, style: const TextStyle(fontSize: 14)),
-              subtitle: Text(_kapanBerbunyi(kind, settings), style: const TextStyle(fontSize: 11.5)),
+              subtitle: Text(
+                _kapanBerbunyi(kind, settings),
+                style: const TextStyle(fontSize: 11.5),
+              ),
               dense: true,
               activeThumbColor: AppColors.profile,
               value: settings.jenisAktif.contains(kind),
               // Saklar utama mati berarti tidak ada yang akan berbunyi apa pun
               // pilihannya di sini — jadi jangan biarkan diubah dan menjanjikan
               // sesuatu yang tidak terjadi.
-              onChanged:
-                  settings.aktif ? (value) => controller.setJenis(kind, value) : null,
+              onChanged: settings.aktif ? (value) => controller.setJenis(kind, value) : null,
             ),
           if (settings.jenisAktif.contains(ReminderKind.kelas)) ...[
             const Divider(height: 1),
@@ -527,9 +527,9 @@ class _NotificationSettingsCard extends ConsumerWidget {
               final granted = await service.requestPermission();
               if (!context.mounted) return;
               if (!granted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Izin notifikasi belum diberikan.')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Izin notifikasi belum diberikan.')));
                 return;
               }
               await service.showTestNotification();
@@ -542,14 +542,13 @@ class _NotificationSettingsCard extends ConsumerWidget {
 
   /// Kapan tiap jenis benar-benar berbunyi — supaya saklarnya bisa dipilih
   /// tanpa harus menyalakannya dulu dan menunggu semalam untuk tahu.
-  static String _kapanBerbunyi(ReminderKind kind, NotificationSettings settings) =>
-      switch (kind) {
-        ReminderKind.deadline => 'H-7, H-3, H-1, dan hari-H',
-        ReminderKind.kelas => '${settings.menitSebelumKelas} menit sebelum kelas dimulai',
-        ReminderKind.streak => 'Jam 19.00, kalau hari itu belum ada gerakan',
-        ReminderKind.tagihan => 'Sehari sebelum jatuh tempo',
-        ReminderKind.dokumen => 'H-60, H-14, dan hari-H sebelum masa berlaku habis',
-        ReminderKind.kendaraan => 'Pajak H-30, plat H-60, servis H-7',
-        ReminderKind.catatMakan => 'Jam 20.30, kalau belum ada catatan makan',
-      };
+  static String _kapanBerbunyi(ReminderKind kind, NotificationSettings settings) => switch (kind) {
+    ReminderKind.deadline => 'H-7, H-3, H-1, dan hari-H',
+    ReminderKind.kelas => '${settings.menitSebelumKelas} menit sebelum kelas dimulai',
+    ReminderKind.streak => 'Jam 19.00, kalau hari itu belum ada gerakan',
+    ReminderKind.tagihan => 'Sehari sebelum jatuh tempo',
+    ReminderKind.dokumen => 'H-60, H-14, dan hari-H sebelum masa berlaku habis',
+    ReminderKind.kendaraan => 'Pajak H-30, plat H-60, servis H-7',
+    ReminderKind.catatMakan => 'Jam 20.30, kalau belum ada catatan makan',
+  };
 }
