@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/warna_matkul.dart';
 import '../../../core/widgets/daftar_bergaris.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
@@ -15,23 +19,49 @@ import 'academic_providers.dart';
 
 final _phlDateFormat = DateFormat('d MMM', 'id_ID');
 
-class SchedulePage extends ConsumerWidget {
+class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SchedulePage> createState() => _SchedulePageState();
+}
+
+class _SchedulePageState extends ConsumerState<SchedulePage> {
+  /// 1 = Senin ... 7 = Minggu. Awalnya hari ini.
+  int _hari = DateTime.now().weekday;
+
+  /// Tampilan per hari (timeline) atau sepekan (daftar ringkas).
+  bool _sepekan = false;
+
+  Timer? _detak;
+
+  @override
+  void initState() {
+    super.initState();
+    // Garis "sekarang" dan status "sedang berlangsung" ikut bergeser.
+    _detak = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _detak?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final schedulesAsync = ref.watch(classSchedulesProvider);
-    final todayCount = ref.watch(todaySchedulesProvider).value?.length ?? 0;
-    final totalCount = schedulesAsync.value?.length ?? 0;
+    final semua = schedulesAsync.value ?? const <ClassSchedule>[];
 
     // Mata kuliah yang punya jadwal = yang kamu jalani semester ini.
     //
     // Sengaja tidak memakai kolom `semester` di tabel courses: mata kuliah
-    // hasil import KRS tidak mengisinya, jadi menyaring lewat kolom itu akan
-    // menghasilkan nol untuk semester yang justru sedang berjalan. Jadwal
-    // kelas cuma ada untuk semester yang sedang diambil, dan itu bukti yang
-    // lebih dapat dipercaya daripada kolom yang sering kosong.
-    final matkulSemesterIni = schedulesAsync.value?.map((s) => s.courseId).toSet().length ?? 0;
+    // hasil import KRS tidak mengisinya. Jadwal kelas cuma ada untuk semester
+    // yang sedang diambil, dan itu bukti yang lebih dapat dipercaya.
+    final matkulSemesterIni = semua.map((s) => s.courseId).toSet().length;
+    final rutin = semua.where((s) => !s.isPhl).length;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -51,8 +81,8 @@ class SchedulePage extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader(
-              title: 'Jadwal kuliah',
-              subtitle: 'Semua jadwal perkuliahanmu dalam seminggu',
+              title: 'Jadwal',
+              subtitle: '$rutin kelas sepekan · $matkulSemesterIni mata kuliah',
               color: AppColors.academic,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -62,19 +92,16 @@ class SchedulePage extends ConsumerWidget {
                     tooltip: 'Absensi',
                     onPressed: () => context.push('/academic/schedule/attendance'),
                   ),
-                  const SizedBox(width: 6),
                   HeroIconButton(
                     icon: Icons.workspace_premium_outlined,
                     tooltip: 'Nilai & IPK',
                     onPressed: () => context.push('/academic/schedule/grades'),
                   ),
-                  const SizedBox(width: 6),
                   HeroIconButton(
                     icon: Icons.document_scanner_outlined,
                     tooltip: 'Import dari foto KRS',
                     onPressed: () => context.push('/academic/schedule/import'),
                   ),
-                  const SizedBox(width: 6),
                   HeroIconButton(
                     icon: Icons.calendar_month,
                     tooltip: 'Kalender',
@@ -82,34 +109,36 @@ class SchedulePage extends ConsumerWidget {
                   ),
                 ],
               ),
-              stats: [
-                HeroStatData(icon: Icons.today_outlined, value: '$todayCount', label: 'Hari ini'),
-                HeroStatData(
-                  icon: Icons.event_note_outlined,
-                  value: '$totalCount',
-                  label: 'Total jadwal',
-                ),
-                HeroStatData(
-                  icon: Icons.menu_book_outlined,
-                  value: '$matkulSemesterIni',
-                  label: 'Matkul aktif',
-                ),
-              ],
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, 0),
+              child: _PemilihHari(
+                jadwal: semua,
+                terpilih: _sepekan ? null : _hari,
+                onPilih: (h) => setState(() {
+                  _hari = h;
+                  _sepekan = false;
+                }),
+                onSepekan: () => setState(() => _sepekan = !_sepekan),
+                sepekan: _sepekan,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 96),
               child: schedulesAsync.when(
                 data: (items) => items.isEmpty
                     ? const EmptyState(
                         icon: Icons.event_note_outlined,
                         title: 'Belum ada jadwal kuliah',
-                        subtitle: 'Tekan tombol + untuk menambahkan',
+                        subtitle: 'Tekan tombol + atau import dari foto KRS',
                         color: AppColors.academic,
                       )
-                    : Column(
+                    : _sepekan
+                    ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: _buildDayGroups(context, ref, items),
-                      ),
+                      )
+                    : _TimelineHari(hari: _hari, semua: items),
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: 48),
                   child: Center(child: CircularProgressIndicator()),
@@ -162,6 +191,535 @@ class SchedulePage extends ConsumerWidget {
       widgets.add(const SizedBox(height: AppSpacing.lg));
     }
     return widgets;
+  }
+}
+
+/// Tanggal (di pekan ini) untuk hari ke-[hari], 1 = Senin.
+DateTime _tanggalPekanIni(int hari) {
+  final n = DateTime.now();
+  final senin = DateTime(n.year, n.month, n.day).subtract(Duration(days: n.weekday - 1));
+  return senin.add(Duration(days: hari - 1));
+}
+
+bool _hariSama(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
+
+/// Kelas yang jatuh pada hari ke-[hari] pekan ini: kelas rutin di hari itu,
+/// ditambah kelas pengganti (PHL) yang tanggalnya persis hari itu.
+List<ClassSchedule> _kelasPada(List<ClassSchedule> semua, int hari) {
+  final tanggal = _tanggalPekanIni(hari);
+  return [
+    for (final s in semua)
+      if (s.isPhl
+          ? (s.specificDate != null && _hariSama(s.specificDate!, tanggal))
+          : s.dayOfWeek == hari)
+        s,
+  ]..sort((a, b) => (menitDariJam(a.startTime) ?? 0).compareTo(menitDariJam(b.startTime) ?? 0));
+}
+
+/// Tujuh pil hari plus tombol "Sepekan". Tiap pil menunjukkan tanggal dan
+/// titik sebanyak kelasnya, jadi hari padat kelihatan tanpa dibuka.
+class _PemilihHari extends StatelessWidget {
+  const _PemilihHari({
+    required this.jadwal,
+    required this.terpilih,
+    required this.onPilih,
+    required this.onSepekan,
+    required this.sepekan,
+  });
+
+  final List<ClassSchedule> jadwal;
+  final int? terpilih;
+  final ValueChanged<int> onPilih;
+  final VoidCallback onSepekan;
+  final bool sepekan;
+
+  static const _singkat = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final hariIni = DateTime.now().weekday;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            for (var h = 1; h <= 7; h++)
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    final pilih = terpilih == h;
+                    final jumlah = _kelasPada(jadwal, h).length;
+                    final warnaTeks = pilih ? Colors.white : colorScheme.onSurface;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Material(
+                        color: pilih
+                            ? AppColors.academic
+                            : (h == hariIni
+                                  ? AppColors.academic.withValues(alpha: 0.1)
+                                  : colorScheme.surface),
+                        borderRadius: BorderRadius.circular(16),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => onPilih(h),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Column(
+                              children: [
+                                Text(
+                                  _singkat[h - 1],
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: pilih
+                                        ? Colors.white.withValues(alpha: 0.85)
+                                        : (h == hariIni
+                                              ? AppColors.academic
+                                              : colorScheme.onSurfaceVariant),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '${_tanggalPekanIni(h).day}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: warnaTeks,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                SizedBox(
+                                  height: 5,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      for (var i = 0; i < math.min(jumlah, 3); i++)
+                                        Container(
+                                          width: 5,
+                                          height: 5,
+                                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: pilih ? Colors.white : AppColors.academic,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                sepekan
+                    ? 'Semua kelas sepekan'
+                    : '${weekDayName(terpilih ?? hariIni)}, '
+                          '${DateFormat('d MMMM', 'id_ID').format(_tanggalPekanIni(terpilih ?? hariIni))}',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: onSepekan,
+              icon: Icon(sepekan ? Icons.view_day_outlined : Icons.view_week_outlined, size: 18),
+              label: Text(sepekan ? 'Per hari' : 'Sepekan'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Satu hari sebagai garis waktu: blok kelas berwarna per mata kuliah, jeda
+/// di antaranya disebut panjangnya, dan — kalau hari ini — garis "sekarang".
+class _TimelineHari extends StatelessWidget {
+  const _TimelineHari({required this.hari, required this.semua});
+
+  final int hari;
+  final List<ClassSchedule> semua;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final kelas = _kelasPada(semua, hari);
+    final sekarang = DateTime.now();
+    final hariIni = hari == sekarang.weekday;
+    final menitSekarang = sekarang.hour * 60 + sekarang.minute;
+    final bentrok = conflictMap(semua);
+
+    if (kelas.isEmpty) {
+      return Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+          child: Column(
+            children: [
+              Icon(
+                Icons.weekend_outlined,
+                size: 40,
+                color: AppColors.academic.withValues(alpha: 0.7),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Tidak ada kuliah hari ${weekDayName(hari)}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Waktu kosong untuk tugas, latihan, atau istirahat.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final anak = <Widget>[];
+    int? akhirSebelum;
+    var garisSudah = !hariIni;
+
+    void pasangGaris() {
+      anak.add(_GarisSekarang(jam: DateFormat('HH.mm').format(sekarang)));
+      garisSudah = true;
+    }
+
+    for (final s in kelas) {
+      final mulai = menitDariJam(s.startTime) ?? 0;
+      final selesai = menitDariJam(s.endTime) ?? mulai;
+
+      if (!garisSudah && menitSekarang < mulai) pasangGaris();
+
+      if (akhirSebelum != null && mulai - akhirSebelum >= 20) {
+        anak.add(_Jeda(menit: mulai - akhirSebelum));
+      }
+
+      final status = !hariIni
+          ? _StatusKelas.nanti
+          : menitSekarang >= selesai
+          ? _StatusKelas.selesai
+          : menitSekarang >= mulai
+          ? _StatusKelas.berlangsung
+          : _StatusKelas.nanti;
+
+      anak.add(
+        _BlokKelas(
+          schedule: s,
+          status: status,
+          progres: status == _StatusKelas.berlangsung && selesai > mulai
+              ? (menitSekarang - mulai) / (selesai - mulai)
+              : null,
+          bentrok: bentrok[s.id] ?? const [],
+        ),
+      );
+      if (status == _StatusKelas.berlangsung) garisSudah = true;
+      akhirSebelum = selesai;
+    }
+    if (!garisSudah) pasangGaris();
+
+    final totalMenit = kelas.fold<int>(
+      0,
+      (n, s) => n + ((menitDariJam(s.endTime) ?? 0) - (menitDariJam(s.startTime) ?? 0)),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...anak,
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          '${kelas.length} kelas · ${_durasi(totalMenit)} di kampus',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12.5, color: colorScheme.onSurfaceVariant),
+        ),
+      ],
+    );
+  }
+}
+
+String _durasi(int menit) {
+  final j = menit ~/ 60;
+  final m = menit % 60;
+  if (j == 0) return '$m menit';
+  if (m == 0) return '$j jam';
+  return '$j j $m m';
+}
+
+enum _StatusKelas { selesai, berlangsung, nanti }
+
+class _BlokKelas extends StatelessWidget {
+  const _BlokKelas({
+    required this.schedule,
+    required this.status,
+    this.progres,
+    this.bentrok = const [],
+  });
+
+  final ClassSchedule schedule;
+  final _StatusKelas status;
+  final double? progres;
+  final List<ScheduleConflict> bentrok;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final warna = warnaMatkul(schedule.courseId);
+    final selesai = status == _StatusKelas.selesai;
+    final jalan = status == _StatusKelas.berlangsung;
+    final mulai = menitDariJam(schedule.startTime) ?? 0;
+    final akhir = menitDariJam(schedule.endTime) ?? mulai;
+
+    final isi = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 50,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  schedule.startTime.substring(0, 5),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+                Text(
+                  schedule.endTime.substring(0, 5),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: Material(
+            color: jalan ? warna : warna.withValues(alpha: 0.11),
+            borderRadius: BorderRadius.circular(18),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => context.push('/academic/schedule/${schedule.id}/edit'),
+              child: Container(
+                constraints: BoxConstraints(minHeight: 64 + (akhir - mulai) * 0.35),
+                decoration: BoxDecoration(
+                  border: Border(left: BorderSide(color: warna, width: 5)),
+                ),
+                padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            schedule.courseName,
+                            style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                              height: 1.25,
+                              color: jalan ? Colors.white : colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        if (jalan)
+                          const _Lencana('Berlangsung', latar: Colors.white24, teks: Colors.white)
+                        else if (schedule.isPhl)
+                          _Lencana(
+                            schedule.specificDate != null
+                                ? 'PHL ${_phlDateFormat.format(schedule.specificDate!)}'
+                                : 'PHL',
+                            latar: warna.withValues(alpha: 0.18),
+                            teks: warna,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    _InfoKelas(
+                      ikon: Icons.schedule_rounded,
+                      teks: _durasi(akhir - mulai),
+                      putih: jalan,
+                    ),
+                    if (schedule.room case final r? when r.trim().isNotEmpty)
+                      _InfoKelas(ikon: Icons.place_outlined, teks: r.trim(), putih: jalan),
+                    if (schedule.lecturer case final l? when l.trim().isNotEmpty)
+                      _InfoKelas(ikon: Icons.person_outline, teks: l.trim(), putih: jalan),
+                    if (bentrok.isNotEmpty)
+                      _InfoKelas(
+                        ikon: Icons.warning_amber_rounded,
+                        teks: 'Bentrok: ${bentrok.map((c) => c.lawan.courseName).join(', ')}',
+                        warna: jalan ? Colors.white : colorScheme.error,
+                      ),
+                    if (progres != null) ...[
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(99),
+                        child: LinearProgressIndicator(
+                          value: progres!.clamp(0.0, 1.0),
+                          minHeight: 5,
+                          color: Colors.white,
+                          backgroundColor: Colors.white24,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Selesai ${akhir - (DateTime.now().hour * 60 + DateTime.now().minute)} menit lagi',
+                        style: const TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Opacity(opacity: selesai ? 0.5 : 1, child: isi),
+    );
+  }
+}
+
+class _InfoKelas extends StatelessWidget {
+  const _InfoKelas({required this.ikon, required this.teks, this.putih = false, this.warna});
+
+  final IconData ikon;
+  final String teks;
+  final bool putih;
+  final Color? warna;
+
+  @override
+  Widget build(BuildContext context) {
+    final c =
+        warna ??
+        (putih
+            ? Colors.white.withValues(alpha: 0.9)
+            : Theme.of(context).colorScheme.onSurfaceVariant);
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(
+        children: [
+          Icon(ikon, size: 14, color: c),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              teks,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12.5, color: c),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Lencana extends StatelessWidget {
+  const _Lencana(this.label, {required this.latar, required this.teks});
+
+  final String label;
+  final Color latar;
+  final Color teks;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: latar, borderRadius: BorderRadius.circular(99)),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: teks),
+      ),
+    );
+  }
+}
+
+class _Jeda extends StatelessWidget {
+  const _Jeda({required this.menit});
+
+  final int menit;
+
+  @override
+  Widget build(BuildContext context) {
+    final redup = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.only(left: 50, bottom: 10),
+      child: Row(
+        children: [
+          Icon(Icons.coffee_outlined, size: 15, color: redup),
+          const SizedBox(width: 6),
+          Text(
+            'Jeda ${_durasi(menit)}',
+            style: TextStyle(fontSize: 12.5, color: redup, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+        ],
+      ),
+    );
+  }
+}
+
+class _GarisSekarang extends StatelessWidget {
+  const _GarisSekarang({required this.jam});
+
+  final String jam;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 50,
+            child: Text(
+              jam,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                color: AppColors.deadline,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          Container(
+            width: 9,
+            height: 9,
+            decoration: const BoxDecoration(color: AppColors.deadline, shape: BoxShape.circle),
+          ),
+          const Expanded(child: Divider(color: AppColors.deadline, thickness: 1.5, height: 1.5)),
+        ],
+      ),
+    );
   }
 }
 
