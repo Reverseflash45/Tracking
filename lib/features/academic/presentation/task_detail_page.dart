@@ -133,6 +133,18 @@ class _TaskDetailBody extends ConsumerWidget {
           onSelectionChanged: (selection) =>
               ubahStatusTugas(context, ref, task.id, selection.first),
         ),
+        if (!task.isDone) ...[
+          const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.deadline,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => context.push('/academic/tasks/${task.id}/fokus'),
+            icon: const Icon(Icons.timer_outlined),
+            label: const Text('Mulai fokus'),
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         const SectionHeader(
           title: 'Deskripsi',

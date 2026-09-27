@@ -5,6 +5,7 @@ import '../../features/academic/data/models/task.dart';
 import '../../features/academic/presentation/grades_page.dart';
 import '../../features/academic/presentation/khs_import_page.dart';
 import '../../features/academic/presentation/krs_import_page.dart';
+import '../../features/academic/presentation/fokus_page.dart';
 import '../../features/academic/presentation/personal_tasks_page.dart';
 import '../../features/academic/presentation/recurring_tasks_page.dart';
 import '../../features/academic/presentation/schedule_form_page.dart';
@@ -228,6 +229,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: ':id/edit',
                   builder: (context, state) => TaskFormPage(taskId: state.pathParameters['id']),
+                ),
+                GoRoute(
+                  path: ':id/fokus',
+                  builder: (context, state) => FokusPage(taskId: state.pathParameters['id']!),
                 ),
                 GoRoute(
                   path: ':id',

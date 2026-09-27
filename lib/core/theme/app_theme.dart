@@ -283,6 +283,7 @@ class AppTheme {
         style: SegmentedButton.styleFrom(
           selectedBackgroundColor: colorScheme.onSurface,
           selectedForegroundColor: colorScheme.surface,
+          foregroundColor: colorScheme.onSurfaceVariant,
           side: BorderSide(color: colorScheme.outlineVariant),
           textStyle: const TextStyle(fontFamily: fontFamily, fontWeight: FontWeight.w600),
         ),
