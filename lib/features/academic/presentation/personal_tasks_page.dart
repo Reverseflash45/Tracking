@@ -57,7 +57,7 @@ class _PersonalTasksPageState extends ConsumerState<PersonalTasksPage> {
 
     final belum = pribadi.where((t) => !t.isDone).length;
     final terlambat =
-        pribadi.where((t) => !t.isDone && t.deadline.isBefore(DateTime.now())).length;
+        pribadi.where((t) => !t.isDone && t.tenggatLokal.isBefore(DateTime.now())).length;
     final selesai = pribadi.where((t) => t.isDone).length;
 
     return Scaffold(

@@ -73,7 +73,7 @@ class _TaskDetailBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final accent = priorityColor(task.priority);
-    final overdue = !task.isDone && task.deadline.isBefore(DateTime.now());
+    final overdue = !task.isDone && task.tenggatLokal.isBefore(DateTime.now());
     final description = task.description?.trim() ?? '';
 
     return ListView(

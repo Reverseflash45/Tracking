@@ -85,6 +85,25 @@ class AcademicTask {
 
   bool get dariTemplate => recurringId != null;
 
+  /// Tenggat sebagai jam dinding di zona perangkat.
+  ///
+  /// Tenggat disimpan sebagai jam dinding ("23:59") tanpa zona, tetapi
+  /// Supabase mengembalikannya dengan akhiran +00:00, sehingga [deadline]
+  /// jadi DateTime UTC yang angka jamnya benar namun instannya bergeser
+  /// sebesar selisih zona (7 jam di WIB). Membandingkan [deadline] dengan
+  /// `DateTime.now()` karenanya salah; bandingkan yang ini.
+  DateTime get tenggatLokal => DateTime(
+    deadline.year,
+    deadline.month,
+    deadline.day,
+    deadline.hour,
+    deadline.minute,
+    deadline.second,
+  );
+
+  /// Sudah lewat tenggat dan belum selesai.
+  bool get terlambat => !isDone && tenggatLokal.isBefore(DateTime.now());
+
   /// Selesai tepat waktu: statusnya done dan diselesaikan sebelum/sama dengan deadline.
   bool get isOnTime => isDone && completedAt != null && !completedAt!.isAfter(deadline);
 

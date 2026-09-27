@@ -289,13 +289,13 @@ class _KartuSorotanState extends ConsumerState<_KartuSorotan> {
             .where(
               (t) =>
                   !t.isDone &&
-                  t.deadline.difference(sekarang) < const Duration(days: 2),
+                  t.tenggatLokal.difference(sekarang) < const Duration(days: 2),
             )
             .toList()
           ..sort((a, b) => a.deadline.compareTo(b.deadline));
     if (mepet.isNotEmpty) {
       final t = mepet.first;
-      final telat = t.deadline.isBefore(sekarang);
+      final telat = t.tenggatLokal.isBefore(sekarang);
       return _TampilanSorotan(
         jenis: _JenisSorotan.tenggat,
         label: telat ? 'Sudah lewat tenggat' : 'Tenggat terdekat',
@@ -306,7 +306,7 @@ class _KartuSorotanState extends ConsumerState<_KartuSorotan> {
         ].join(' · '),
         sudut: telat
             ? 'Terlambat'
-            : _hitungMundur(t.deadline.difference(sekarang)),
+            : _hitungMundur(t.tenggatLokal.difference(sekarang)),
         onTap: () => _keTab(context, kTabTugas),
       );
     }
@@ -590,7 +590,7 @@ class _KartuCincin extends ConsumerWidget {
 
     final tugas = ref.watch(tasksProvider).value ?? const <AcademicTask>[];
     final tugasMinggu = tugas
-        .where((t) => !t.deadline.isBefore(awal) && t.deadline.isBefore(akhir))
+        .where((t) => !t.tenggatLokal.isBefore(awal) && t.tenggatLokal.isBefore(akhir))
         .toList();
     final tugasBeres = tugasMinggu.where((t) => t.isDone).length;
 
@@ -1006,7 +1006,7 @@ class _BarisTenggat extends StatelessWidget {
       t.deadline.month,
       t.deadline.day,
     ).difference(DateTime(sekarang.year, sekarang.month, sekarang.day)).inDays;
-    final telat = t.deadline.isBefore(sekarang);
+    final telat = t.tenggatLokal.isBefore(sekarang);
     final mepet = telat || hari <= 1;
     final kapan = telat
         ? 'Terlambat'

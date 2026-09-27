@@ -329,7 +329,7 @@ class _BarisTugas extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final warna = statusColor(task.status, colorScheme);
-    final terlambat = !task.isDone && task.deadline.isBefore(DateTime.now());
+    final terlambat = !task.isDone && task.tenggatLokal.isBefore(DateTime.now());
 
     return InkWell(
       onTap: () => context.push('/academic/tasks/${task.id}'),

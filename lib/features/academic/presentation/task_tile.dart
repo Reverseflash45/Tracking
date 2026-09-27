@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/warna_matkul.dart';
 import '../data/academic_repository.dart';
 import '../data/models/task.dart';
 import 'academic_providers.dart';
@@ -109,7 +110,7 @@ class TaskTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final accent = priorityColor(task.priority);
-    final overdue = !task.isDone && task.deadline.isBefore(DateTime.now());
+    final overdue = !task.isDone && task.tenggatLokal.isBefore(DateTime.now());
 
     return Dismissible(
       key: ValueKey(task.id),
@@ -168,14 +169,22 @@ class TaskTile extends ConsumerWidget {
                   task.id,
                   task.isDone ? TaskStatus.todo : TaskStatus.done,
                 ),
-                icon: Icon(
-                  task.isDone
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  size: 22,
-                  color: task.isDone
-                      ? AppColors.statusDone
-                      : colorScheme.outline,
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  transitionBuilder: (child, anim) =>
+                      ScaleTransition(scale: anim, child: child),
+                  child: Icon(
+                    task.isDone
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked,
+                    key: ValueKey(task.isDone),
+                    size: 24,
+                    color: task.isDone
+                        ? AppColors.statusDone
+                        : (task.priority == TaskPriority.high
+                              ? AppColors.priorityHigh
+                              : colorScheme.outline),
+                  ),
                 ),
               ),
               Expanded(
@@ -216,22 +225,41 @@ class TaskTile extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 3),
-                    Text(
-                      [
-                        if (tampilkanMatkul) task.courseName ?? 'Umum',
-                        task.isDone
-                            ? _dateFormat.format(task.deadline)
-                            : countdownLabel(task.deadline),
-                      ].join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: overdue
-                            ? AppColors.priorityHigh
-                            : colorScheme.onSurfaceVariant,
-                        fontWeight: overdue ? FontWeight.w600 : FontWeight.w400,
-                      ),
+                    Row(
+                      children: [
+                        if (tampilkanMatkul && task.courseName != null) ...[
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: warnaMatkul(task.courseId),
+                              borderRadius: BorderRadius.circular(2.5),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(
+                          child: Text(
+                            [
+                              if (tampilkanMatkul) task.courseName ?? 'Umum',
+                              task.isDone
+                                  ? _dateFormat.format(task.deadline)
+                                  : countdownLabel(task.deadline),
+                            ].join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: overdue
+                                  ? AppColors.priorityHigh
+                                  : colorScheme.onSurfaceVariant,
+                              fontWeight: overdue
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -250,8 +278,14 @@ class TaskTile extends ConsumerWidget {
                       ),
                     )
                     .toList(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(9, 4, 5, 4),
+                  decoration: BoxDecoration(
+                    color: task.status == TaskStatus.inProgress
+                        ? AppColors.statusInProgress.withValues(alpha: 0.14)
+                        : colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -259,16 +293,18 @@ class TaskTile extends ConsumerWidget {
                         task.status.label,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: task.status == TaskStatus.inProgress
-                              ? colorScheme.primary
+                              ? AppColors.statusInProgress
                               : colorScheme.onSurfaceVariant,
                         ),
                       ),
                       Icon(
                         Icons.expand_more,
                         size: 16,
-                        color: colorScheme.onSurfaceVariant,
+                        color: task.status == TaskStatus.inProgress
+                            ? AppColors.statusInProgress
+                            : colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
