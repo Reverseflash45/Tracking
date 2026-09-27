@@ -90,8 +90,7 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell>
-    with WidgetsBindingObserver {
+class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -132,26 +131,30 @@ class _AppShellState extends ConsumerState<AppShell>
       body: navigationShell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
+          border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
         ),
-        child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: (index) => navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
+        // Pil di belakang ikon aktif ikut warna tab-nya: tiap bagian punya
+        // warna sendiri (Jadwal ungu, Tugas koral, …), dan bar bawah jadi
+        // tempat pertama warna itu dikenali.
+        child: NavigationBarTheme(
+          data: Theme.of(context).navigationBarTheme.copyWith(
+            indicatorColor: _tabs[navigationShell.currentIndex].color.withValues(alpha: 0.14),
           ),
-          destinations: [
-            for (final tab in _tabs)
-              NavigationDestination(
-                icon: Icon(tab.icon),
-                selectedIcon: Icon(tab.selectedIcon),
-                label: tab.label,
-              ),
-          ],
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: (index) => navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            ),
+            destinations: [
+              for (final tab in _tabs)
+                NavigationDestination(
+                  icon: Icon(tab.icon),
+                  selectedIcon: Icon(tab.selectedIcon, color: tab.color),
+                  label: tab.label,
+                ),
+            ],
+          ),
         ),
       ),
     );
