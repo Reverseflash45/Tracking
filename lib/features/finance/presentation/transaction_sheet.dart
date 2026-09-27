@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+
 import '../../../core/offline/pending_writes.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -10,6 +11,7 @@ import '../data/finance_repository.dart';
 import '../domain/finance_stats.dart';
 import '../domain/receipt_parser.dart';
 import '../domain/transaction.dart';
+import 'grafik_keuangan.dart';
 
 const _color = AppColors.finance;
 final _dateFormat = DateFormat('d MMMM y', 'id_ID');
@@ -295,6 +297,28 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                 },
               ),
 
+              // Nominal jajan yang paling sering, sekali ketuk. Hanya saat
+              // mencatat baru dan belum ada angka dari struk.
+              if (!_isEdit && _candidates.isEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final n in const [5000, 10000, 15000, 20000, 25000, 50000, 100000])
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ActionChip(
+                            visualDensity: VisualDensity.compact,
+                            label: Text(formatRupiahRingkas(n.toDouble())),
+                            onPressed: () => setState(() => _amountController.text = '$n'),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+
               // Kalau totalnya tidak ketemu, angka yang memang tertulis di
               // struk ditawarkan untuk dipilih. Menawarkan lebih jujur
               // daripada memilihkan, dan tetap lebih cepat daripada mengetik.
@@ -338,8 +362,8 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                         category.icon,
                         size: 15,
                         color: _category == category
-                            ? _color
-                            : colorScheme.onSurfaceVariant,
+                            ? colorScheme.surface
+                            : warnaKategori(category),
                       ),
                       label: Text(category.label),
                       selected: _category == category,

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/supabase/supabase_client_provider.dart';
+import '../../../core/theme/warna_matkul.dart';
 import '../data/academic_repository.dart';
 import '../data/models/class_schedule.dart';
 import '../data/models/course.dart';
@@ -12,13 +13,18 @@ import '../domain/schedule_conflict.dart';
 final coursesProvider = FutureProvider.autoDispose<List<Course>>((ref) async {
   final userId = ref.watch(currentUserProvider)?.id;
   if (userId == null) return const [];
-  return ref.watch(academicRepositoryProvider).fetchCourses(userId);
+  final daftar = await ref.watch(academicRepositoryProvider).fetchCourses(userId);
+  bagikanWarnaMatkul(daftar.map((c) => c.id));
+  return daftar;
 });
 
 final classSchedulesProvider = FutureProvider.autoDispose<List<ClassSchedule>>((ref) async {
   final userId = ref.watch(currentUserProvider)?.id;
   if (userId == null) return const [];
   final list = await ref.watch(academicRepositoryProvider).fetchSchedules(userId);
+  // Jadwal bisa dimuat sebelum daftar mata kuliah; warnanya dibagikan dari
+  // sini juga supaya blok jadwal tidak sempat memakai warna hash.
+  bagikanWarnaMatkul(list.map((s) => s.courseId));
   // Urutan dari server tidak selalu sampai utuh (salinan luring bisa
   // tersimpan dalam urutan lain), jadi diurutkan ulang di sini: per hari,
   // lalu per jam mulai.

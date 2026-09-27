@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/warna_matkul.dart';
 import '../../../core/widgets/daftar_bergaris.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
@@ -43,6 +44,9 @@ class TasksPage extends ConsumerStatefulWidget {
 
 class _TasksPageState extends ConsumerState<TasksPage> {
   _TaskFilter _filter = _TaskFilter.all;
+
+  /// Saring per mata kuliah; null = semua.
+  String? _matkul;
 
   @override
   Widget build(BuildContext context) {
@@ -134,11 +138,47 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                 ),
               ),
             ),
+            if (_daftarMatkul(kuliah) case final matkul when matkul.length > 1)
+              SizedBox(
+                height: 44,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+                  children: [
+                    for (final (id, nama) in matkul) ...[
+                      ActionChip(
+                        avatar: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: warnaMatkul(id),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        label: Text(nama),
+                        backgroundColor: _matkul == id
+                            ? warnaMatkul(id).withValues(alpha: 0.16)
+                            : null,
+                        side: BorderSide(
+                          color: _matkul == id
+                              ? warnaMatkul(id)
+                              : Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        onPressed: () => setState(() => _matkul = _matkul == id ? null : id),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                    ],
+                  ],
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, 96),
               child: tasksAsync.when(
                 data: (_) {
-                  final filtered = kuliah.where(_filter.matches).toList();
+                  final filtered = kuliah
+                      .where(_filter.matches)
+                      .where((t) => _matkul == null || t.courseId == _matkul)
+                      .toList();
                   if (filtered.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.only(top: AppSpacing.md),
@@ -386,4 +426,15 @@ class _KartuProgresMinggu extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Mata kuliah yang punya tugas, sebagai (id, nama), urut abjad.
+List<(String, String)> _daftarMatkul(List<AcademicTask> tugas) {
+  final peta = <String, String>{};
+  for (final t in tugas) {
+    if (t.courseId case final id?) peta[id] = t.courseName ?? 'Tanpa nama';
+  }
+  final isi = [for (final e in peta.entries) (e.key, e.value)];
+  isi.sort((a, b) => a.$2.compareTo(b.$2));
+  return isi;
 }

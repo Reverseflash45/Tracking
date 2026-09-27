@@ -273,6 +273,11 @@ class _KartuSorotanState extends ConsumerState<_KartuSorotan> {
           rincian: _rincianKelas(s),
           sudut: 'Selesai ${s.endTime.substring(0, 5)}',
           progres: total <= 0 ? null : lewat / total,
+          aksi: (
+            'Catat hadir',
+            Icons.how_to_reg_rounded,
+            () => context.push('/academic/schedule/attendance'),
+          ),
           onTap: () => _keTab(context, kTabJadwal),
         );
       }
@@ -315,7 +320,12 @@ class _KartuSorotanState extends ConsumerState<_KartuSorotan> {
         sudut: telat
             ? 'Terlambat'
             : _hitungMundur(t.tenggatLokal.difference(sekarang)),
-        onTap: () => _keTab(context, kTabTugas),
+        aksi: (
+          'Mulai fokus',
+          Icons.timer_outlined,
+          () => context.push('/academic/tasks/${t.id}/fokus'),
+        ),
+        onTap: () => context.push('/academic/tasks/${t.id}'),
       );
     }
 
@@ -376,6 +386,7 @@ class _TampilanSorotan extends StatelessWidget {
     required this.rincian,
     this.sudut,
     this.progres,
+    this.aksi,
     this.onTap,
   });
 
@@ -385,6 +396,9 @@ class _TampilanSorotan extends StatelessWidget {
   final String rincian;
   final String? sudut;
   final double? progres;
+
+  /// Tombol kecil di bawah kartu untuk langkah berikutnya yang paling wajar.
+  final (String, IconData, VoidCallback)? aksi;
   final VoidCallback? onTap;
 
   @override
@@ -493,6 +507,21 @@ class _TampilanSorotan extends StatelessWidget {
                         color: putih,
                         backgroundColor: Colors.white.withValues(alpha: 0.25),
                       ),
+                    ),
+                  ],
+                  if (aksi case (final label, final ikon, final tekan)) ...[
+                    const SizedBox(height: 14),
+                    FilledButton.icon(
+                      onPressed: tekan,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: warna,
+                        minimumSize: const Size(0, 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      icon: Icon(ikon, size: 18),
+                      label: Text(label),
                     ),
                   ],
                 ],

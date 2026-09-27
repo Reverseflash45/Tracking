@@ -36,6 +36,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  /// Akun contoh yang sengaja dibuka untuk umum (portofolio): isinya data
+  /// rekaan, dan diisi ulang oleh `scripts/isi_demo.py`.
+  static const _emailDemo = 'demo@raffstw.my.id';
+  static const _sandiDemo = 'TrackingDemo2026';
+
+  Future<void> _masukDemo() async {
+    _emailController.text = _emailDemo;
+    _passwordController.text = _sandiDemo;
+    await _submit();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authControllerProvider).isLoading;
@@ -85,6 +96,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Masuk'),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : _masukDemo,
+              icon: const Icon(Icons.visibility_outlined, size: 18),
+              label: const Text('Coba dengan akun demo'),
             ),
           ],
         ),
