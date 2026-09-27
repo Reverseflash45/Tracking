@@ -278,7 +278,10 @@ class _KartuSorotanState extends ConsumerState<_KartuSorotan> {
             Icons.how_to_reg_rounded,
             () => context.push('/academic/schedule/attendance'),
           ),
-          onTap: () => _keTab(context, kTabJadwal),
+          onTap: () {
+            ref.read(hariJadwalProvider.notifier).pilih(DateTime.now().weekday);
+            _keTab(context, kTabJadwal);
+          },
         );
       }
     }
@@ -291,7 +294,10 @@ class _KartuSorotanState extends ConsumerState<_KartuSorotan> {
           judul: s.courseName,
           rincian: _rincianKelas(s),
           sudut: _hitungMundur(mulai.difference(sekarang)),
-          onTap: () => _keTab(context, kTabJadwal),
+          onTap: () {
+            ref.read(hariJadwalProvider.notifier).pilih(DateTime.now().weekday);
+            _keTab(context, kTabJadwal);
+          },
         );
       }
     }
@@ -341,7 +347,10 @@ class _KartuSorotanState extends ConsumerState<_KartuSorotan> {
           ? 'Belum ada jadwal kuliah tersimpan'
           : 'Berikutnya ${weekDayName(berikut.dayOfWeek)} '
                 '${berikut.startTime.substring(0, 5)} · ${berikut.courseName}',
-      onTap: () => _keTab(context, kTabJadwal),
+      onTap: () {
+        ref.read(hariJadwalProvider.notifier).pilih(DateTime.now().weekday);
+        _keTab(context, kTabJadwal);
+      },
     );
   }
 
@@ -632,7 +641,10 @@ class _KartuCincin extends ConsumerWidget {
 
     final tugas = ref.watch(tasksProvider).value ?? const <AcademicTask>[];
     final tugasMinggu = tugas
-        .where((t) => !t.tenggatLokal.isBefore(awal) && t.tenggatLokal.isBefore(akhir))
+        .where(
+          (t) =>
+              !t.tenggatLokal.isBefore(awal) && t.tenggatLokal.isBefore(akhir),
+        )
         .toList();
     final tugasBeres = tugasMinggu.where((t) => t.isDone).length;
 
@@ -858,7 +870,13 @@ class _KartuMingguIni extends ConsumerWidget {
 
                     return InkWell(
                       borderRadius: BorderRadius.circular(14),
-                      onTap: () => _keTab(context, kTabJadwal),
+                      // Buka Jadwal tepat di hari yang diketuk.
+                      onTap: () {
+                        ref
+                            .read(hariJadwalProvider.notifier)
+                            .pilih(hari.weekday);
+                        _keTab(context, kTabJadwal);
+                      },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Column(
@@ -1566,7 +1584,11 @@ Future<void> _bukaCatatCepat(BuildContext context, WidgetRef ref) {
                                   color: warna,
                                   borderRadius: BorderRadius.circular(11),
                                 ),
-                                child: Icon(ikon, color: Colors.white, size: 20),
+                                child: Icon(
+                                  ikon,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
                               const Spacer(),
                               Text(
@@ -1582,7 +1604,9 @@ Future<void> _bukaCatatCepat(BuildContext context, WidgetRef ref) {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Theme.of(sheet).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    sheet,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],

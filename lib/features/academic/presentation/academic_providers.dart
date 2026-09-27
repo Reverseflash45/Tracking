@@ -125,3 +125,17 @@ final scheduleConflictsProvider =
   final schedules = ref.watch(classSchedulesProvider).value ?? const <ClassSchedule>[];
   return conflictMap(schedules);
 });
+
+/// Hari yang sedang dibuka di tab Jadwal (1 = Senin). Dibagi lewat provider,
+/// bukan state halaman, supaya Beranda bisa membuka Jadwal langsung di hari
+/// yang diketuk di strip pekan.
+class HariJadwal extends Notifier<int> {
+  @override
+  int build() => DateTime.now().weekday;
+
+  void pilih(int hari) => state = hari;
+
+  void geser(int langkah) => state = ((state - 1 + langkah) % 7) + 1;
+}
+
+final hariJadwalProvider = NotifierProvider<HariJadwal, int>(HariJadwal.new);

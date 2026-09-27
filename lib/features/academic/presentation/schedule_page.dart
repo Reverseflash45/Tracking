@@ -28,7 +28,6 @@ class SchedulePage extends ConsumerStatefulWidget {
 
 class _SchedulePageState extends ConsumerState<SchedulePage> {
   /// 1 = Senin ... 7 = Minggu. Awalnya hari ini.
-  int _hari = DateTime.now().weekday;
 
   /// Tampilan per hari (timeline) atau sepekan (daftar ringkas).
   bool _sepekan = false;
@@ -53,6 +52,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   @override
   Widget build(BuildContext context) {
     final schedulesAsync = ref.watch(classSchedulesProvider);
+    final hari = ref.watch(hariJadwalProvider);
     final semua = schedulesAsync.value ?? const <ClassSchedule>[];
 
     // Mata kuliah yang punya jadwal = yang kamu jalani semester ini.
@@ -114,9 +114,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, 0),
               child: _PemilihHari(
                 jadwal: semua,
-                terpilih: _sepekan ? null : _hari,
+                terpilih: _sepekan ? null : hari,
                 onPilih: (h) => setState(() {
-                  _hari = h;
+                  ref.read(hariJadwalProvider.notifier).pilih(h);
                   _sepekan = false;
                 }),
                 onSepekan: () => setState(() => _sepekan = !_sepekan),
@@ -144,7 +144,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                         onHorizontalDragEnd: (d) {
                           final v = d.primaryVelocity ?? 0;
                           if (v.abs() < 250) return;
-                          setState(() => _hari = ((_hari - 1 + (v < 0 ? 1 : -1)) % 7) + 1);
+                          ref.read(hariJadwalProvider.notifier).geser(v < 0 ? 1 : -1);
                         },
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 220),
@@ -159,7 +159,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                               child: child,
                             ),
                           ),
-                          child: _TimelineHari(key: ValueKey(_hari), hari: _hari, semua: items),
+                          child: _TimelineHari(key: ValueKey(hari), hari: hari, semua: items),
                         ),
                       ),
                 loading: () => const Padding(
