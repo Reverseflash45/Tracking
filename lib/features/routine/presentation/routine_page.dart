@@ -369,18 +369,26 @@ class BarisRutinitas extends StatelessWidget {
           child: Row(
             children: [
               SizedBox(
-                width: 44,
+                width: 50,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      baris.mulai,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                        height: 1.2,
-                        color: baris.dariKuliah ? AppColors.academic : colorScheme.onSurface,
+                    // Menyusut, tidak patah: "08:00" dulu terbelah jadi
+                    // "08:0" dan "0" di kolom yang terlalu sempit.
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        baris.mulai,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          height: 1.2,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                          color: baris.dariKuliah ? AppColors.academic : colorScheme.onSurface,
+                        ),
                       ),
                     ),
                     if (baris.selesai case final akhir?)

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -722,11 +724,18 @@ class _LineChartView extends StatelessWidget {
 
     final padding = ((maxValue - minValue).abs() * 0.2).clamp(1.0, double.infinity);
     final labelInterval = (points.length / 4).ceil().toDouble().clamp(1.0, double.infinity);
+    // Sumbu kiri memakai kelipatan "rapi" (1, 2, 5, 10, …) dan batasnya
+    // dibulatkan ke kelipatan itu. Dulu fl_chart menaruh label di min dan
+    // max mentah juga, sehingga "64" dan "64" bertumpuk di dasar grafik.
+    final kasar = (maxValue + padding - (minValue - padding)) / 4;
+    final langkah = _intervalRapi(kasar);
+    final minY = ((minValue - padding) / langkah).floor() * langkah;
+    final maxY = ((maxValue + padding) / langkah).ceil() * langkah;
 
     return LineChart(
       LineChartData(
-        minY: (minValue - padding).clamp(0, double.infinity),
-        maxY: maxValue + padding,
+        minY: minY.clamp(0, double.infinity).toDouble(),
+        maxY: maxY,
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
@@ -761,8 +770,11 @@ class _LineChartView extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 42,
+              interval: langkah,
               getTitlesWidget: (value, meta) => Text(
-                _numberFormat.format(value.round()),
+                langkah < 1
+                    ? value.toStringAsFixed(1).replaceAll('.', ',')
+                    : _numberFormat.format(value.round()),
                 style: TextStyle(fontSize: 9, color: colorScheme.onSurfaceVariant),
               ),
             ),
@@ -919,4 +931,14 @@ class _WeeklyBarChart extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Kelipatan 1, 2, 2,5, atau 5 kali pangkat sepuluh terdekat di atas [kasar].
+double _intervalRapi(double kasar) {
+  if (kasar <= 0 || kasar.isNaN) return 1;
+  final pangkat = math.pow(10, (math.log(kasar) / math.ln10).floor()).toDouble();
+  for (final k in [1.0, 2.0, 2.5, 5.0, 10.0]) {
+    if (k * pangkat >= kasar) return k * pangkat;
+  }
+  return 10 * pangkat;
 }
