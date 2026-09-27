@@ -63,7 +63,7 @@ def main() -> None:
 
     # urutan hapus: anak dulu, lalu induk
     for t in ["workout_exercises", "workout_sessions", "class_schedules", "tasks", "courses", "transactions",
-              "sleep_logs", "weight_logs", "goals", "runs", "food_logs", "water_logs"]:
+              "sleep_logs", "weight_logs", "goals", "runs", "food_logs", "water_logs", "notes", "wishlist_items", "media_items"]:
         kosongkan(t)
     for t in ["finance_settings", "body_profiles"]:
         kosongkan(t)
@@ -184,6 +184,26 @@ def main() -> None:
     isi("food_logs", makan)
     isi("water_logs", [{"logged_on": (HARI_INI - timedelta(days=d)).isoformat(), "ml": ml}
                        for d in range(7) for ml in ([250] * (4 if d == 0 else acak.randint(6, 10)))])
+    # ---------- catatan, wishlist, watchlist ----------
+    isi("notes", [
+        {"title": "Ide tugas akhir", "pinned": True,
+         "body": "1. Deteksi hama padi dari foto daun (CNN)\n2. Aplikasi antre puskesmas\n3. Analisis sentimen ulasan KRL"},
+        {"title": "Wifi lab 3.2", "pinned": False, "body": "SSID: LAB-TI-32\nMinta password ke asisten tiap awal semester"},
+        {"title": "Belanja bulanan", "pinned": False, "body": "Beras 5 kg, telur 1 kg, sabun, pasta gigi, kopi sachet"},
+    ])
+    isi("wishlist_items", [
+        {"name": "Keyboard mekanikal 75%", "price": 650_000, "saved": 420_000, "category": "belanja", "priority": "tinggi",
+         "target_date": (HARI_INI + timedelta(days=45)).isoformat()},
+        {"name": "Sepatu lari", "price": 900_000, "saved": 150_000, "category": "belanja", "priority": "sedang"},
+        {"name": "Kursus Flutter lanjutan", "price": 350_000, "saved": 350_000, "category": "kuliah", "priority": "tinggi"},
+    ])
+    isi("media_items", [
+        {"title": "Frieren: Beyond Journey's End", "kind": "series", "origin": "anime", "status": "jalan", "progress": 18, "total": 28, "year": 2023},
+        {"title": "Laskar Pelangi", "kind": "buku", "origin": "indonesia", "status": "selesai", "progress": 529, "total": 529, "rating": 5,
+         "finished_on": (HARI_INI - timedelta(days=12)).isoformat()},
+        {"title": "Dune: Part Two", "kind": "film", "origin": "hollywood", "status": "rencana", "progress": 0, "year": 2024},
+        {"title": "Clean Code", "kind": "buku", "origin": "hollywood", "status": "jalan", "progress": 140, "total": 431},
+    ])
     isi("goals", [
         {"title": "Latihan 12 kali bulan ini", "metric": "sesiLatihan", "target_value": 12, "period": "bulanan"},
         {"title": "Pengeluaran di bawah 2 juta", "metric": "batasPengeluaran", "target_value": 2_000_000, "period": "bulanan"},
