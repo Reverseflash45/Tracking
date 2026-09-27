@@ -1,19 +1,22 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/domain/achievements.dart';
-import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/offline/offline_banner.dart';
+import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_shell.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/menu_list.dart';
-import '../../../core/widgets/section_header.dart';
 import '../../academic/data/models/class_schedule.dart';
 import '../../academic/data/models/task.dart';
+import '../../academic/domain/schedule_conflict.dart';
 import '../../academic/presentation/academic_providers.dart';
 import '../../body/data/body_repository.dart';
 import '../../body/domain/calorie_calculator.dart';
@@ -23,7 +26,15 @@ import '../../nutrition/data/nutrition_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 
-final _dayFormat = DateFormat('EEEE, d MMMM y', 'id_ID');
+final _dayFormat = DateFormat('EEEE, d MMMM', 'id_ID');
+
+/// Warna cincin asupan. Lima warna tab sudah terpakai untuk arti lain, dan
+/// asupan butuh rona hangat yang tidak tertukar dengan koral tenggat.
+const Color _warnaAsupan = Color(0xFFF2A33A);
+
+/// Target hari bergerak per minggu kalau belum ada target sendiri — batas
+/// bawah anjuran aktivitas fisik orang dewasa (3–5 hari seminggu).
+const int _targetLatihanMingguan = 4;
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -41,41 +52,441 @@ class DashboardPage extends ConsumerWidget {
           ref.invalidate(waterLogsProvider);
         },
         child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const _HeroHeader(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.xl,
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            MediaQuery.of(context).padding.top + 14,
+            AppSpacing.md,
+            AppSpacing.xl,
+          ),
+          children: const [
+            _Sapaan(),
+            SizedBox(height: 18),
+            // Ditaruh di atas: catatan yang tertahan harus terlihat sebelum
+            // kamu menganggap semuanya sudah tersimpan.
+            OfflineBanner(),
+            _KartuSorotan(),
+            SizedBox(height: AppSpacing.md),
+            _KartuCincin(),
+            SizedBox(height: AppSpacing.md),
+            _KartuMingguIni(),
+            _AchievementsRow(),
+            _Judul('Tenggat', aksi: 'Semua', tab: kTabTugas),
+            _DaftarTenggat(),
+            _Judul('Uang', aksi: 'Detail', tab: kTabKeuangan),
+            _KartuUang(),
+            _Judul('Lainnya'),
+            _PintasanLainnya(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pindah ke tab lain, bukan menumpuk halamannya di atas Beranda.
+///
+/// Kalau di-push, bar bawah tetap menunjuk Beranda padahal kamu sudah ada di
+/// Jadwal, dan tombol kembali jadi satu-satunya jalan keluar.
+void _keTab(BuildContext context, int tab) {
+  StatefulNavigationShell.of(context).goBranch(tab);
+}
+
+bool _hariSama(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+DateTime _awalMinggu(DateTime t) {
+  final hari = DateTime(t.year, t.month, t.day);
+  return hari.subtract(Duration(days: hari.weekday - 1));
+}
+
+// ---------------------------------------------------------------------------
+// Sapaan
+// ---------------------------------------------------------------------------
+
+/// Tanggal, sapaan, dan satu kalimat yang merangkum hari ini — bukan tiga
+/// angka tanpa konteks.
+class _Sapaan extends ConsumerWidget {
+  const _Sapaan();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final user = ref.watch(currentUserProvider);
+    final profile = ref.watch(profileProvider).value;
+    final fullName = profile?.fullName;
+    final nama = (fullName != null && fullName.trim().isNotEmpty)
+        ? fullName.trim().split(' ').first
+        : (user?.email?.split('@').first ?? 'Mahasiswa');
+    final avatarUrl = profile?.avatarUrl;
+
+    final jam = DateTime.now().hour;
+    final salam = jam < 11
+        ? 'Selamat pagi'
+        : jam < 15
+        ? 'Selamat siang'
+        : jam < 19
+        ? 'Selamat sore'
+        : 'Selamat malam';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _dayFormat.format(DateTime.now()),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '$salam, $nama',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 26,
+                    height: 1.15,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        HeroIconButton(
+          icon: Icons.search,
+          tooltip: 'Cari',
+          onPressed: () => context.push('/search'),
+        ),
+        const SizedBox(width: 2),
+        Semantics(
+          button: true,
+          label: 'Buka profil',
+          child: InkWell(
+            onTap: () => context.push('/profile'),
+            customBorder: const CircleBorder(),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.dashboard,
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl)
+                  : null,
+              child: avatarUrl == null
+                  ? Text(
+                      nama.isNotEmpty ? nama[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Kartu sorotan: satu hal terpenting sekarang
+// ---------------------------------------------------------------------------
+
+enum _JenisSorotan { berlangsung, berikutnya, tenggat, bebas }
+
+/// Satu kartu besar berisi hal yang paling perlu kamu tahu *sekarang*:
+/// kelas yang sedang jalan, kelas berikutnya, tenggat yang mepet, atau
+/// kabar bahwa hari ini kosong. Warnanya ikut artinya — ungu untuk kuliah,
+/// koral untuk tenggat — jadi dari jauh pun kelihatan jenisnya.
+///
+/// Diperbarui tiap 30 detik supaya hitung mundurnya tidak basi.
+class _KartuSorotan extends ConsumerStatefulWidget {
+  const _KartuSorotan();
+
+  @override
+  ConsumerState<_KartuSorotan> createState() => _KartuSorotanState();
+}
+
+class _KartuSorotanState extends ConsumerState<_KartuSorotan> {
+  Timer? _detak;
+
+  @override
+  void initState() {
+    super.initState();
+    _detak = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => mounted ? setState(() {}) : null,
+    );
+  }
+
+  @override
+  void dispose() {
+    _detak?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sekarang = DateTime.now();
+    final hariIni = ref.watch(todaySchedulesProvider).value ?? const [];
+    final semua = ref.watch(classSchedulesProvider).value ?? const [];
+    final tugas = ref.watch(tasksProvider).value ?? const <AcademicTask>[];
+
+    DateTime pada(String jam) {
+      final m = menitDariJam(jam) ?? 0;
+      return DateTime(
+        sekarang.year,
+        sekarang.month,
+        sekarang.day,
+        m ~/ 60,
+        m % 60,
+      );
+    }
+
+    // 1. Kelas yang sedang berlangsung, lalu kelas berikutnya hari ini.
+    for (final s in hariIni) {
+      final mulai = pada(s.startTime);
+      final selesai = pada(s.endTime);
+      if (!sekarang.isBefore(mulai) && sekarang.isBefore(selesai)) {
+        final total = selesai.difference(mulai).inMinutes;
+        final lewat = sekarang.difference(mulai).inMinutes;
+        return _TampilanSorotan(
+          jenis: _JenisSorotan.berlangsung,
+          label: 'Sedang berlangsung',
+          judul: s.courseName,
+          rincian: _rincianKelas(s),
+          sudut: 'Selesai ${s.endTime.substring(0, 5)}',
+          progres: total <= 0 ? null : lewat / total,
+          onTap: () => _keTab(context, kTabJadwal),
+        );
+      }
+    }
+    for (final s in hariIni) {
+      final mulai = pada(s.startTime);
+      if (sekarang.isBefore(mulai)) {
+        return _TampilanSorotan(
+          jenis: _JenisSorotan.berikutnya,
+          label: 'Kelas berikutnya',
+          judul: s.courseName,
+          rincian: _rincianKelas(s),
+          sudut: _hitungMundur(mulai.difference(sekarang)),
+          onTap: () => _keTab(context, kTabJadwal),
+        );
+      }
+    }
+
+    // 2. Tidak ada kelas lagi: tenggat yang lewat atau jatuh dalam 2 hari.
+    final mepet =
+        tugas
+            .where(
+              (t) =>
+                  !t.isDone &&
+                  t.deadline.difference(sekarang) < const Duration(days: 2),
+            )
+            .toList()
+          ..sort((a, b) => a.deadline.compareTo(b.deadline));
+    if (mepet.isNotEmpty) {
+      final t = mepet.first;
+      final telat = t.deadline.isBefore(sekarang);
+      return _TampilanSorotan(
+        jenis: _JenisSorotan.tenggat,
+        label: telat ? 'Sudah lewat tenggat' : 'Tenggat terdekat',
+        judul: t.title,
+        rincian: [
+          t.courseName ?? 'Tugas pribadi',
+          if (mepet.length > 1) '+${mepet.length - 1} lainnya',
+        ].join(' · '),
+        sudut: telat
+            ? 'Terlambat'
+            : _hitungMundur(t.deadline.difference(sekarang)),
+        onTap: () => _keTab(context, kTabTugas),
+      );
+    }
+
+    // 3. Hari ini kosong: sebut kapan kuliah berikutnya.
+    final berikut = _kelasBerikutnya(semua, sekarang);
+    return _TampilanSorotan(
+      jenis: _JenisSorotan.bebas,
+      label: hariIni.isEmpty
+          ? 'Tidak ada kuliah hari ini'
+          : 'Kuliah hari ini selesai',
+      judul: 'Waktunya buat dirimu sendiri',
+      rincian: berikut == null
+          ? 'Belum ada jadwal kuliah tersimpan'
+          : 'Berikutnya ${weekDayName(berikut.dayOfWeek)} '
+                '${berikut.startTime.substring(0, 5)} · ${berikut.courseName}',
+      onTap: () => _keTab(context, kTabJadwal),
+    );
+  }
+
+  static String _rincianKelas(ClassSchedule s) => [
+    s.timeRangeLabel.replaceAll(' - ', '–'),
+    ?s.room,
+    if (s.lecturer case final l? when l.trim().isNotEmpty) l.trim(),
+  ].join(' · ');
+
+  static ClassSchedule? _kelasBerikutnya(
+    List<ClassSchedule> semua,
+    DateTime sekarang,
+  ) {
+    final rutin = semua.where((s) => !s.isPhl).toList();
+    if (rutin.isEmpty) return null;
+    for (var geser = 1; geser <= 7; geser++) {
+      final hari = (sekarang.weekday - 1 + geser) % 7 + 1;
+      final kelas = rutin.where((s) => s.dayOfWeek == hari).toList();
+      if (kelas.isNotEmpty) return kelas.first;
+    }
+    return null;
+  }
+}
+
+String _hitungMundur(Duration d) {
+  if (d.inMinutes < 1) return 'Sebentar lagi';
+  if (d.inMinutes < 60) return '${d.inMinutes} menit lagi';
+  if (d.inHours < 24) {
+    final menit = d.inMinutes % 60;
+    return menit == 0
+        ? '${d.inHours} jam lagi'
+        : '${d.inHours} j $menit m lagi';
+  }
+  return '${d.inDays} hari lagi';
+}
+
+class _TampilanSorotan extends StatelessWidget {
+  const _TampilanSorotan({
+    required this.jenis,
+    required this.label,
+    required this.judul,
+    required this.rincian,
+    this.sudut,
+    this.progres,
+    this.onTap,
+  });
+
+  final _JenisSorotan jenis;
+  final String label;
+  final String judul;
+  final String rincian;
+  final String? sudut;
+  final double? progres;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final (warna, ikon) = switch (jenis) {
+      _JenisSorotan.berlangsung => (AppColors.academic, Icons.school_rounded),
+      _JenisSorotan.berikutnya => (AppColors.academic, Icons.schedule_rounded),
+      _JenisSorotan.tenggat => (AppColors.deadline, Icons.flag_rounded),
+      _JenisSorotan.bebas => (AppColors.workout, Icons.wb_sunny_rounded),
+    };
+    const putih = Colors.white;
+    final redup = Colors.white.withValues(alpha: 0.78);
+
+    return Material(
+      color: warna,
+      borderRadius: BorderRadius.circular(22),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Stack(
+          children: [
+            // Ikon besar samar di pojok: memberi karakter tanpa gradien.
+            Positioned(
+              right: -18,
+              bottom: -26,
+              child: Icon(
+                ikon,
+                size: 132,
+                color: Colors.white.withValues(alpha: 0.12),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ditaruh paling atas: catatan yang tertahan harus terlihat
-                  // sebelum kamu menganggap semuanya sudah tersimpan.
-                  const OfflineBanner(),
-                  const _AchievementsRow(),
-
-                  // Tiga pertanyaan, tiga kartu: apa yang harus kulakukan hari
-                  // ini, bagaimana badanku, bagaimana uangku. Tiap kartu satu
-                  // daftar bergaris, bukan kartu-kartu kecil yang ditumpuk.
-                  const SectionHeader(title: 'Hari ini'),
-                  const _KartuHariIni(),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  const SectionHeader(title: 'Badan'),
-                  const _KartuBadan(),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  const SectionHeader(title: 'Uang'),
-                  const _FinanceCard(),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  const SectionHeader(title: 'Lainnya'),
-                  const _PintasanLainnya(),
+                  Row(
+                    children: [
+                      if (jenis == _JenisSorotan.berlangsung) ...[
+                        const _TitikBerdenyut(),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: Text(
+                          label.toUpperCase(),
+                          style: TextStyle(
+                            color: redup,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.9,
+                          ),
+                        ),
+                      ),
+                      if (sudut != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            sudut!,
+                            style: const TextStyle(
+                              color: putih,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    judul,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: putih,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    rincian,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: redup,
+                      fontSize: 13.5,
+                      height: 1.35,
+                    ),
+                  ),
+                  if (progres != null) ...[
+                    const SizedBox(height: 14),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(99),
+                      child: LinearProgressIndicator(
+                        value: progres!.clamp(0.0, 1.0),
+                        minHeight: 6,
+                        color: putih,
+                        backgroundColor: Colors.white.withValues(alpha: 0.25),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -86,226 +497,899 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
-/// Sapaan dan tanggal di atas latar halaman, lalu tiga angka dalam satu strip.
-///
-/// Dulu blok gradient biru-ungu berisi avatar, sapaan berseru, dan tiga kotak
-/// kaca berikon api, petir, dan centang. Sekarang tanggal jadi label kecil,
-/// sapaannya besar dan tenang, dan angkanya berbicara sendiri tanpa ikon.
-class _HeroHeader extends ConsumerWidget {
-  const _HeroHeader();
+/// Titik putih yang berdenyut pelan: tanda "sedang live".
+class _TitikBerdenyut extends StatefulWidget {
+  const _TitikBerdenyut();
+
+  @override
+  State<_TitikBerdenyut> createState() => _TitikBerdenyutState();
+}
+
+class _TitikBerdenyutState extends State<_TitikBerdenyut>
+    with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween(begin: 0.35, end: 1.0).animate(_c),
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cincin progres
+// ---------------------------------------------------------------------------
+
+class _DataCincin {
+  const _DataCincin({
+    required this.label,
+    required this.nilai,
+    required this.target,
+    required this.satuan,
+    required this.warna,
+    required this.onTap,
+  });
+
+  final String label;
+  final double nilai;
+  final double target;
+  final String satuan;
+  final Color warna;
+  final VoidCallback onTap;
+
+  double get rasio => target <= 0 ? 0 : (nilai / target).clamp(0.0, 1.0);
+}
+
+/// Tiga cincin konsentris ala Apple Fitness: latihan minggu ini, asupan hari
+/// ini, dan tugas minggu ini. Satu gambar yang langsung menjawab "sudah
+/// seberapa jauh aku", dengan angka persisnya di samping.
+class _KartuCincin extends ConsumerWidget {
+  const _KartuCincin();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sekarang = DateTime.now();
+    final awal = _awalMinggu(sekarang);
+    final akhir = awal.add(const Duration(days: 7));
+
+    final aktif = ref.watch(activeDatesProvider);
+    final hariLatihan = {
+      for (final d in aktif)
+        if (!d.isBefore(awal) && d.isBefore(akhir))
+          DateTime(d.year, d.month, d.day),
+    }.length;
+
+    final asupan = ref.watch(todayNutritionProvider).value;
+    final profil = ref.watch(bodyProfileProvider).value;
+    final berat = ref.watch(currentWeightProvider).value;
+    final targetKkal = (profil == null || berat == null)
+        ? null
+        : calculateCalories(
+            profile: profil,
+            weightKg: berat,
+            now: sekarang,
+          ).goalKcal;
+
+    final tugas = ref.watch(tasksProvider).value ?? const <AcademicTask>[];
+    final tugasMinggu = tugas
+        .where((t) => !t.deadline.isBefore(awal) && t.deadline.isBefore(akhir))
+        .toList();
+    final tugasBeres = tugasMinggu.where((t) => t.isDone).length;
+
+    final cincin = [
+      _DataCincin(
+        label: 'Latihan',
+        nilai: hariLatihan.toDouble(),
+        target: _targetLatihanMingguan.toDouble(),
+        satuan: '/$_targetLatihanMingguan hari',
+        warna: AppColors.workout,
+        onTap: () => _keTab(context, kTabWorkout),
+      ),
+      _DataCincin(
+        label: 'Asupan',
+        nilai: asupan?.calories ?? 0,
+        target: (targetKkal ?? 2000).toDouble(),
+        satuan: targetKkal == null ? ' kkal' : '/${_ribuan(targetKkal)} kkal',
+        warna: _warnaAsupan,
+        onTap: () => context.push('/workout/nutrition'),
+      ),
+      _DataCincin(
+        label: 'Tugas',
+        nilai: tugasBeres.toDouble(),
+        target: tugasMinggu.length.toDouble(),
+        satuan: '/${tugasMinggu.length} minggu ini',
+        warna: AppColors.deadline,
+        onTap: () => _keTab(context, kTabTugas),
+      ),
+    ];
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+        child: Row(
+          children: [
+            SizedBox.square(
+              dimension: 116,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeOutCubic,
+                builder: (context, t, _) => CustomPaint(
+                  painter: _LukisCincin(cincin: cincin, t: t),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                children: [for (final c in cincin) _BarisCincin(c)],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _ribuan(num n) => NumberFormat.decimalPattern('id_ID').format(n.round());
+
+class _BarisCincin extends StatelessWidget {
+  const _BarisCincin(this.c);
+
+  final _DataCincin c;
+
+  @override
+  Widget build(BuildContext context) {
+    final redup = Theme.of(context).colorScheme.onSurfaceVariant;
+    return InkWell(
+      onTap: c.onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 30,
+              decoration: BoxDecoration(
+                color: c.warna,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    c.label,
+                    style: TextStyle(fontSize: 12, color: redup, height: 1.2),
+                  ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: _ribuan(c.nilai),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.4,
+                            ),
+                          ),
+                          TextSpan(
+                            text: c.satuan,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: redup,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      style: const TextStyle(
+                        height: 1.25,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LukisCincin extends CustomPainter {
+  _LukisCincin({required this.cincin, required this.t});
+
+  final List<_DataCincin> cincin;
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const tebal = 12.0;
+    const jarak = 3.5;
+    final pusat = size.center(Offset.zero);
+    var jari = size.shortestSide / 2 - tebal / 2;
+
+    for (final c in cincin) {
+      final kotak = Rect.fromCircle(center: pusat, radius: jari);
+      final kuas = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = tebal
+        ..strokeCap = StrokeCap.round;
+
+      canvas.drawCircle(
+        pusat,
+        jari,
+        kuas..color = c.warna.withValues(alpha: 0.18),
+      );
+      final sudut = 2 * math.pi * c.rasio * t;
+      if (sudut > 0) {
+        canvas.drawArc(
+          kotak,
+          -math.pi / 2,
+          sudut,
+          false,
+          kuas..color = c.warna,
+        );
+      }
+      jari -= tebal + jarak;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LukisCincin old) => old.t != t || old.cincin != cincin;
+}
+
+// ---------------------------------------------------------------------------
+// Minggu ini
+// ---------------------------------------------------------------------------
+
+/// Tujuh hari dalam satu baris: hari ini ditandai, titik ungu untuk hari
+/// yang ada kuliah, titik teal untuk hari yang sudah ada latihan.
+class _KartuMingguIni extends ConsumerWidget {
+  const _KartuMingguIni();
+
+  static const _singkat = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final user = ref.watch(currentUserProvider);
-    final profile = ref.watch(profileProvider).value;
-    final fullName = profile?.fullName;
-    final displayName = (fullName != null && fullName.trim().isNotEmpty)
-        ? fullName.trim().split(' ').first
-        : (user?.email?.split('@').first ?? 'Mahasiswa');
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
-    final avatarUrl = profile?.avatarUrl;
+    final sekarang = DateTime.now();
+    final awal = _awalMinggu(sekarang);
+    final jadwal = ref.watch(classSchedulesProvider).value ?? const [];
+    final aktif = ref.watch(activeDatesProvider);
+    final tugas = ref.watch(tasksProvider).value ?? const <AcademicTask>[];
 
-    final workoutStreak = ref.watch(workoutStreakProvider).value?.current ?? 0;
-    final deadlineStreak =
-        ref.watch(deadlineStreakProvider).value?.current ?? 0;
-    final doneToday =
-        ref.watch(tasksProvider).value?.where((t) {
-          final completed = t.completedAt;
-          final now = DateTime.now();
-          return completed != null &&
-              completed.year == now.year &&
-              completed.month == now.month &&
-              completed.day == now.day;
-        }).length ??
-        0;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.md + 4,
-        MediaQuery.of(context).padding.top + 18,
-        AppSpacing.md,
-        AppSpacing.sm,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        child: Row(
+          children: [
+            for (var i = 0; i < 7; i++)
               Expanded(
-                child: _Menyusut(
-                  child: Text(
-                    _dayFormat.format(DateTime.now()).toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.9,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
-              HeroIconButton(
-                icon: Icons.search,
-                tooltip: 'Cari',
-                onPressed: () => context.push('/search'),
-              ),
-              // Foto profil membuka Profil — pola yang sudah dikenal dari app lain.
-              Semantics(
-                button: true,
-                label: 'Buka profil',
-                child: InkWell(
-                  onTap: () => context.push('/profile'),
-                  customBorder: const CircleBorder(),
-                  child: CircleAvatar(
-                    radius: 17,
-                    backgroundColor: colorScheme.surfaceContainerHighest,
-                    backgroundImage: avatarUrl != null
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            initial,
-                            style: TextStyle(
-                              color: colorScheme.onSurface,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
+                child: Builder(
+                  builder: (context) {
+                    final hari = awal.add(Duration(days: i));
+                    final iniHari = _hariSama(hari, sekarang);
+                    final lalu = hari.isBefore(
+                      DateTime(sekarang.year, sekarang.month, sekarang.day),
+                    );
+                    final adaKuliah = jadwal.any(
+                      (s) => s.isPhl
+                          ? (s.specificDate != null &&
+                                _hariSama(s.specificDate!, hari))
+                          : s.dayOfWeek == hari.weekday,
+                    );
+                    final adaLatihan = aktif.any((d) => _hariSama(d, hari));
+                    final adaTenggat = tugas.any(
+                      (t) => !t.isDone && _hariSama(t.deadline, hari),
+                    );
+
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => _keTab(context, kTabJadwal),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Column(
+                          children: [
+                            Text(
+                              _singkat[i],
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: iniHari
+                                    ? AppColors.dashboard
+                                    : colorScheme.onSurfaceVariant,
+                              ),
                             ),
-                          )
-                        : null,
-                  ),
+                            const SizedBox(height: 6),
+                            Container(
+                              width: 34,
+                              height: 34,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: iniHari
+                                    ? AppColors.dashboard
+                                    : Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '${hari.day}',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: iniHari
+                                      ? Colors.white
+                                      : lalu
+                                      ? colorScheme.onSurfaceVariant
+                                      : colorScheme.onSurface,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            SizedBox(
+                              height: 6,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (adaKuliah)
+                                    const _Titik(AppColors.academic),
+                                  if (adaTenggat)
+                                    const _Titik(AppColors.deadline),
+                                  if (adaLatihan)
+                                    const _Titik(AppColors.workout),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          _Menyusut(
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Titik extends StatelessWidget {
+  const _Titik(this.warna);
+
+  final Color warna;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 5,
+      height: 5,
+      margin: const EdgeInsets.symmetric(horizontal: 1.5),
+      decoration: BoxDecoration(color: warna, shape: BoxShape.circle),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Judul bagian
+// ---------------------------------------------------------------------------
+
+class _Judul extends StatelessWidget {
+  const _Judul(this.teks, {this.aksi, this.tab});
+
+  final String teks;
+  final String? aksi;
+  final int? tab;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 26, 0, 8),
+      child: Row(
+        children: [
+          Expanded(
             child: Text(
-              'Halo, $displayName.',
-              style: TextStyle(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w700,
-                fontSize: 30,
-                height: 1.1,
-                letterSpacing: -0.9,
+              teks,
+              style: const TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
               ),
             ),
           ),
-          const SizedBox(height: 18),
-          KartuStatistik(
-            stats: [
-              HeroStatData(
-                icon: Icons.local_fire_department,
-                value: '$workoutStreak hari',
-                label: 'Rutin latihan',
+          if (aksi != null && tab != null)
+            TextButton(
+              onPressed: () => _keTab(context, tab!),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
-              HeroStatData(
-                icon: Icons.bolt,
-                value: '$deadlineStreak hari',
-                label: 'Tepat waktu',
-              ),
-              HeroStatData(
-                icon: Icons.task_alt,
-                value: '$doneToday',
-                label: 'Selesai hari ini',
-              ),
-            ],
-          ),
+              child: Text(aksi!),
+            ),
         ],
       ),
     );
   }
 }
 
-/// Pintasan ke bagian yang tidak punya tab sendiri.
-///
-/// Dulu tersebar: Target dan Wishlist jadi tombol kecil di header, sedangkan
-/// Watchlist, Kendaraan, dan Dokumen terkubur dua lapis di dalam Profil —
-/// tempat orang mencari setelan, bukan mencari fitur. Sekarang kelimanya
-/// berjajar di layar yang paling sering kamu buka.
-/// Fitur yang tidak punya kartu ringkasan sendiri di Beranda.
-///
-/// Dulu lima petak ikon, tiga per baris — yang berarti baris kedua selalu
-/// menyisakan satu lubang. Lubang itu terbaca sebagai sesuatu yang belum
-/// selesai, dan jumlah pintasan di sini memang tidak akan pernah habis dibagi
-/// tiga.
-///
-/// Keterangannya sengaja tidak diisi untuk yang namanya sudah menjelaskan
-/// dirinya. "Target" tidak butuh; "Watchlist" butuh, karena namanya tidak
-/// memberi tahu isinya film atau tempat menabung.
+// ---------------------------------------------------------------------------
+// Tenggat
+// ---------------------------------------------------------------------------
+
+/// Empat tenggat terdekat. Tanggalnya jadi blok di kiri seperti kalender
+/// meja; yang mepet (hari ini, besok, atau lewat) diwarnai koral.
+class _DaftarTenggat extends ConsumerWidget {
+  const _DaftarTenggat();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tugasAsync = ref.watch(tasksProvider);
+    return tugasAsync.when(
+      data: (semua) {
+        final belum = semua.where((t) => !t.isDone).toList()
+          ..sort((a, b) => a.deadline.compareTo(b.deadline));
+        if (belum.isEmpty) {
+          return const _KartuKosong(
+            ikon: Icons.celebration_outlined,
+            teks: 'Semua tugas beres. Nikmati waktumu.',
+          );
+        }
+        return Card(
+          margin: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (final (i, t) in belum.take(4).indexed) ...[
+                if (i > 0) const Divider(height: 1, indent: 72),
+                _BarisTenggat(t),
+              ],
+            ],
+          ),
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.all(AppSpacing.md),
+        child: LinearProgressIndicator(),
+      ),
+      error: (error, _) => const _KartuKosong(
+        ikon: Icons.error_outline,
+        teks: 'Tugas gagal dimuat.',
+      ),
+    );
+  }
+}
+
+class _BarisTenggat extends StatelessWidget {
+  const _BarisTenggat(this.t);
+
+  final AcademicTask t;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final sekarang = DateTime.now();
+    final hari = DateTime(
+      t.deadline.year,
+      t.deadline.month,
+      t.deadline.day,
+    ).difference(DateTime(sekarang.year, sekarang.month, sekarang.day)).inDays;
+    final telat = t.deadline.isBefore(sekarang);
+    final mepet = telat || hari <= 1;
+    final kapan = telat
+        ? 'Terlambat'
+        : hari == 0
+        ? 'Hari ini ${DateFormat('HH.mm').format(t.deadline)}'
+        : hari == 1
+        ? 'Besok'
+        : '$hari hari lagi';
+
+    final warnaBlok = mepet ? AppColors.deadline : colorScheme.onSurface;
+
+    return InkWell(
+      onTap: () => context.push('/academic/tasks/${t.id}'),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 48,
+              decoration: BoxDecoration(
+                color: mepet
+                    ? AppColors.deadline.withValues(alpha: 0.12)
+                    : colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    DateFormat('MMM', 'id_ID').format(t.deadline).toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: warnaBlok,
+                    ),
+                  ),
+                  Text(
+                    '${t.deadline.day}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                      color: warnaBlok,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t.courseName ?? 'Tugas pribadi',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              kapan,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: mepet
+                    ? AppColors.deadline
+                    : colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _KartuKosong extends StatelessWidget {
+  const _KartuKosong({required this.ikon, required this.teks});
+
+  final IconData ikon;
+  final String teks;
+
+  @override
+  Widget build(BuildContext context) {
+    final redup = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            Icon(ikon, size: 20, color: redup),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(teks, style: TextStyle(fontSize: 13.5, color: redup)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Uang
+// ---------------------------------------------------------------------------
+
+/// Yang ditonjolkan jatah harian, bukan total pengeluaran — "boleh habis
+/// berapa hari ini" lebih menentukan keputusanmu siang ini.
+class _KartuUang extends ConsumerWidget {
+  const _KartuUang();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final summaryAsync = ref.watch(financeSummaryProvider);
+
+    return summaryAsync.when(
+      data: (summary) {
+        final jatah = summary.jatahHarian;
+        final budget = summary.budget;
+        if (jatah == null || budget == null || budget <= 0) {
+          return _KartuKosong(
+            ikon: Icons.account_balance_wallet_outlined,
+            teks: summary.kosong
+                ? 'Belum ada catatan keuangan.'
+                : 'Keluar ${formatRupiah(summary.pengeluaran)} periode ini.',
+          );
+        }
+        final kebobolan = (summary.sisaBudget ?? 0) <= 0;
+        final rasio = (summary.pengeluaran / budget).clamp(0.0, 1.0);
+        final warna = kebobolan
+            ? AppColors.priorityHigh
+            : rasio > 0.8
+            ? AppColors.priorityMedium
+            : AppColors.finance;
+
+        return Card(
+          margin: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => _keTab(context, kTabKeuangan),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              kebobolan ? 'Lewat anggaran' : 'Jatah hari ini',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                formatRupiah(
+                                  kebobolan ? summary.sisaBudget!.abs() : jatah,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.8,
+                                  color: kebobolan
+                                      ? warna
+                                      : colorScheme.onSurface,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: warna.withValues(alpha: 0.14),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.account_balance_wallet_rounded,
+                          color: warna,
+                          size: 21,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: LinearProgressIndicator(
+                      value: rasio,
+                      minHeight: 8,
+                      color: warna,
+                      backgroundColor: warna.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text(
+                        '${formatRupiahRingkas(summary.pengeluaran)} dari '
+                        '${formatRupiahRingkas(budget)}',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${summary.sisaHari} hari lagi',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox(
+        height: 60,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      error: (error, _) => const _KartuKosong(
+        ikon: Icons.error_outline,
+        teks: 'Gagal memuat keuangan.',
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pintasan
+// ---------------------------------------------------------------------------
+
+/// Fitur yang tidak punya tab sendiri, sebagai deretan ubin berwarna yang
+/// bisa digeser — seperti pintasan di aplikasi dompet atau ojek daring.
 class _PintasanLainnya extends StatelessWidget {
   const _PintasanLainnya();
 
   static const _isi = [
     MenuItemData(
-      icon: Icons.schedule_outlined,
+      icon: Icons.schedule_rounded,
       label: 'Rutinitas',
       rute: '/routine',
       warna: AppColors.dashboard,
-      keterangan: 'Jadwal harian di luar kuliah',
     ),
     MenuItemData(
-      icon: Icons.sticky_note_2_outlined,
+      icon: Icons.sticky_note_2_rounded,
       label: 'Catatan',
       rute: '/notes',
       warna: AppColors.note,
-      keterangan: 'Apa pun yang perlu diingat',
     ),
     MenuItemData(
-      icon: Icons.flag_outlined,
+      icon: Icons.flag_rounded,
       label: 'Target',
       rute: '/goals',
-      warna: AppColors.dashboard,
+      warna: AppColors.deadline,
     ),
     MenuItemData(
-      icon: Icons.favorite_outline,
+      icon: Icons.favorite_rounded,
       label: 'Wishlist',
       rute: '/wishlist',
       warna: AppColors.finance,
-      keterangan: 'Barang yang ingin dibeli',
     ),
     MenuItemData(
-      icon: Icons.movie_outlined,
+      icon: Icons.movie_rounded,
       label: 'Watchlist',
       rute: '/watchlist',
       warna: AppColors.watchlist,
-      keterangan: 'Film, series, buku, komik',
     ),
     MenuItemData(
-      icon: Icons.two_wheeler,
+      icon: Icons.two_wheeler_rounded,
       label: 'Kendaraan',
       rute: '/vehicle',
       warna: AppColors.vehicle,
-      keterangan: 'Pajak, servis, dan bensin',
     ),
     MenuItemData(
-      icon: Icons.badge_outlined,
+      icon: Icons.badge_rounded,
       label: 'Dokumen',
       rute: '/documents',
       warna: AppColors.document,
-      keterangan: 'KTP, SIM, paspor, kartu',
     ),
   ];
 
   @override
-  Widget build(BuildContext context) => const MenuList(items: _isi);
-}
-
-/// muat. Tidak pernah memotong maupun memindahkan teks ke baris berikutnya.
-class _Menyusut extends StatelessWidget {
-  const _Menyusut({required this.child});
-
-  final Widget child;
-
-  @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: Alignment.centerLeft,
-      child: child,
+    final colorScheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        itemCount: _isi.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, i) {
+          final item = _isi[i];
+          final warna = item.warna ?? AppColors.dashboard;
+          return Material(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => context.push(item.rute),
+              child: Container(
+                width: 84,
+                decoration: BoxDecoration(
+                  border: Border.all(color: colorScheme.outlineVariant),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: warna.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(item.icon, color: warna, size: 22),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Lencana
+// ---------------------------------------------------------------------------
 
 class _AchievementsRow extends ConsumerWidget {
   const _AchievementsRow();
@@ -326,7 +1410,7 @@ class _AchievementsRow extends ConsumerWidget {
     if (achievements.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.only(top: AppSpacing.md),
       child: Wrap(
         spacing: AppSpacing.sm,
         runSpacing: AppSpacing.sm,
@@ -336,474 +1420,11 @@ class _AchievementsRow extends ConsumerWidget {
               avatar: Icon(
                 achievement.icon,
                 size: 18,
-                color: Theme.of(context).colorScheme.primary,
+                color: AppColors.workout,
               ),
               label: Text(achievement.label),
             ),
         ],
-      ),
-    );
-  }
-}
-
-/// Pindah ke tab lain, bukan menumpuk halamannya di atas Beranda.
-///
-/// Kalau di-push, bar bawah tetap menunjuk Beranda padahal kamu sudah ada di
-/// Jadwal, dan tombol kembali jadi satu-satunya jalan keluar — dua hal yang
-/// tidak terjadi kalau kamu menekan tabnya langsung.
-void _keTab(BuildContext context, int tab) {
-  StatefulNavigationShell.of(context).goBranch(tab);
-}
-
-/// Satu kartu berisi baris-baris bergaris, bukan kartu per baris.
-class _KartuDaftar extends StatelessWidget {
-  const _KartuDaftar({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (final (i, anak) in children.indexed) ...[
-            if (i > 0) const Divider(height: 1, indent: AppSpacing.md),
-            anak,
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Baris dua kolom: keterangan di kiri, nilai di kanan.
-class _Baris extends StatelessWidget {
-  const _Baris({
-    required this.judul,
-    this.keterangan,
-    this.kanan,
-    this.warnaKanan,
-    this.depan,
-    this.onTap,
-  });
-
-  final String judul;
-  final String? keterangan;
-  final String? kanan;
-  final Color? warnaKanan;
-  final String? depan;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isi = Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 13,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (depan != null)
-            SizedBox(
-              width: 52,
-              child: Text(
-                depan!,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 1.45,
-                  color: colorScheme.onSurfaceVariant,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  judul,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                  ),
-                ),
-                if (keterangan != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    keterangan!,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (kanan != null) ...[
-            const SizedBox(width: AppSpacing.sm),
-            Padding(
-              padding: const EdgeInsets.only(top: 1),
-              child: Text(
-                kanan!,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: warnaKanan ?? colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-    return onTap == null ? isi : InkWell(onTap: onTap, child: isi);
-  }
-}
-
-/// Keadaan kosong di dalam kartu daftar — datar, tanpa ikon dalam lingkaran
-/// dan tanpa seruan penyemangat.
-class _BarisKosong extends StatelessWidget {
-  const _BarisKosong(this.teks, {this.onTap});
-
-  final String teks;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final redup = Theme.of(context).colorScheme.onSurfaceVariant;
-    final isi = Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 14,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(teks, style: TextStyle(fontSize: 13.5, color: redup)),
-          ),
-          if (onTap != null) Icon(Icons.chevron_right, size: 18, color: redup),
-        ],
-      ),
-    );
-    return onTap == null ? isi : InkWell(onTap: onTap, child: isi);
-  }
-}
-
-/// "Kapan" dalam bahasa sehari-hari: Hari ini 23.59, Besok, 3 hari lagi.
-(String, bool) _tenggat(DateTime deadline) {
-  final sekarang = DateTime.now();
-  final hari = DateTime(
-    deadline.year,
-    deadline.month,
-    deadline.day,
-  ).difference(DateTime(sekarang.year, sekarang.month, sekarang.day)).inDays;
-  if (deadline.isBefore(sekarang)) return ('Terlambat', true);
-  if (hari == 0) {
-    return ('Hari ini ${DateFormat('HH.mm').format(deadline)}', true);
-  }
-  if (hari == 1) return ('Besok', true);
-  if (hari < 7) return ('$hari hari lagi', false);
-  return (DateFormat('d MMM', 'id_ID').format(deadline), false);
-}
-
-/// Jadwal kuliah dan tenggat terdekat dalam satu kartu: keduanya menjawab
-/// pertanyaan yang sama — apa yang harus kulakukan hari ini.
-class _KartuHariIni extends ConsumerWidget {
-  const _KartuHariIni();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final schedules = ref.watch(todaySchedulesProvider);
-    final deadlines = ref.watch(upcomingDeadlinesProvider);
-    void keJadwal() => _keTab(context, kTabJadwal);
-    void keTugas() => _keTab(context, kTabTugas);
-
-    final baris = <Widget>[
-      ...schedules.when(
-        data: (items) => items.isEmpty
-            ? [_BarisKosong('Tidak ada kuliah hari ini.', onTap: keJadwal)]
-            : [
-                for (final ClassSchedule s in items)
-                  _Baris(
-                    depan: s.timeRangeLabel.split('-').first.trim(),
-                    judul: s.courseName,
-                    keterangan: [s.timeRangeLabel, ?s.room].join(' · '),
-                    onTap: keJadwal,
-                  ),
-              ],
-        loading: () => [
-          const Padding(
-            padding: EdgeInsets.all(AppSpacing.md),
-            child: LinearProgressIndicator(),
-          ),
-        ],
-        error: (error, _) => [const _BarisKosong('Jadwal gagal dimuat.')],
-      ),
-      ...deadlines.when(
-        data: (items) => items.isEmpty
-            ? [
-                _BarisKosong(
-                  'Tidak ada tenggat dalam waktu dekat.',
-                  onTap: keTugas,
-                ),
-              ]
-            : [
-                for (final AcademicTask t in items.take(4))
-                  _barisTugas(t, keTugas),
-              ],
-        loading: () => const <Widget>[],
-        error: (error, _) => [const _BarisKosong('Tugas gagal dimuat.')],
-      ),
-    ];
-    return _KartuDaftar(children: baris);
-  }
-
-  Widget _barisTugas(AcademicTask t, VoidCallback onTap) {
-    final (kapan, mendesak) = _tenggat(t.deadline);
-    return _Baris(
-      judul: t.title,
-      keterangan: t.courseName,
-      kanan: kapan,
-      warnaKanan: mendesak ? AppColors.priorityHigh : null,
-      onTap: onTap,
-    );
-  }
-}
-
-/// Latihan dan asupan hari ini, dua baris dalam satu kartu.
-class _KartuBadan extends ConsumerWidget {
-  const _KartuBadan();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final session = ref.watch(todayWorkoutSessionProvider);
-    final todayAsync = ref.watch(todayNutritionProvider);
-    final profile = ref.watch(bodyProfileProvider).value;
-    final weight = ref.watch(currentWeightProvider).value;
-    final targets = (profile == null || weight == null)
-        ? null
-        : calculateCalories(
-            profile: profile,
-            weightKg: weight,
-            now: DateTime.now(),
-          );
-
-    final Widget barisLatihan = session.when(
-      data: (data) => _Baris(
-        judul: 'Latihan',
-        keterangan: data == null
-            ? 'Belum ada sesi hari ini'
-            : '${data.exercises.length} gerakan tercatat${data.notes != null ? ' · ${data.notes}' : ''}',
-        kanan: data == null ? 'Mulai' : 'Selesai',
-        warnaKanan: data == null ? colorScheme.primary : AppColors.statusDone,
-        onTap: () => _keTab(context, kTabWorkout),
-      ),
-      loading: () => const Padding(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: LinearProgressIndicator(),
-      ),
-      error: (error, _) => const _BarisKosong('Latihan gagal dimuat.'),
-    );
-
-    final Widget barisAsupan = todayAsync.when(
-      data: (today) {
-        final lewat = targets != null && today.calories > targets.goalKcal;
-        final air = '${(today.waterMl / 1000).toStringAsFixed(1)} L air';
-        return InkWell(
-          // Nutrisi bukan akar tab, jadi halamannya memang di-push.
-          onTap: () => context.push('/workout/nutrition'),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              13,
-              AppSpacing.md,
-              14,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Asupan',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '${today.calories.round()}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: lewat
-                                  ? AppColors.priorityHigh
-                                  : colorScheme.onSurface,
-                            ),
-                          ),
-                          TextSpan(
-                            text: targets == null
-                                ? ' kkal'
-                                : ' / ${targets.goalKcal} kkal',
-                          ),
-                        ],
-                      ),
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: colorScheme.onSurfaceVariant,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-                if (targets != null) ...[
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(
-                    value: (today.calories / targets.goalKcal).clamp(0.0, 1.0),
-                    minHeight: 5,
-                    color: lewat
-                        ? AppColors.priorityHigh
-                        : colorScheme.onSurface,
-                  ),
-                ],
-                const SizedBox(height: 8),
-                Text(
-                  today.kosong
-                      ? 'Belum ada catatan makan · $air'
-                      : 'Protein ${today.proteinG.round()} g · Karbo ${today.carbsG.round()} g · '
-                            'Lemak ${today.fatG.round()} g · $air',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (error, _) => const _BarisKosong('Asupan gagal dimuat.'),
-    );
-
-    return _KartuDaftar(children: [barisLatihan, barisAsupan]);
-  }
-}
-
-/// Ringkasan anggaran. Yang ditonjolkan jatah harian, bukan total pengeluaran —
-/// "boleh habis berapa hari ini" lebih menentukan keputusanmu siang ini
-/// daripada "sudah habis berapa bulan ini".
-class _FinanceCard extends ConsumerWidget {
-  const _FinanceCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final summaryAsync = ref.watch(financeSummaryProvider);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _keTab(context, kTabKeuangan),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: summaryAsync.when(
-            data: (summary) {
-              final jatah = summary.jatahHarian;
-              final kebobolan = (summary.sisaBudget ?? 0) <= 0;
-
-              if (jatah == null) {
-                return Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        summary.kosong
-                            ? 'Belum ada catatan keuangan'
-                            : 'Keluar ${formatRupiah(summary.pengeluaran)} periode ini',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right, size: 20),
-                  ],
-                );
-              }
-
-              return Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        kebobolan ? 'Lewat anggaran' : 'Jatah hari ini',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        kebobolan
-                            ? formatRupiah(summary.sisaBudget!.abs())
-                            : formatRupiah(jatah),
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          height: 1.1,
-                          letterSpacing: -0.6,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                          color: kebobolan
-                              ? AppColors.priorityHigh
-                              : colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${summary.sisaHari} hari lagi',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right, size: 20),
-                ],
-              );
-            },
-            loading: () => const SizedBox(
-              height: 40,
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            ),
-            error: (error, _) => Row(
-              children: [
-                Icon(Icons.error_outline, size: 18, color: colorScheme.error),
-                const SizedBox(width: AppSpacing.sm),
-                const Expanded(
-                  child: Text(
-                    'Gagal memuat keuangan',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
