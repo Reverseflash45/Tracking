@@ -199,7 +199,7 @@ def main() -> None:
     ])
     isi("media_items", [
         {"title": "Frieren: Beyond Journey's End", "kind": "series", "origin": "anime", "status": "jalan", "progress": 18, "total": 28, "year": 2023},
-        {"title": "Laskar Pelangi", "kind": "buku", "origin": "indonesia", "status": "selesai", "progress": 529, "total": 529, "rating": 5,
+        {"title": "Laskar Pelangi", "kind": "buku", "origin": "indonesia", "status": "selesai", "progress": 529, "total": 529, "rating": 9,
          "finished_on": (HARI_INI - timedelta(days=12)).isoformat()},
         {"title": "Dune: Part Two", "kind": "film", "origin": "hollywood", "status": "rencana", "progress": 0, "year": 2024},
         {"title": "Clean Code", "kind": "buku", "origin": "hollywood", "status": "jalan", "progress": 140, "total": 431},
