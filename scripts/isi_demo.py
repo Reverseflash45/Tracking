@@ -63,7 +63,7 @@ def main() -> None:
 
     # urutan hapus: anak dulu, lalu induk
     for t in ["workout_exercises", "workout_sessions", "class_schedules", "tasks", "courses", "transactions",
-              "sleep_logs", "weight_logs", "goals", "runs"]:
+              "sleep_logs", "weight_logs", "goals", "runs", "food_logs", "water_logs"]:
         kosongkan(t)
     for t in ["finance_settings", "body_profiles"]:
         kosongkan(t)
@@ -163,6 +163,27 @@ def main() -> None:
                          "weight_kg": round(63.2 + (8 - w) * 0.35 + acak.uniform(-0.2, 0.2), 1)} for w in range(9)])
     isi("sleep_logs", [{"logged_on": (HARI_INI - timedelta(days=d)).isoformat(),
                         "hours": round(acak.uniform(5.5, 8.2) * 2) / 2, "quality": acak.randint(2, 5)} for d in range(14)])
+    # ---------- nutrisi: 6 hari terakhir penuh, hari ini sarapan + makan siang ----------
+    menu = {
+        "sarapan": [("Nasi uduk + telur", 520, 17, 70, 18), ("Roti gandum selai kacang", 380, 14, 45, 15),
+                    ("Oatmeal pisang", 350, 11, 62, 7)],
+        "makan_siang": [("Nasi ayam geprek", 780, 38, 85, 30), ("Gado-gado + lontong", 610, 22, 70, 26),
+                        ("Nasi padang rendang", 850, 35, 90, 38)],
+        "makan_malam": [("Mie ayam bakso", 640, 28, 80, 20), ("Nasi pecel lele", 720, 34, 75, 30),
+                        ("Soto ayam + nasi", 560, 30, 65, 17)],
+        "camilan": [("Susu protein", 180, 24, 8, 4), ("Pisang 2 buah", 210, 2, 54, 1)],
+    }
+    makan = []
+    for d in range(7):
+        hari = (HARI_INI - timedelta(days=d)).isoformat()
+        waktu = ["sarapan", "makan_siang"] if d == 0 else ["sarapan", "makan_siang", "makan_malam", "camilan"]
+        for m in waktu:
+            nama, kkal, p, k, l = acak.choice(menu[m])
+            makan.append({"logged_on": hari, "name": nama, "meal": m, "calories": kkal,
+                          "protein_g": p, "carbs_g": k, "fat_g": l})
+    isi("food_logs", makan)
+    isi("water_logs", [{"logged_on": (HARI_INI - timedelta(days=d)).isoformat(), "ml": ml}
+                       for d in range(7) for ml in ([250] * (4 if d == 0 else acak.randint(6, 10)))])
     isi("goals", [
         {"title": "Latihan 12 kali bulan ini", "metric": "sesiLatihan", "target_value": 12, "period": "bulanan"},
         {"title": "Pengeluaran di bawah 2 juta", "metric": "batasPengeluaran", "target_value": 2_000_000, "period": "bulanan"},
