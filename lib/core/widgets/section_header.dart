@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 /// bersaing dengan isinya — padahal yang perlu menonjol justru angka dan
 /// kalimat di kartunya, bukan penanda bagiannya.
 ///
-/// Sekarang: huruf kecil, tebal, redup, dengan ikon polos seukuran huruf.
-/// Judul bagian memang tugasnya mengalah.
+/// Sekarang: judul tebal berhuruf kalimat, sama dengan judul bagian di
+/// Beranda, tanpa ikon. Cukup besar untuk jadi penanda saat menggulir.
 class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
@@ -41,14 +41,14 @@ class SectionHeader extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              title.toUpperCase(),
+              title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.9,
-                color: colorScheme.onSurfaceVariant,
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+                color: colorScheme.onSurface,
               ),
             ),
           ),

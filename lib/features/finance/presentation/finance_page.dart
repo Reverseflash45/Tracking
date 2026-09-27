@@ -15,10 +15,10 @@ import '../data/finance_repository.dart';
 import '../domain/finance_stats.dart';
 import '../domain/receipt_parser.dart';
 import '../domain/transaction.dart';
+import 'grafik_keuangan.dart';
 import 'transaction_sheet.dart';
 
 const _color = AppColors.finance;
-final _dayFormat = DateFormat('d MMM', 'id_ID');
 final _rangeFormat = DateFormat('d MMM', 'id_ID');
 
 class FinancePage extends ConsumerWidget {
@@ -117,6 +117,18 @@ class FinancePage extends ConsumerWidget {
                         trailing: const Icon(Icons.chevron_right, size: 20),
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const SectionHeader(
+                      title: 'Pengeluaran harian',
+                      icon: Icons.bar_chart,
+                      color: _color,
+                    ),
+                    GrafikPengeluaranHarian(
+                      transaksi: transactions,
+                      mulai: s.start,
+                      akhir: s.end,
+                      anggaran: s.budget,
+                    ),
                     if (s.perKategori.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.lg),
                       const SectionHeader(
@@ -124,7 +136,7 @@ class FinancePage extends ConsumerWidget {
                         icon: Icons.pie_chart_outline,
                         color: _color,
                       ),
-                      _CategoryBreakdown(summary: s),
+                      DonatKategori(summary: s),
                     ],
                     const SizedBox(height: AppSpacing.lg),
                     const SectionHeader(
@@ -142,12 +154,13 @@ class FinancePage extends ConsumerWidget {
                         color: _color,
                       )
                     else
-                      DaftarBergaris(
-                        indentGaris: 56,
-                        children: [
-                          for (final tx in transactions) _TxTile(tx: tx),
-                        ],
-                      ),
+                      for (final (tanggal, isi) in _perTanggal(transactions)) ...[
+                        _KepalaTanggal(tanggal: tanggal, isi: isi),
+                        DaftarBergaris(
+                          indentGaris: 68,
+                          children: [for (final tx in isi) _TxTile(tx: tx)],
+                        ),
+                      ],
                   ],
                 ),
                 loading: () => const Padding(
@@ -401,7 +414,7 @@ class _BudgetCard extends StatelessWidget {
     // kebobolan tidak lagi terasa berbeda.
     final warna = kebobolan
         ? AppColors.priorityHigh
-        : (persen > 80 ? AppColors.priorityMedium : colorScheme.onSurface);
+        : (persen > 80 ? AppColors.priorityMedium : AppColors.finance);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -431,8 +444,8 @@ class _BudgetCard extends StatelessWidget {
                           : formatRupiah(jatah),
                       style: TextStyle(
                         fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: warna,
+                        fontWeight: FontWeight.w800,
+                        color: kebobolan ? warna : colorScheme.onSurface,
                         height: 1.1,
                         letterSpacing: -0.8,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -470,10 +483,14 @@ class _BudgetCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            LinearProgressIndicator(
-              value: (persen / 100).clamp(0, 1),
-              minHeight: 6,
-              color: warna,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: (persen / 100).clamp(0, 1),
+                minHeight: 8,
+                color: warna,
+                backgroundColor: warna.withValues(alpha: 0.15),
+              ),
             ),
             const SizedBox(height: 6),
             Text(
@@ -511,74 +528,6 @@ class _BudgetCard extends StatelessWidget {
                 ],
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryBreakdown extends StatelessWidget {
-  const _CategoryBreakdown({required this.summary});
-
-  final FinanceSummary summary;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final terbesar = summary.perKategori.first.total;
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Column(
-          children: [
-            for (final item in summary.perKategori)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: 7,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      item.category.icon,
-                      size: 17,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      width: 112,
-                      child: Text(
-                        item.category.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: LinearProgressIndicator(
-                        value: terbesar == 0 ? 0 : item.total / terbesar,
-                        minHeight: 5,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      formatRupiahRingkas(item.total),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
@@ -628,15 +577,20 @@ class _TxTile extends ConsumerWidget {
       },
       child: ListTile(
         onTap: () => showTransactionSheet(context, existing: tx),
-        leading: SizedBox(
-          width: 24,
+        leading: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: warnaKategori(tx.category).withValues(alpha: 0.14),
+            shape: BoxShape.circle,
+          ),
           child: Icon(
             tx.category.icon,
-            size: 20,
-            color: colorScheme.onSurfaceVariant,
+            size: 19,
+            color: warnaKategori(tx.category),
           ),
         ),
-        horizontalTitleGap: 16,
+        horizontalTitleGap: 14,
         minVerticalPadding: 10,
         title: Row(
           children: [
@@ -679,7 +633,7 @@ class _TxTile extends ConsumerWidget {
         ),
         subtitle: Text(
           [
-            _dayFormat.format(tx.occurredOn),
+            tx.category.label,
             // Nama toko turun ke baris kedua kalau judulnya sudah dipakai
             // nama produk, supaya keduanya tetap terbaca.
             if (tx.product?.isNotEmpty == true &&
@@ -700,6 +654,64 @@ class _TxTile extends ConsumerWidget {
             color: masuk ? AppColors.statusDone : colorScheme.onSurface,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Mengelompokkan riwayat per tanggal, urutan terbaru dulu.
+List<(DateTime, List<Transaction>)> _perTanggal(List<Transaction> semua) {
+  final peta = <DateTime, List<Transaction>>{};
+  for (final t in semua) {
+    final d = DateTime(t.occurredOn.year, t.occurredOn.month, t.occurredOn.day);
+    peta.putIfAbsent(d, () => []).add(t);
+  }
+  final kunci = peta.keys.toList()..sort((a, b) => b.compareTo(a));
+  return [for (final k in kunci) (k, peta[k]!)];
+}
+
+class _KepalaTanggal extends StatelessWidget {
+  const _KepalaTanggal({required this.tanggal, required this.isi});
+
+  final DateTime tanggal;
+  final List<Transaction> isi;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final n = DateTime.now();
+    final hariIni = DateTime(n.year, n.month, n.day);
+    final selisih = hariIni.difference(tanggal).inDays;
+    final label = selisih == 0
+        ? 'Hari ini'
+        : selisih == 1
+        ? 'Kemarin'
+        : DateFormat('EEEE, d MMM', 'id_ID').format(tanggal);
+    final keluar = isi
+        .where((t) => t.kind == TxKind.pengeluaran)
+        .fold<double>(0, (a, t) => a + t.amount);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
+            ),
+          ),
+          if (keluar > 0)
+            Text(
+              '-${formatRupiahRingkas(keluar)}',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+        ],
       ),
     );
   }

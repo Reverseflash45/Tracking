@@ -10,6 +10,7 @@ import '../../../core/widgets/section_header.dart';
 import '../data/models/workout_session.dart';
 import '../data/rest_day_repository.dart';
 import 'rest_day_card.dart';
+import 'ringkasan_workout.dart';
 import 'workout_providers.dart';
 
 /// Halaman utama Workout: pintu masuk ke semua alat, bukan tempat menumpuk
@@ -26,12 +27,6 @@ class WorkoutHomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(workoutSessionsProvider).value ?? const <WorkoutSession>[];
     final restDays = ref.watch(restDaysProvider).value ?? const <RestDay>[];
-    final streak = ref.watch(workoutStreakProvider).value;
-
-    final now = DateTime.now();
-    final bulanIni = sessions
-        .where((s) => s.sessionDate.year == now.year && s.sessionDate.month == now.month)
-        .length;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -52,30 +47,13 @@ class WorkoutHomePage extends ConsumerWidget {
           children: [
             HeroHeader(
               title: 'Workout',
-              subtitle: 'Riwayat latihan dan perkembanganmu',
+              subtitle: 'Latihan, lari, nutrisi, dan tidur',
               color: AppColors.workout,
               trailing: HeroIconButton(
                 icon: Icons.show_chart,
                 tooltip: 'Lihat progress',
                 onPressed: () => context.push('/workout/progress'),
               ),
-              stats: [
-                HeroStatData(
-                  icon: Icons.local_fire_department,
-                  value: '${streak?.current ?? 0}',
-                  label: 'Streak aktif',
-                ),
-                HeroStatData(
-                  icon: Icons.emoji_events_outlined,
-                  value: '${streak?.best ?? 0}',
-                  label: 'Streak terbaik',
-                ),
-                HeroStatData(
-                  icon: Icons.calendar_month_outlined,
-                  value: '$bulanIni',
-                  label: 'Bulan ini',
-                ),
-              ],
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -87,7 +65,15 @@ class WorkoutHomePage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const KartuStreak(),
+                  const SizedBox(height: AppSpacing.md),
                   const RestDayCard(),
+                  const SizedBox(height: AppSpacing.md),
+                  const KartuSesiTerakhir(),
+                  const SizedBox(height: AppSpacing.md),
+                  const HeatmapLatihan(),
+                  const SizedBox(height: AppSpacing.md),
+                  const StatistikBulanWorkout(),
                   const SizedBox(height: AppSpacing.lg),
 
                   // Dikelompokkan menurut apa yang sedang kamu cari.

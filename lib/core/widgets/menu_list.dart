@@ -56,7 +56,7 @@ class MenuList extends StatelessWidget {
       child: Column(
         children: [
           for (final (i, item) in items.indexed) ...[
-            if (i > 0) const Divider(height: 1, indent: 52),
+            if (i > 0) const Divider(height: 1, indent: 62),
             _BarisMenu(item: item),
           ],
         ],
@@ -73,9 +73,10 @@ class _BarisMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    // Ikon abu-abu seragam: warna berbeda per baris membuat daftar biasa terlihat
-    // seperti peta kategori. [MenuItemData.warna] tetap diterima tapi tidak dipakai.
-    final warnaIkon = colorScheme.onSurfaceVariant;
+    // Ikon putih di kotak berwarna, seperti Pengaturan iOS: warnanya jadi
+    // penanda yang dikenali mata sebelum tulisannya terbaca. Baris tanpa
+    // warna memakai abu-abu.
+    final warnaKotak = item.warna ?? colorScheme.onSurfaceVariant;
 
     return InkWell(
       onTap: () => context.push(item.rute),
@@ -86,7 +87,15 @@ class _BarisMenu extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(item.icon, size: 20, color: warnaIkon),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: warnaKotak,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(item.icon, size: 18, color: Colors.white),
+            ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(

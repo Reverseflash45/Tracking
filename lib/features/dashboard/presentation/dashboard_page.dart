@@ -570,10 +570,15 @@ class _KartuCincin extends ConsumerWidget {
     final awal = _awalMinggu(sekarang);
     final akhir = awal.add(const Duration(days: 7));
 
+    // Latihan dihitung tujuh hari terakhir, bukan pekan kalender: di hari
+    // Senin pekan kalender selalu nol padahal kamu baru latihan kemarin.
+    final hariIni = DateTime(sekarang.year, sekarang.month, sekarang.day);
+    final tujuhHari = hariIni.subtract(const Duration(days: 6));
     final aktif = ref.watch(activeDatesProvider);
     final hariLatihan = {
       for (final d in aktif)
-        if (!d.isBefore(awal) && d.isBefore(akhir))
+        if (!DateTime(d.year, d.month, d.day).isBefore(tujuhHari) &&
+            !d.isAfter(sekarang))
           DateTime(d.year, d.month, d.day),
     }.length;
 
@@ -596,7 +601,7 @@ class _KartuCincin extends ConsumerWidget {
 
     final cincin = [
       _DataCincin(
-        label: 'Latihan',
+        label: 'Latihan · 7 hari',
         nilai: hariLatihan.toDouble(),
         target: _targetLatihanMingguan.toDouble(),
         satuan: '/$_targetLatihanMingguan hari',
@@ -615,7 +620,7 @@ class _KartuCincin extends ConsumerWidget {
         label: 'Tugas',
         nilai: tugasBeres.toDouble(),
         target: tugasMinggu.length.toDouble(),
-        satuan: '/${tugasMinggu.length} minggu ini',
+        satuan: '/${tugasMinggu.length} pekan ini',
         warna: AppColors.deadline,
         onTap: () => _keTab(context, kTabTugas),
       ),
