@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,7 +17,13 @@ import '../domain/daily_nutrition.dart';
 import '../domain/food_log.dart';
 import 'food_form_sheet.dart';
 
-const _color = AppColors.deadline;
+/// Oranye asupan. Dulu koral tenggat, sehingga angka kalori 0 di pagi hari
+/// tampil merah seperti peringatan.
+const _color = Color(0xFFE8812C);
+const _warnaAir = Color(0xFF3F8FD1);
+const _warnaProtein = Color(0xFFE0655A);
+const _warnaKarbo = Color(0xFFD9A21E);
+const _warnaLemak = Color(0xFF7C62D6);
 final _numberFormat = NumberFormat.decimalPattern('id_ID');
 final _timeFormat = DateFormat('HH:mm', 'id_ID');
 
@@ -185,6 +193,9 @@ class _TargetCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final sisa = targets.goalKcal - today.calories;
 
+    final rasio = targets.goalKcal <= 0 ? 0.0 : (today.calories / targets.goalKcal);
+    final lewat = rasio > 1;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -192,67 +203,90 @@ class _TargetCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  _numberFormat.format(today.calories.round()),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 32,
-                    color: _color,
-                    height: 1,
+                SizedBox.square(
+                  dimension: 118,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: rasio.clamp(0.0, 1.0)),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, v, _) => CircularProgressIndicator(
+                          value: v,
+                          strokeWidth: 11,
+                          strokeCap: StrokeCap.round,
+                          color: lewat ? AppColors.priorityHigh : _color,
+                          backgroundColor: _color.withValues(alpha: 0.14),
+                        ),
+                      ),
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _numberFormat.format(today.calories.round()),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.6,
+                                height: 1.1,
+                              ),
+                            ),
+                            Text(
+                              'dari ${_numberFormat.format(targets.goalKcal)}',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 4),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    '/ ${_numberFormat.format(targets.goalKcal)} kkal',
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
-                  ),
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    sisa >= 0
-                        ? 'Sisa ${_numberFormat.format(sisa.round())}'
-                        : 'Lebih ${_numberFormat.format((-sisa).round())}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: sisa >= 0 ? AppColors.statusDone : AppColors.priorityHigh,
-                    ),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        sisa >= 0
+                            ? 'Sisa ${_numberFormat.format(sisa.round())} kkal'
+                            : 'Lebih ${_numberFormat.format((-sisa).round())} kkal',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: sisa >= 0 ? colorScheme.onSurface : AppColors.priorityHigh,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _MacroProgress(
+                        label: 'Protein',
+                        value: today.proteinG,
+                        target: targets.macros.proteinG.toDouble(),
+                        color: _warnaProtein,
+                      ),
+                      const SizedBox(height: 8),
+                      _MacroProgress(
+                        label: 'Karbo',
+                        value: today.carbsG,
+                        target: targets.macros.carbsG.toDouble(),
+                        color: _warnaKarbo,
+                      ),
+                      const SizedBox(height: 8),
+                      _MacroProgress(
+                        label: 'Lemak',
+                        value: today.fatG,
+                        target: targets.macros.fatG.toDouble(),
+                        color: _warnaLemak,
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _ProgressBar(
-              value: today.calories,
-              target: targets.goalKcal.toDouble(),
-              color: _color,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _MacroProgress(
-              label: 'Protein',
-              value: today.proteinG,
-              target: targets.macros.proteinG.toDouble(),
-              color: AppColors.deadline,
-            ),
-            const SizedBox(height: 12),
-            _MacroProgress(
-              label: 'Karbohidrat',
-              value: today.carbsG,
-              target: targets.macros.carbsG.toDouble(),
-              color: AppColors.dashboard,
-            ),
-            const SizedBox(height: 12),
-            _MacroProgress(
-              label: 'Lemak',
-              value: today.fatG,
-              target: targets.macros.fatG.toDouble(),
-              color: AppColors.priorityMedium,
             ),
             if (today.fiberG != null || today.sugarG != null || today.sodiumMg != null) ...[
               const Divider(height: AppSpacing.lg),
@@ -316,7 +350,17 @@ class _MacroProgress extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(label, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                ],
+              ),
             ),
             Text(
               '${value.round()} / ${target.round()} g',
@@ -348,8 +392,8 @@ class _ProgressBar extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: LinearProgressIndicator(
         value: ratio.toDouble(),
-        minHeight: 8,
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+        minHeight: 7,
+        backgroundColor: color.withValues(alpha: 0.14),
         valueColor: AlwaysStoppedAnimation(lewat ? AppColors.priorityHigh : color),
       ),
     );
@@ -382,43 +426,50 @@ class _WaterCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${(waterMl / 1000).toStringAsFixed(2)} L',
+                  '${(waterMl / 1000).toStringAsFixed(1)} L',
                   style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 24,
-                    color: _color,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 26,
+                    letterSpacing: -0.6,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Expanded(
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    targetGelas == null
-                        ? '$gelas gelas'
-                        : '$gelas dari $targetGelas gelas',
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    targetGelas == null ? '$gelas gelas' : '$gelas dari $targetGelas gelas',
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
             ),
-            if (targetMl != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              _ProgressBar(
-                value: waterMl.toDouble(),
-                target: targetMl!.toDouble(),
-                color: AppColors.dashboard,
-              ),
-            ],
+            const SizedBox(height: 12),
+            // Satu ikon per gelas: lebih cepat dibaca daripada batang, dan
+            // "tinggal 3 gelas lagi" terlihat tanpa berhitung.
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (var i = 0; i < math.max(targetGelas ?? 8, gelas); i++)
+                  Icon(
+                    i < gelas ? Icons.local_drink_rounded : Icons.local_drink_outlined,
+                    size: 26,
+                    color: i < gelas ? _warnaAir : _warnaAir.withValues(alpha: 0.3),
+                  ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: FilledButton.tonalIcon(
                     onPressed: () => _addWater(ref, kGlassMl),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _color,
-                      side: const BorderSide(color: _color),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _warnaAir.withValues(alpha: 0.14),
+                      foregroundColor: _warnaAir,
                     ),
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('1 gelas', style: TextStyle(fontSize: 12)),
@@ -426,11 +477,11 @@ class _WaterCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: FilledButton.tonalIcon(
                     onPressed: () => _addWater(ref, 600),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _color,
-                      side: const BorderSide(color: _color),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _warnaAir.withValues(alpha: 0.14),
+                      foregroundColor: _warnaAir,
                     ),
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('1 botol', style: TextStyle(fontSize: 12)),

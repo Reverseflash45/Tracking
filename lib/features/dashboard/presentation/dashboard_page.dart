@@ -32,7 +32,7 @@ final _dayFormat = DateFormat('EEEE, d MMMM', 'id_ID');
 
 /// Warna cincin asupan. Lima warna tab sudah terpakai untuk arti lain, dan
 /// asupan butuh rona hangat yang tidak tertukar dengan koral tenggat.
-const Color _warnaAsupan = Color(0xFFF2A33A);
+const Color _warnaAsupan = Color(0xFFE8812C);
 
 /// Target hari bergerak per minggu kalau belum ada target sendiri — batas
 /// bawah anjuran aktivitas fisik orang dewasa (3–5 hari seminggu).
