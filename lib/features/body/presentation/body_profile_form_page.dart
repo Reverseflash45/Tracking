@@ -181,7 +181,7 @@ class _BodyProfileFormPageState extends ConsumerState<BodyProfileFormPage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Profil Tubuh',
+              title: 'Profil tubuh',
               subtitle: 'Dasar perhitungan kalori dan target harianmu',
               color: _color,
               leading: HeroIconButton(
@@ -196,7 +196,7 @@ class _BodyProfileFormPageState extends ConsumerState<BodyProfileFormPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SectionHeader(
-                    title: 'Data Dasar',
+                    title: 'Data dasar',
                     icon: Icons.straighten,
                     color: _color,
                   ),
@@ -286,7 +286,7 @@ class _BodyProfileFormPageState extends ConsumerState<BodyProfileFormPage> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   const SectionHeader(
-                    title: 'Tingkat Aktivitas',
+                    title: 'Tingkat aktivitas',
                     icon: Icons.directions_run,
                     color: _color,
                   ),

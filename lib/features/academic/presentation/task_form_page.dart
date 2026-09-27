@@ -187,7 +187,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SectionHeader(
-                    title: 'Detail Tugas',
+                    title: 'Detail tugas',
                     icon: Icons.assignment_outlined,
                     color: _deadlineColor,
                   ),
@@ -195,7 +195,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
                     controller: _titleController,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: const InputDecoration(
-                      labelText: 'Judul Tugas',
+                      labelText: 'Judul tugas',
                       hintText: 'Misal: Laporan Praktikum Bab 3',
                       prefixIcon: Icon(Icons.title),
                     ),
@@ -303,7 +303,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
                   if (_kind == TaskKind.kuliah) ...[
                   const SizedBox(height: AppSpacing.lg),
                   const SectionHeader(
-                    title: 'Mata Kuliah',
+                    title: 'Mata kuliah',
                     icon: Icons.menu_book_outlined,
                     color: _deadlineColor,
                   ),

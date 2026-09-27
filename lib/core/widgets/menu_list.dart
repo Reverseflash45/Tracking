@@ -73,7 +73,9 @@ class _BarisMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final warnaIkon = item.warna ?? colorScheme.onSurfaceVariant;
+    // Ikon abu-abu seragam: warna berbeda per baris membuat daftar biasa terlihat
+    // seperti peta kategori. [MenuItemData.warna] tetap diterima tapi tidak dipakai.
+    final warnaIkon = colorScheme.onSurfaceVariant;
 
     return InkWell(
       onTap: () => context.push(item.rute),
@@ -95,7 +97,10 @@ class _BarisMenu extends StatelessWidget {
                     item.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   if (item.keterangan case final keterangan?) ...[
                     const SizedBox(height: 2),
@@ -103,7 +108,10 @@ class _BarisMenu extends StatelessWidget {
                       keterangan,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ],

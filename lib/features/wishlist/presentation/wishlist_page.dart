@@ -34,8 +34,6 @@ class WishlistPage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _bukaForm(context, ref),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Barang'),
       ),
@@ -70,7 +68,7 @@ class WishlistPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.trending_flat,
                   value: _ringkas(ringkasan.totalKurang),
-                  label: 'Masih Kurang',
+                  label: 'Masih kurang',
                 ),
               ],
             ),

@@ -27,8 +27,6 @@ class DocumentPage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _bukaForm(context, ref),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Dokumen'),
       ),
@@ -60,7 +58,7 @@ class DocumentPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.schedule,
                   value: '${ringkasan.segera}',
-                  label: 'Segera Habis',
+                  label: 'Segera habis',
                 ),
               ],
             ),

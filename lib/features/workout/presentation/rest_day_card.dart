@@ -44,15 +44,15 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
     final userId = ref.read(currentUserProvider)?.id;
     if (userId == null) return;
     await _jalankan(
-      () => ref.read(restDayRepositoryProvider).addRestDay(
-            userId: userId,
-            date: DateTime.now(),
-          ),
+      () => ref
+          .read(restDayRepositoryProvider)
+          .addRestDay(userId: userId, date: DateTime.now()),
     );
   }
 
-  Future<void> _batalkan(RestDay restDay) =>
-      _jalankan(() => ref.read(restDayRepositoryProvider).deleteRestDay(restDay.id));
+  Future<void> _batalkan(RestDay restDay) => _jalankan(
+    () => ref.read(restDayRepositoryProvider).deleteRestDay(restDay.id),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -95,13 +95,9 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: warna.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 18, color: warna),
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: Icon(icon, size: 20, color: warna),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
@@ -161,7 +157,7 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
                           foregroundColor: _restColor,
                         ),
                         icon: const Icon(Icons.bedtime_outlined, size: 17),
-                        label: const Text('Tandai Istirahat'),
+                        label: const Text('Tandai istirahat'),
                       ),
               ),
             ],
@@ -205,9 +201,9 @@ class _RestDayCardState extends ConsumerState<RestDayCard> {
         'Hari ini ditandai istirahat',
         sisa > 0
             ? 'Streak tetap jalan. Sisa jatah $sisa hari lagi sebelum harus '
-                'bergerak.'
+                  'bergerak.'
             : 'Streak tetap jalan, tapi jatahnya habis. Besok harus bergerak '
-                'atau rantainya putus.',
+                  'atau rantainya putus.',
         _restColor,
       );
     }

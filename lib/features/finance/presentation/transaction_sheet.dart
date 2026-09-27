@@ -344,14 +344,6 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                       label: Text(category.label),
                       selected: _category == category,
                       onSelected: (_) => setState(() => _category = category),
-                      selectedColor: _color.withValues(alpha: 0.18),
-                      labelStyle: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: _category == category
-                            ? _color
-                            : colorScheme.onSurfaceVariant,
-                      ),
                     ),
                 ],
               ),
@@ -395,12 +387,6 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                       // pengeluaran punya tempat (transfer, iuran, parkir).
                       onSelected: (dipilih) =>
                           setState(() => _placeKind = dipilih ? place : null),
-                      selectedColor: _color.withValues(alpha: 0.18),
-                      labelStyle: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: _placeKind == place ? _color : colorScheme.onSurfaceVariant,
-                      ),
                     ),
                 ],
               ),

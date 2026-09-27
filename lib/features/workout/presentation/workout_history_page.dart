@@ -24,10 +24,12 @@ String _exerciseSummary(ExerciseEntry exercise) {
   final setsReps = '${exercise.sets ?? 0}x${exercise.reps ?? 0}';
   return switch (exercise.type) {
     ExerciseType.cardio => '${exercise.durationMinutes ?? 0} menit',
-    ExerciseType.isometrik => '${exercise.sets ?? 0}x${exercise.durationSeconds ?? 0} detik',
-    ExerciseType.bodyweight => exercise.weightKg != null && exercise.weightKg! > 0
-        ? '+${exercise.weightKg} kg  ·  $setsReps'
-        : setsReps,
+    ExerciseType.isometrik =>
+      '${exercise.sets ?? 0}x${exercise.durationSeconds ?? 0} detik',
+    ExerciseType.bodyweight =>
+      exercise.weightKg != null && exercise.weightKg! > 0
+          ? '+${exercise.weightKg} kg  ·  $setsReps'
+          : setsReps,
     ExerciseType.beban => '${exercise.weightKg ?? 0} kg  ·  $setsReps',
   };
 }
@@ -80,7 +82,7 @@ class _WorkoutHistoryPageState extends ConsumerState<WorkoutHistoryPage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Riwayat Latihan',
+              title: 'Riwayat latihan',
               subtitle: 'Semua catatan, bisa disaring',
               color: AppColors.workout,
               leading: HeroIconButton(
@@ -131,7 +133,9 @@ class _WorkoutHistoryPageState extends ConsumerState<WorkoutHistoryPage> {
                             children: [
                               for (final row in rows)
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.sm,
+                                  ),
                                   child: row.isRest
                                       ? _RestDayTile(restDay: row.rest!)
                                       : _SessionCard(session: row.session!),
@@ -235,7 +239,10 @@ class _FilterBar extends StatelessWidget {
                 foregroundColor: colorScheme.onSurfaceVariant,
               ),
               icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
-              label: const Text('Tampilkan semua', style: TextStyle(fontSize: 12)),
+              label: const Text(
+                'Tampilkan semua',
+                style: TextStyle(fontSize: 12),
+              ),
             ),
           ),
         ],
@@ -296,7 +303,6 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: ChoiceChip(
         label: Text(label),
@@ -304,12 +310,6 @@ class _FilterChip extends StatelessWidget {
         onSelected: (_) => onTap(),
         visualDensity: VisualDensity.compact,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        selectedColor: AppColors.workout.withValues(alpha: 0.18),
-        labelStyle: TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w600,
-          color: selected ? AppColors.workout : colorScheme.onSurfaceVariant,
-        ),
       ),
     );
   }
@@ -336,7 +336,8 @@ class _EmptyForFilter extends StatelessWidget {
     return const EmptyState(
       icon: Icons.search_off,
       title: 'Tidak ada yang cocok',
-      subtitle: 'Coba longgarkan saringannya — periode lebih panjang, '
+      subtitle:
+          'Coba longgarkan saringannya — periode lebih panjang, '
           'jenis "Semua", atau hapus pencarian',
       color: AppColors.workout,
     );
@@ -352,7 +353,10 @@ class _SessionCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final volume = session.exercises.fold<double>(0, (sum, e) => sum + e.volume);
+    final volume = session.exercises.fold<double>(
+      0,
+      (sum, e) => sum + e.volume,
+    );
     final cardioMinutes = session.exercises
         .where((e) => e.type == ExerciseType.cardio)
         .fold<int>(0, (sum, e) => sum + (e.durationMinutes ?? 0));
@@ -373,10 +377,18 @@ class _SessionCard extends ConsumerWidget {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Hapus sesi?'),
-          content: const Text('Sesi workout ini beserta semua latihannya akan dihapus.'),
+          content: const Text(
+            'Sesi workout ini beserta semua latihannya akan dihapus.',
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Hapus'),
+            ),
           ],
         ),
       ),
@@ -390,13 +402,16 @@ class _SessionCard extends ConsumerWidget {
         child: Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: 4,
+            ),
             childrenPadding: const EdgeInsets.only(bottom: AppSpacing.sm),
             leading: Container(
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: AppColors.workout.withValues(alpha: 0.14),
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Column(
@@ -407,7 +422,6 @@ class _SessionCard extends ConsumerWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 17,
-                      color: AppColors.workout,
                       height: 1.1,
                     ),
                   ),
@@ -416,7 +430,6 @@ class _SessionCard extends ConsumerWidget {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.workout,
                       height: 1.2,
                     ),
                   ),
@@ -443,14 +456,20 @@ class _SessionCard extends ConsumerWidget {
                       label: '${_volumeFormat.format(volume.round())} kg',
                     ),
                   if (cardioMinutes > 0)
-                    _StatPill(icon: Icons.directions_run, label: '$cardioMinutes menit'),
+                    _StatPill(
+                      icon: Icons.directions_run,
+                      label: '$cardioMinutes menit',
+                    ),
                 ],
               ),
             ),
             children: [
               for (final exercise in session.exercises)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: 6,
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -465,12 +484,18 @@ class _SessionCard extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           exercise.exerciseName,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       Text(
                         _exerciseSummary(exercise),
-                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -505,7 +530,12 @@ class _SessionCard extends ConsumerWidget {
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.sm, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                  0,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -514,13 +544,14 @@ class _SessionCard extends ConsumerWidget {
                         await context.push('/workout/new?from=${session.id}');
                         ref.invalidate(workoutSessionsProvider);
                       },
-                      icon: const Icon(Icons.replay, size: 18, color: AppColors.workout),
-                      label: const Text('Ulangi', style: TextStyle(color: AppColors.workout)),
+                      icon: const Icon(Icons.replay, size: 18),
+                      label: const Text('Ulangi'),
                     ),
                     TextButton.icon(
-                      onPressed: () => context.push('/workout/${session.id}/edit'),
-                      icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.workout),
-                      label: const Text('Edit', style: TextStyle(color: AppColors.workout)),
+                      onPressed: () =>
+                          context.push('/workout/${session.id}/edit'),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('Edit'),
                     ),
                   ],
                 ),
@@ -576,7 +607,7 @@ class _RestDayTile extends ConsumerWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.statusInProgress.withValues(alpha: 0.12),
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -587,7 +618,6 @@ class _RestDayTile extends ConsumerWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 14,
-                        color: AppColors.statusInProgress,
                         height: 1.1,
                       ),
                     ),
@@ -596,7 +626,6 @@ class _RestDayTile extends ConsumerWidget {
                       style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.statusInProgress,
                         height: 1.2,
                       ),
                     ),
@@ -610,14 +639,20 @@ class _RestDayTile extends ConsumerWidget {
                   children: [
                     Text(
                       _weekDayFormat.format(restDay.restOn),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       restDay.note?.trim().isNotEmpty == true
                           ? restDay.note!
                           : 'Hari istirahat',
-                      style: TextStyle(fontSize: 11.5, color: colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

@@ -107,7 +107,7 @@ class _WrappedPageState extends ConsumerState<WrappedPage> {
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => SharePreviewPage(
-                          title: 'Bagikan Rekap',
+                          title: 'Bagikan rekap',
                           accent: AppColors.profile,
                           card: WrappedShareCard(stats: stats),
                           fileName: 'wrapped-${_period.name}-'

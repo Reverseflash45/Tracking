@@ -336,7 +336,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SectionHeader(
-                    title: 'Mata Kuliah',
+                    title: 'Mata kuliah',
                     icon: Icons.school_outlined,
                     color: _academicColor,
                   ),
@@ -462,7 +462,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                   ],
                   const SizedBox(height: AppSpacing.lg),
                   const SectionHeader(
-                    title: 'Detail Tambahan',
+                    title: 'Detail tambahan',
                     icon: Icons.info_outline,
                     color: _academicColor,
                   ),

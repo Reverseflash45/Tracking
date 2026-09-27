@@ -9,7 +9,6 @@ import '../../../core/offline/offline_banner.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_shell.dart';
-import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/menu_list.dart';
 import '../../../core/widgets/section_header.dart';
@@ -24,12 +23,7 @@ import '../../nutrition/data/nutrition_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 
-final _deadlineFormat = DateFormat('d MMM, HH:mm', 'id_ID');
 final _dayFormat = DateFormat('EEEE, d MMMM y', 'id_ID');
-
-const _academicColor = AppColors.academic;
-const _deadlineColor = AppColors.deadline;
-const _workoutColor = AppColors.workout;
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -53,7 +47,7 @@ class DashboardPage extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
-                AppSpacing.lg,
+                AppSpacing.md,
                 AppSpacing.md,
                 AppSpacing.xl,
               ),
@@ -65,31 +59,22 @@ class DashboardPage extends ConsumerWidget {
                   const OfflineBanner(),
                   const _AchievementsRow(),
 
-                  // Dikelompokkan, bukan lima judul sejajar.
-                  //
-                  // Sebelumnya Beranda berisi lima blok berbentuk sama persis:
-                  // judul, ikon, kartu. Semuanya terlihat sama pentingnya, dan
-                  // kalau semuanya sama penting berarti tidak ada yang penting.
-                  // Sekarang isinya dibagi menurut pertanyaan yang dijawab:
-                  // apa yang harus kulakukan hari ini, bagaimana badanku, dan
-                  // bagaimana uangku.
-                  const SectionHeader(title: 'Hari Ini', icon: Icons.today_outlined),
-                  const _TodayScheduleCard(),
-                  const SizedBox(height: AppSpacing.sm),
-                  const _UpcomingDeadlinesCard(),
+                  // Tiga pertanyaan, tiga kartu: apa yang harus kulakukan hari
+                  // ini, bagaimana badanku, bagaimana uangku. Tiap kartu satu
+                  // daftar bergaris, bukan kartu-kartu kecil yang ditumpuk.
+                  const SectionHeader(title: 'Hari ini'),
+                  const _KartuHariIni(),
                   const SizedBox(height: AppSpacing.lg),
 
-                  const SectionHeader(title: 'Badan', icon: Icons.favorite_outline),
-                  const _TodayWorkoutCard(),
-                  const SizedBox(height: AppSpacing.sm),
-                  const _TodayNutritionCard(),
+                  const SectionHeader(title: 'Badan'),
+                  const _KartuBadan(),
                   const SizedBox(height: AppSpacing.lg),
 
-                  const SectionHeader(title: 'Uang', icon: Icons.savings_outlined),
+                  const SectionHeader(title: 'Uang'),
                   const _FinanceCard(),
                   const SizedBox(height: AppSpacing.lg),
 
-                  const SectionHeader(title: 'Lainnya', icon: Icons.grid_view_outlined),
+                  const SectionHeader(title: 'Lainnya'),
                   const _PintasanLainnya(),
                 ],
               ),
@@ -101,11 +86,17 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
+/// Sapaan dan tanggal di atas latar halaman, lalu tiga angka dalam satu strip.
+///
+/// Dulu blok gradient biru-ungu berisi avatar, sapaan berseru, dan tiga kotak
+/// kaca berikon api, petir, dan centang. Sekarang tanggal jadi label kecil,
+/// sapaannya besar dan tenang, dan angkanya berbicara sendiri tanpa ikon.
 class _HeroHeader extends ConsumerWidget {
   const _HeroHeader();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final user = ref.watch(currentUserProvider);
     final profile = ref.watch(profileProvider).value;
     final fullName = profile?.fullName;
@@ -116,8 +107,10 @@ class _HeroHeader extends ConsumerWidget {
     final avatarUrl = profile?.avatarUrl;
 
     final workoutStreak = ref.watch(workoutStreakProvider).value?.current ?? 0;
-    final deadlineStreak = ref.watch(deadlineStreakProvider).value?.current ?? 0;
-    final doneToday = ref.watch(tasksProvider).value?.where((t) {
+    final deadlineStreak =
+        ref.watch(deadlineStreakProvider).value?.current ?? 0;
+    final doneToday =
+        ref.watch(tasksProvider).value?.where((t) {
           final completed = t.completedAt;
           final now = DateTime.now();
           return completed != null &&
@@ -127,35 +120,37 @@ class _HeroHeader extends ConsumerWidget {
         }).length ??
         0;
 
-    return Container(
-      width: double.infinity,
+    return Padding(
       padding: EdgeInsets.fromLTRB(
+        AppSpacing.md + 4,
+        MediaQuery.of(context).padding.top + 18,
         AppSpacing.md,
-        MediaQuery.of(context).padding.top + AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.lg,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: HeroHeader.gradientFor(AppColors.dashboard),
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
+        AppSpacing.sm,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              // Foto profil membuka Profil. Selama ini dia terlihat seperti
-              // tombol tapi tidak melakukan apa pun, sementara Profil punya
-              // tab sendiri di bawah — sekarang kebalikannya, dan ini pola
-              // yang sudah dikenal orang dari app lain.
+              Expanded(
+                child: _Menyusut(
+                  child: Text(
+                    _dayFormat.format(DateTime.now()).toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.9,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+              HeroIconButton(
+                icon: Icons.search,
+                tooltip: 'Cari',
+                onPressed: () => context.push('/search'),
+              ),
+              // Foto profil membuka Profil — pola yang sudah dikenal dari app lain.
               Semantics(
                 button: true,
                 label: 'Buka profil',
@@ -163,97 +158,56 @@ class _HeroHeader extends ConsumerWidget {
                   onTap: () => context.push('/profile'),
                   customBorder: const CircleBorder(),
                   child: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.white.withValues(alpha: 0.25),
-                    backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                    radius: 17,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    backgroundImage: avatarUrl != null
+                        ? NetworkImage(avatarUrl)
+                        : null,
                     child: avatarUrl == null
                         ? Text(
                             initial,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
+                            style: TextStyle(
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
                             ),
                           )
                         : null,
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Dikecilkan hanya kalau kurang tempat. Tiga tombol di
-                    // kanan menyisakan ruang tipis di layar 360dp, dan nama
-                    // yang patah jadi dua baris atau tanggal yang terpotong
-                    // di tengah lebih buruk daripada huruf yang sedikit kecil.
-                    _Menyusut(
-                      child: Text(
-                        'Halo, $displayName!',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    _Menyusut(
-                      child: Text(
-                        _dayFormat.format(DateTime.now()),
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Tinggal satu tombol. Target dan Wishlist turun ke pintasan
-              // "Lainnya" di bawah, tempat namanya terbaca — tiga ikon
-              // berdempet di pojok kanan atas menuntutmu menghafal arti
-              // bendera dan hati sebelum bisa memakainya.
-              HeroIconButton(
-                icon: Icons.search,
-                tooltip: 'Cari',
-                onPressed: () => context.push('/search'),
-              ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: HeroStat(
-                  data: HeroStatData(
-                    icon: Icons.local_fire_department,
-                    value: '$workoutStreak',
-                    label: 'Streak Workout',
-                  ),
-                ),
+          const SizedBox(height: 2),
+          _Menyusut(
+            child: Text(
+              'Halo, $displayName.',
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+                fontSize: 30,
+                height: 1.1,
+                letterSpacing: -0.9,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: HeroStat(
-                  data: HeroStatData(
-                    icon: Icons.bolt,
-                    value: '$deadlineStreak',
-                    label: 'Streak Deadline',
-                  ),
-                ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          KartuStatistik(
+            stats: [
+              HeroStatData(
+                icon: Icons.local_fire_department,
+                value: '$workoutStreak hari',
+                label: 'Rutin latihan',
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: HeroStat(
-                  data: HeroStatData(
-                    icon: Icons.task_alt,
-                    value: '$doneToday',
-                    label: 'Selesai Hari Ini',
-                  ),
-                ),
+              HeroStatData(
+                icon: Icons.bolt,
+                value: '$deadlineStreak hari',
+                label: 'Tepat waktu',
+              ),
+              HeroStatData(
+                icon: Icons.task_alt,
+                value: '$doneToday',
+                label: 'Selesai hari ini',
               ),
             ],
           ),
@@ -360,8 +314,10 @@ class _AchievementsRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Badge "Workout 30 Hari" harus berarti 30 hari latihan. Hari istirahat
     // menyambung streak, tapi tidak boleh ikut mengisi lencananya.
-    final workoutStreak = ref.watch(workoutStreakProvider).value?.activeInCurrent ?? 0;
-    final deadlineStreak = ref.watch(deadlineStreakProvider).value?.current ?? 0;
+    final workoutStreak =
+        ref.watch(workoutStreakProvider).value?.activeInCurrent ?? 0;
+    final deadlineStreak =
+        ref.watch(deadlineStreakProvider).value?.current ?? 0;
     final achievements = computeAchievements(
       workoutStreak: workoutStreak,
       deadlineStreak: deadlineStreak,
@@ -377,34 +333,15 @@ class _AchievementsRow extends ConsumerWidget {
         children: [
           for (final achievement in achievements)
             Chip(
-              avatar: Icon(achievement.icon, size: 18, color: Theme.of(context).colorScheme.primary),
+              avatar: Icon(
+                achievement.icon,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               label: Text(achievement.label),
             ),
         ],
       ),
-    );
-  }
-}
-
-class _DashboardCard extends StatelessWidget {
-  const _DashboardCard({required this.child, this.onTap});
-
-  final Widget child;
-
-  /// Null berarti kartu ini memang tidak menuju ke mana-mana — dan kalau
-  /// begitu, jangan pasang efek tekan yang menjanjikan sesuatu yang tidak
-  /// terjadi.
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isi = Padding(padding: const EdgeInsets.all(AppSpacing.md), child: child);
-
-    if (onTap == null) return Card(child: isi);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(onTap: onTap, child: isi),
     );
   }
 }
@@ -418,88 +355,349 @@ void _keTab(BuildContext context, int tab) {
   StatefulNavigationShell.of(context).goBranch(tab);
 }
 
-class _TodayScheduleCard extends ConsumerWidget {
-  const _TodayScheduleCard();
+/// Satu kartu berisi baris-baris bergaris, bukan kartu per baris.
+class _KartuDaftar extends StatelessWidget {
+  const _KartuDaftar({required this.children});
+
+  final List<Widget> children;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final schedules = ref.watch(todaySchedulesProvider);
-    return _DashboardCard(
-      onTap: () => _keTab(context, kTabJadwal),
-      child: schedules.when(
-        data: (items) => items.isEmpty
-            ? const EmptyState(
-                icon: Icons.school_outlined,
-                title: 'Tidak ada jadwal hari ini',
-                subtitle: 'Nikmati waktu luangmu!',
-                color: _academicColor,
-                compact: true,
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final ClassSchedule schedule in items)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.access_time, size: 18, color: _academicColor),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text('${schedule.timeRangeLabel} - ${schedule.courseName}'
-                                '${schedule.room != null ? " (${schedule.room})" : ""}'),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-        loading: () => const LinearProgressIndicator(),
-        error: (error, stackTrace) => Text('Gagal memuat: $error'),
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (final (i, anak) in children.indexed) ...[
+            if (i > 0) const Divider(height: 1, indent: AppSpacing.md),
+            anak,
+          ],
+        ],
       ),
     );
   }
 }
 
-class _UpcomingDeadlinesCard extends ConsumerWidget {
-  const _UpcomingDeadlinesCard();
+/// Baris dua kolom: keterangan di kiri, nilai di kanan.
+class _Baris extends StatelessWidget {
+  const _Baris({
+    required this.judul,
+    this.keterangan,
+    this.kanan,
+    this.warnaKanan,
+    this.depan,
+    this.onTap,
+  });
+
+  final String judul;
+  final String? keterangan;
+  final String? kanan;
+  final Color? warnaKanan;
+  final String? depan;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isi = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 13,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (depan != null)
+            SizedBox(
+              width: 52,
+              child: Text(
+                depan!,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.45,
+                  color: colorScheme.onSurfaceVariant,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  judul,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+                if (keterangan != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    keterangan!,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (kanan != null) ...[
+            const SizedBox(width: AppSpacing.sm),
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Text(
+                kanan!,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: warnaKanan ?? colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+    return onTap == null ? isi : InkWell(onTap: onTap, child: isi);
+  }
+}
+
+/// Keadaan kosong di dalam kartu daftar — datar, tanpa ikon dalam lingkaran
+/// dan tanpa seruan penyemangat.
+class _BarisKosong extends StatelessWidget {
+  const _BarisKosong(this.teks, {this.onTap});
+
+  final String teks;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final redup = Theme.of(context).colorScheme.onSurfaceVariant;
+    final isi = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 14,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(teks, style: TextStyle(fontSize: 13.5, color: redup)),
+          ),
+          if (onTap != null) Icon(Icons.chevron_right, size: 18, color: redup),
+        ],
+      ),
+    );
+    return onTap == null ? isi : InkWell(onTap: onTap, child: isi);
+  }
+}
+
+/// "Kapan" dalam bahasa sehari-hari: Hari ini 23.59, Besok, 3 hari lagi.
+(String, bool) _tenggat(DateTime deadline) {
+  final sekarang = DateTime.now();
+  final hari = DateTime(
+    deadline.year,
+    deadline.month,
+    deadline.day,
+  ).difference(DateTime(sekarang.year, sekarang.month, sekarang.day)).inDays;
+  if (deadline.isBefore(sekarang)) return ('Terlambat', true);
+  if (hari == 0) {
+    return ('Hari ini ${DateFormat('HH.mm').format(deadline)}', true);
+  }
+  if (hari == 1) return ('Besok', true);
+  if (hari < 7) return ('$hari hari lagi', false);
+  return (DateFormat('d MMM', 'id_ID').format(deadline), false);
+}
+
+/// Jadwal kuliah dan tenggat terdekat dalam satu kartu: keduanya menjawab
+/// pertanyaan yang sama — apa yang harus kulakukan hari ini.
+class _KartuHariIni extends ConsumerWidget {
+  const _KartuHariIni();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final schedules = ref.watch(todaySchedulesProvider);
     final deadlines = ref.watch(upcomingDeadlinesProvider);
-    return _DashboardCard(
-      onTap: () => _keTab(context, kTabTugas),
-      child: deadlines.when(
+    void keJadwal() => _keTab(context, kTabJadwal);
+    void keTugas() => _keTab(context, kTabTugas);
+
+    final baris = <Widget>[
+      ...schedules.when(
         data: (items) => items.isEmpty
-            ? const EmptyState(
-                icon: Icons.celebration_outlined,
-                title: 'Tidak ada deadline mendatang',
-                subtitle: 'Mantap, semua tugas aman!',
-                color: _deadlineColor,
-                compact: true,
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final AcademicTask task in items)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Row(
+            ? [_BarisKosong('Tidak ada kuliah hari ini.', onTap: keJadwal)]
+            : [
+                for (final ClassSchedule s in items)
+                  _Baris(
+                    depan: s.timeRangeLabel.split('-').first.trim(),
+                    judul: s.courseName,
+                    keterangan: [s.timeRangeLabel, ?s.room].join(' · '),
+                    onTap: keJadwal,
+                  ),
+              ],
+        loading: () => [
+          const Padding(
+            padding: EdgeInsets.all(AppSpacing.md),
+            child: LinearProgressIndicator(),
+          ),
+        ],
+        error: (error, _) => [const _BarisKosong('Jadwal gagal dimuat.')],
+      ),
+      ...deadlines.when(
+        data: (items) => items.isEmpty
+            ? [
+                _BarisKosong(
+                  'Tidak ada tenggat dalam waktu dekat.',
+                  onTap: keTugas,
+                ),
+              ]
+            : [
+                for (final AcademicTask t in items.take(4))
+                  _barisTugas(t, keTugas),
+              ],
+        loading: () => const <Widget>[],
+        error: (error, _) => [const _BarisKosong('Tugas gagal dimuat.')],
+      ),
+    ];
+    return _KartuDaftar(children: baris);
+  }
+
+  Widget _barisTugas(AcademicTask t, VoidCallback onTap) {
+    final (kapan, mendesak) = _tenggat(t.deadline);
+    return _Baris(
+      judul: t.title,
+      keterangan: t.courseName,
+      kanan: kapan,
+      warnaKanan: mendesak ? AppColors.priorityHigh : null,
+      onTap: onTap,
+    );
+  }
+}
+
+/// Latihan dan asupan hari ini, dua baris dalam satu kartu.
+class _KartuBadan extends ConsumerWidget {
+  const _KartuBadan();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final session = ref.watch(todayWorkoutSessionProvider);
+    final todayAsync = ref.watch(todayNutritionProvider);
+    final profile = ref.watch(bodyProfileProvider).value;
+    final weight = ref.watch(currentWeightProvider).value;
+    final targets = (profile == null || weight == null)
+        ? null
+        : calculateCalories(
+            profile: profile,
+            weightKg: weight,
+            now: DateTime.now(),
+          );
+
+    final Widget barisLatihan = session.when(
+      data: (data) => _Baris(
+        judul: 'Latihan',
+        keterangan: data == null
+            ? 'Belum ada sesi hari ini'
+            : '${data.exercises.length} gerakan tercatat${data.notes != null ? ' · ${data.notes}' : ''}',
+        kanan: data == null ? 'Mulai' : 'Selesai',
+        warnaKanan: data == null ? colorScheme.primary : AppColors.statusDone,
+        onTap: () => _keTab(context, kTabWorkout),
+      ),
+      loading: () => const Padding(
+        padding: EdgeInsets.all(AppSpacing.md),
+        child: LinearProgressIndicator(),
+      ),
+      error: (error, _) => const _BarisKosong('Latihan gagal dimuat.'),
+    );
+
+    final Widget barisAsupan = todayAsync.when(
+      data: (today) {
+        final lewat = targets != null && today.calories > targets.goalKcal;
+        final air = '${(today.waterMl / 1000).toStringAsFixed(1)} L air';
+        return InkWell(
+          // Nutrisi bukan akar tab, jadi halamannya memang di-push.
+          onTap: () => context.push('/workout/nutrition'),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              13,
+              AppSpacing.md,
+              14,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Asupan',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text.rich(
+                      TextSpan(
                         children: [
-                          const Icon(Icons.alarm, size: 18, color: _deadlineColor),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text('${task.title} - ${_deadlineFormat.format(task.deadline)}'),
+                          TextSpan(
+                            text: '${today.calories.round()}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: lewat
+                                  ? AppColors.priorityHigh
+                                  : colorScheme.onSurface,
+                            ),
+                          ),
+                          TextSpan(
+                            text: targets == null
+                                ? ' kkal'
+                                : ' / ${targets.goalKcal} kkal',
                           ),
                         ],
                       ),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: colorScheme.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
+                  ],
+                ),
+                if (targets != null) ...[
+                  const SizedBox(height: 10),
+                  LinearProgressIndicator(
+                    value: (today.calories / targets.goalKcal).clamp(0.0, 1.0),
+                    minHeight: 5,
+                    color: lewat
+                        ? AppColors.priorityHigh
+                        : colorScheme.onSurface,
+                  ),
                 ],
-              ),
-        loading: () => const LinearProgressIndicator(),
-        error: (error, stackTrace) => Text('Gagal memuat: $error'),
-      ),
+                const SizedBox(height: 8),
+                Text(
+                  today.kosong
+                      ? 'Belum ada catatan makan · $air'
+                      : 'Protein ${today.proteinG.round()} g · Karbo ${today.carbsG.round()} g · '
+                            'Lemak ${today.fatG.round()} g · $air',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (error, _) => const _BarisKosong('Asupan gagal dimuat.'),
     );
+
+    return _KartuDaftar(children: [barisLatihan, barisAsupan]);
   }
 }
 
@@ -528,15 +726,15 @@ class _FinanceCard extends ConsumerWidget {
               if (jatah == null) {
                 return Row(
                   children: [
-                    const Icon(Icons.savings_outlined,
-                        size: 18, color: AppColors.finance),
-                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         summary.kosong
                             ? 'Belum ada catatan keuangan'
                             : 'Keluar ${formatRupiah(summary.pengeluaran)} periode ini',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const Icon(Icons.chevron_right, size: 20),
@@ -563,12 +761,14 @@ class _FinanceCard extends ConsumerWidget {
                             ? formatRupiah(summary.sisaBudget!.abs())
                             : formatRupiah(jatah),
                         style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          height: 1,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          height: 1.1,
+                          letterSpacing: -0.6,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                           color: kebobolan
                               ? AppColors.priorityHigh
-                              : AppColors.finance,
+                              : colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -595,132 +795,15 @@ class _FinanceCard extends ConsumerWidget {
                 Icon(Icons.error_outline, size: 18, color: colorScheme.error),
                 const SizedBox(width: AppSpacing.sm),
                 const Expanded(
-                  child: Text('Gagal memuat keuangan', style: TextStyle(fontSize: 13)),
+                  child: Text(
+                    'Gagal memuat keuangan',
+                    style: TextStyle(fontSize: 13),
+                  ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _TodayNutritionCard extends ConsumerWidget {
-  const _TodayNutritionCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final todayAsync = ref.watch(todayNutritionProvider);
-    final profile = ref.watch(bodyProfileProvider).value;
-    final weight = ref.watch(currentWeightProvider).value;
-
-    final targets = (profile == null || weight == null)
-        ? null
-        : calculateCalories(profile: profile, weightKg: weight, now: DateTime.now());
-
-    return _DashboardCard(
-      // Nutrisi bukan akar tab, jadi halamannya memang di-push. Efek tekannya
-      // sekarang selebar kartu seperti yang lain, bukan cuma seluas isinya.
-      onTap: () => context.push('/workout/nutrition'),
-      child: todayAsync.when(
-        data: (today) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${today.calories.round()}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 24,
-                      color: _deadlineColor,
-                      height: 1,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    targets == null ? 'kkal' : '/ ${targets.goalKcal} kkal',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${(today.waterMl / 1000).toStringAsFixed(1)} L air',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              if (targets != null) ...[
-                const SizedBox(height: AppSpacing.sm),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: LinearProgressIndicator(
-                    value: (today.calories / targets.goalKcal).clamp(0.0, 1.0),
-                    minHeight: 7,
-                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    valueColor: AlwaysStoppedAnimation(
-                      today.calories > targets.goalKcal
-                          ? AppColors.priorityHigh
-                          : _deadlineColor,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                today.kosong
-                    ? 'Belum ada catatan makan hari ini'
-                    : 'Protein ${today.proteinG.round()} g  ·  '
-                        'Karbo ${today.carbsG.round()} g  ·  Lemak ${today.fatG.round()} g',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        loading: () => const LinearProgressIndicator(),
-        error: (error, stackTrace) => Text('Gagal memuat: $error'),
-      ),
-    );
-  }
-}
-
-class _TodayWorkoutCard extends ConsumerWidget {
-  const _TodayWorkoutCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(todayWorkoutSessionProvider);
-    return _DashboardCard(
-      onTap: () => _keTab(context, kTabWorkout),
-      child: session.when(
-        data: (data) => data == null
-            ? const EmptyState(
-                icon: Icons.fitness_center,
-                title: 'Belum ada sesi workout hari ini',
-                color: _workoutColor,
-                compact: true,
-              )
-            : Row(
-                children: [
-                  const Icon(Icons.check_circle, color: _workoutColor),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text('${data.exercises.length} latihan tercatat'
-                        '${data.notes != null ? " - ${data.notes}" : ""}'),
-                  ),
-                ],
-              ),
-        loading: () => const LinearProgressIndicator(),
-        error: (error, stackTrace) => Text('Gagal memuat: $error'),
       ),
     );
   }

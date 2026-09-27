@@ -497,12 +497,12 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
               HeroStatData(
                 icon: Icons.event,
                 value: DateFormat('d MMM', 'id_ID').format(_sessionDate),
-                label: 'Tanggal Sesi',
+                label: 'Tanggal sesi',
               ),
               HeroStatData(
                 icon: Icons.fitness_center,
                 value: '$filledCount',
-                label: 'Latihan Diisi',
+                label: 'Latihan diisi',
               ),
             ],
           ),
@@ -547,7 +547,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                       child: OutlinedButton.icon(
                         onPressed: _pickTemplate,
                         icon: const Icon(Icons.bookmark_outline, size: 18),
-                        label: const Text('Pakai Template', style: TextStyle(fontSize: 12)),
+                        label: const Text('Pakai template', style: TextStyle(fontSize: 12)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _workoutColor,
                           side: BorderSide(color: _workoutColor.withValues(alpha: 0.4)),
@@ -560,7 +560,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                       child: OutlinedButton.icon(
                         onPressed: _saveAsTemplate,
                         icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-                        label: const Text('Simpan Template', style: TextStyle(fontSize: 12)),
+                        label: const Text('Simpan template', style: TextStyle(fontSize: 12)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _workoutColor,
                           side: BorderSide(color: _workoutColor.withValues(alpha: 0.4)),
@@ -593,7 +593,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                 OutlinedButton.icon(
                   onPressed: () => setState(() => _rows.add(_ExerciseRowControllers())),
                   icon: const Icon(Icons.add, color: _workoutColor),
-                  label: const Text('Tambah Latihan', style: TextStyle(color: _workoutColor)),
+                  label: const Text('Tambah latihan', style: TextStyle(color: _workoutColor)),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: _workoutColor),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -628,7 +628,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
             color: _workoutColor,
             saving: _saving,
             onPressed: _submit,
-            label: 'Simpan Sesi',
+            label: 'Simpan sesi',
           ),
         ],
       ),
@@ -665,7 +665,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                     textCapitalization: TextCapitalization.words,
                     // Rebuild supaya strip saran ikut berubah saat namanya diketik.
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(labelText: 'Nama Latihan'),
+                    decoration: const InputDecoration(labelText: 'Nama latihan'),
                   ),
                 ),
                 if (_rows.length > 1)
@@ -696,13 +696,6 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
                       selected: row.type == type,
                       onSelected: (_) => setState(() => row.type = type),
                       selectedColor: _workoutColor.withValues(alpha: 0.18),
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: row.type == type
-                            ? _workoutColor
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
                     ),
                   ],
                 ],

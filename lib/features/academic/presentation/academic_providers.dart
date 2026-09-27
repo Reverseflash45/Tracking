@@ -18,7 +18,15 @@ final coursesProvider = FutureProvider.autoDispose<List<Course>>((ref) async {
 final classSchedulesProvider = FutureProvider.autoDispose<List<ClassSchedule>>((ref) async {
   final userId = ref.watch(currentUserProvider)?.id;
   if (userId == null) return const [];
-  return ref.watch(academicRepositoryProvider).fetchSchedules(userId);
+  final list = await ref.watch(academicRepositoryProvider).fetchSchedules(userId);
+  // Urutan dari server tidak selalu sampai utuh (salinan luring bisa
+  // tersimpan dalam urutan lain), jadi diurutkan ulang di sini: per hari,
+  // lalu per jam mulai.
+  return [...list]..sort((a, b) {
+      final hari = a.dayOfWeek.compareTo(b.dayOfWeek);
+      if (hari != 0) return hari;
+      return (menitDariJam(a.startTime) ?? 0).compareTo(menitDariJam(b.startTime) ?? 0);
+    });
 });
 
 /// Mata kuliah beserta jadwalnya, dipakai bersama [pilihanMatkul] untuk

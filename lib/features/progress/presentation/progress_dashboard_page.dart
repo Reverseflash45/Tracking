@@ -85,17 +85,17 @@ class _ProgressDashboardPageState extends ConsumerState<ProgressDashboardPage> {
                         value: stats.weight.currentWeight == null
                             ? '-'
                             : '${_trim(stats.weight.currentWeight!)} kg',
-                        label: 'Berat Kini',
+                        label: 'Berat kini',
                       ),
                       HeroStatData(
                         icon: Icons.fitness_center,
                         value: '${stats.workout.totalSessions}',
-                        label: 'Sesi Workout',
+                        label: 'Sesi workout',
                       ),
                       HeroStatData(
                         icon: Icons.restaurant_menu,
                         value: '${stats.nutrition.daysLogged}',
-                        label: 'Hari Dicatat',
+                        label: 'Hari dicatat',
                       ),
                     ],
             ),
@@ -190,7 +190,7 @@ class _WeightSection extends StatelessWidget {
 
     if (weight.kosong) {
       return const _SectionPlaceholder(
-        title: 'Berat Badan',
+        title: 'Berat badan',
         icon: Icons.monitor_weight_outlined,
         message: 'Belum ada catatan berat di periode ini. '
             'Berat tercatat setiap kamu menyimpan Profil Tubuh.',
@@ -210,7 +210,7 @@ class _WeightSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(
-          title: 'Berat Badan',
+          title: 'Berat badan',
           icon: Icons.monitor_weight_outlined,
           color: _color,
         ),
@@ -504,14 +504,14 @@ class _WorkoutSection extends StatelessWidget {
                       actual: 0,
                     ),
                     _AvgTile(
-                      label: 'Total Set',
+                      label: 'Total set',
                       value: _numberFormat.format(trend.totalSets),
                       unit: 'set',
                       target: null,
                       actual: 0,
                     ),
                     _AvgTile(
-                      label: 'Total Rep',
+                      label: 'Total rep',
                       value: _numberFormat.format(trend.totalReps),
                       unit: 'rep',
                       target: null,
@@ -584,7 +584,7 @@ class _AchievementSection extends ConsumerWidget {
                 Row(
                   children: [
                     _AvgTile(
-                      label: 'Streak Workout',
+                      label: 'Streak workout',
                       value: '${workoutStreak?.current ?? 0}',
                       unit: 'hari',
                       target: null,
@@ -598,14 +598,14 @@ class _AchievementSection extends ConsumerWidget {
                       actual: 0,
                     ),
                     _AvgTile(
-                      label: 'Streak Deadline',
+                      label: 'Streak deadline',
                       value: '${deadlineStreak?.current ?? 0}',
                       unit: 'tugas',
                       target: null,
                       actual: 0,
                     ),
                     _AvgTile(
-                      label: 'Tepat Waktu',
+                      label: 'Tepat waktu',
                       value: '${(deadlineStreak?.onTimePercentage ?? 0).round()}',
                       unit: '%',
                       target: null,

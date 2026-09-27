@@ -96,7 +96,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SectionHeader(
-                    title: 'Pilih Latihan',
+                    title: 'Pilih latihan',
                     icon: Icons.fitness_center,
                     color: _workoutColor,
                     trailing: Text(
@@ -123,12 +123,6 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                           selected: _selectedKey == null,
                           onSelected: (_) => setState(() => _selectedKey = null),
                           selectedColor: _workoutColor.withValues(alpha: 0.18),
-                          labelStyle: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: _selectedKey == null
-                                ? _workoutColor
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
                         ),
                         for (final progress in all) ...[
                           const SizedBox(width: AppSpacing.sm),
@@ -139,12 +133,6 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
                               () => _selectedKey = progress.name.toLowerCase(),
                             ),
                             selectedColor: _workoutColor.withValues(alpha: 0.18),
-                            labelStyle: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: _selectedKey == progress.name.toLowerCase()
-                                  ? _workoutColor
-                                  : Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
                           ),
                         ],
                       ],
@@ -196,7 +184,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
     final naik = all.where((p) => p.delta > 0).length;
 
     return HeroHeader.sub(
-      title: 'Progress Latihan',
+      title: 'Progress latihan',
       subtitle: 'Perkembangan semua latihanmu',
       color: _workoutColor,
       leading: leading,
@@ -204,10 +192,10 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
         HeroStatData(
           icon: Icons.fitness_center,
           value: '${all.length}',
-          label: 'Jenis Latihan',
+          label: 'Jenis latihan',
         ),
-        HeroStatData(icon: Icons.history, value: '$totalSesi', label: 'Total Catatan'),
-        HeroStatData(icon: Icons.trending_up, value: '$naik', label: 'Sedang Naik'),
+        HeroStatData(icon: Icons.history, value: '$totalSesi', label: 'Total catatan'),
+        HeroStatData(icon: Icons.trending_up, value: '$naik', label: 'Sedang naik'),
       ],
     );
   }
@@ -260,7 +248,7 @@ class _WorkoutProgressPageState extends ConsumerState<WorkoutProgressPage> {
         HeroStatData(
           icon: Icons.history,
           value: '${p.sessionCount}',
-          label: 'Sesi Tercatat',
+          label: 'Sesi tercatat',
         ),
     ];
   }
@@ -280,7 +268,7 @@ class _AllExercisesView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(
-          title: 'Semua Latihan',
+          title: 'Semua latihan',
           icon: Icons.list_alt,
           color: _workoutColor,
         ),
@@ -483,7 +471,7 @@ class _DetailView extends ConsumerWidget {
           _DeltaBanner(delta: progress.delta, metric: progress.metric),
         if (suggestion != null) ...[
           const SectionHeader(
-            title: 'Target Sesi Berikutnya',
+            title: 'Target sesi berikutnya',
             icon: Icons.flag_outlined,
             color: _workoutColor,
           ),

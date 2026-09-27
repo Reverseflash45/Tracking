@@ -33,8 +33,6 @@ class RecurringPage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showForm(context, ref),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Tambah'),
       ),
@@ -44,7 +42,7 @@ class RecurringPage extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Pengeluaran Rutin',
+              title: 'Pengeluaran rutin',
               subtitle: 'Kos, internet, langganan',
               color: _color,
               leading: HeroIconButton(
@@ -61,12 +59,12 @@ class RecurringPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.calendar_month_outlined,
                   value: formatRupiahRingkas(totalBulanan),
-                  label: 'Per Bulan',
+                  label: 'Per bulan',
                 ),
                 HeroStatData(
                   icon: Icons.lock_clock,
                   value: formatRupiahRingkas(summary?.rutinBelumJatuhTempo ?? 0),
-                  label: 'Belum Jatuh Tempo',
+                  label: 'Belum jatuh tempo',
                 ),
               ],
             ),
@@ -368,12 +366,6 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                             selected: _dueDay == day,
                             onSelected: (_) => setState(() => _dueDay = day),
                             visualDensity: VisualDensity.compact,
-                            selectedColor: _color.withValues(alpha: 0.18),
-                            labelStyle: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              color: _dueDay == day ? _color : colorScheme.onSurfaceVariant,
-                            ),
                           ),
                         ),
                       ),
@@ -395,12 +387,6 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
                       label: Text(category.label),
                       selected: _category == category,
                       onSelected: (_) => setState(() => _category = category),
-                      selectedColor: _color.withValues(alpha: 0.18),
-                      labelStyle: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: _category == category ? _color : colorScheme.onSurfaceVariant,
-                      ),
                     ),
                 ],
               ),

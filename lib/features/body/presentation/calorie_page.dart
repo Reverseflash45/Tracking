@@ -49,7 +49,7 @@ class _CaloriePageState extends ConsumerState<CaloriePage> {
         padding: EdgeInsets.zero,
         children: [
           HeroHeader.sub(
-            title: 'Kalkulator Kalori',
+            title: 'Kalkulator kalori',
             subtitle: result == null
                 ? 'Butuh profil tubuh untuk menghitung'
                 : 'BMR ${_numberFormat.format(result.bmr.round())} kkal - '
@@ -71,7 +71,7 @@ class _CaloriePageState extends ConsumerState<CaloriePage> {
                     HeroStatData(
                       icon: Icons.monitor_weight_outlined,
                       value: '${_trim(weight!)} kg',
-                      label: 'Berat Kini',
+                      label: 'Berat kini',
                     ),
                     HeroStatData(
                       icon: Icons.speed,
@@ -81,7 +81,7 @@ class _CaloriePageState extends ConsumerState<CaloriePage> {
                     HeroStatData(
                       icon: Icons.local_fire_department,
                       value: _numberFormat.format(result.goalKcal),
-                      label: 'Target Kalori',
+                      label: 'Target kalori',
                     ),
                   ],
           ),
@@ -101,14 +101,14 @@ class _CaloriePageState extends ConsumerState<CaloriePage> {
                   if (result.targetCheck?.warning != null)
                     _WarningBanner(message: result.targetCheck!.warning!),
                   const SectionHeader(
-                    title: 'Status Berat Badan',
+                    title: 'Status berat badan',
                     icon: Icons.speed,
                     color: _color,
                   ),
                   _BmiCard(result: result),
                   const SizedBox(height: AppSpacing.lg),
                   const SectionHeader(
-                    title: 'Kebutuhan Kalori',
+                    title: 'Kebutuhan kalori',
                     icon: Icons.local_fire_department,
                     color: _color,
                   ),
@@ -133,14 +133,14 @@ class _CaloriePageState extends ConsumerState<CaloriePage> {
                   _KcalCard(result: result, goal: goal),
                   const SizedBox(height: AppSpacing.lg),
                   const SectionHeader(
-                    title: 'Target Makro Harian',
+                    title: 'Target makro harian',
                     icon: Icons.pie_chart_outline,
                     color: _color,
                   ),
                   _MacroCard(macros: result.macros),
                   const SizedBox(height: AppSpacing.lg),
                   const SectionHeader(
-                    title: 'Target Harian Lain',
+                    title: 'Target harian lain',
                     icon: Icons.checklist,
                     color: _color,
                   ),
@@ -208,7 +208,7 @@ class _BelumAdaProfil extends StatelessWidget {
               foregroundColor: Colors.white,
             ),
             icon: const Icon(Icons.edit_outlined),
-            label: const Text('Isi Profil Tubuh'),
+            label: const Text('Isi profil tubuh'),
           ),
         ],
       ),

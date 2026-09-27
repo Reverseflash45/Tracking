@@ -225,7 +225,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                             padding: const EdgeInsets.symmetric(vertical: 13),
                           ),
                           icon: const Icon(Icons.photo_library_outlined, size: 18),
-                          label: const Text('Dari Galeri'),
+                          label: const Text('Dari galeri'),
                         ),
                       ),
                     ],
@@ -500,14 +500,6 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
                     label: Text(weekDayName(day)),
                     selected: _day == day,
                     onSelected: (_) => setState(() => _day = day),
-                    selectedColor: _color.withValues(alpha: 0.18),
-                    labelStyle: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: _day == day
-                          ? _color
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
                   ),
               ],
             ),

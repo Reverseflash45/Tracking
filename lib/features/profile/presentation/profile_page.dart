@@ -267,7 +267,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 _MenuTile(
                   icon: Icons.help_outline,
                   color: AppColors.dashboard,
-                  title: 'Tanya Data',
+                  title: 'Tanya data',
                   // Dihitung dari katalog, bukan ditulis manual — angka yang
                   // dipatok akan basi begitu ada pertanyaan baru.
                   subtitle: '${questionCatalog.length} pertanyaan siap pakai '

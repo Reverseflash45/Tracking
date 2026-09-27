@@ -10,7 +10,13 @@ import 'package:flutter/material.dart';
 /// Sekarang: huruf kecil, tebal, redup, dengan ikon polos seukuran huruf.
 /// Judul bagian memang tugasnya mengalah.
 class SectionHeader extends StatelessWidget {
-  const SectionHeader({super.key, required this.title, this.icon, this.color, this.trailing});
+  const SectionHeader({
+    super.key,
+    required this.title,
+    this.icon,
+    this.color,
+    this.trailing,
+  });
 
   final String title;
   final IconData? icon;
@@ -25,25 +31,23 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final warnaIkon = color ?? colorScheme.onSurfaceVariant;
 
+    // Ikon di depan judul bagian dihapus: tiap bagian punya ikon adalah pola
+    // template, dan labelnya sudah cukup. Parameter [icon] dan [color] tetap
+    // diterima supaya pemanggil lama tidak perlu diubah.
     return Padding(
-      padding: const EdgeInsets.only(left: 2, bottom: 10),
+      padding: const EdgeInsets.only(left: 4, bottom: 10, top: 6),
       child: Row(
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 15, color: warnaIkon),
-            const SizedBox(width: 7),
-          ],
           Expanded(
             child: Text(
-              title,
+              title.toUpperCase(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
+                letterSpacing: 0.9,
                 color: colorScheme.onSurfaceVariant,
               ),
             ),

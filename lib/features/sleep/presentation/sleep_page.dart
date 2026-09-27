@@ -52,12 +52,12 @@ class SleepPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.check_circle_outline,
                   value: '${ringkasan.hariCukup}',
-                  label: 'Hari Cukup',
+                  label: 'Hari cukup',
                 ),
                 HeroStatData(
                   icon: Icons.nights_stay_outlined,
                   value: '${ringkasan.hariKurang}',
-                  label: 'Hari Kurang',
+                  label: 'Hari kurang',
                 ),
               ],
             ),
@@ -191,12 +191,6 @@ class _CatatCardState extends ConsumerState<_CatatCard> {
                     selected: hariIni?.hours == jam,
                     onSelected: _menyimpan ? null : (_) => _simpan(jam),
                     visualDensity: VisualDensity.compact,
-                    selectedColor: _color.withValues(alpha: 0.18),
-                    labelStyle: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: hariIni?.hours == jam ? _color : colorScheme.onSurfaceVariant,
-                    ),
                   ),
               ],
             ),

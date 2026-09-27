@@ -43,8 +43,6 @@ class _NotePageState extends ConsumerState<NotePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/notes/new'),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Catatan'),
       ),

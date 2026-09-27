@@ -38,8 +38,6 @@ class NutritionPage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showFoodFormSheet(context),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Makanan'),
       ),
@@ -52,7 +50,7 @@ class NutritionPage extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Nutrisi Hari Ini',
+              title: 'Nutrisi hari ini',
               subtitle: targets == null
                   ? 'Isi profil tubuh untuk melihat targetmu'
                   : 'Target ${_numberFormat.format(targets.goalKcal)} kkal - '
@@ -67,7 +65,7 @@ class NutritionPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.local_fire_department,
                   value: _numberFormat.format((today?.calories ?? 0).round()),
-                  label: 'Kalori Masuk',
+                  label: 'Kalori masuk',
                 ),
                 HeroStatData(
                   icon: Icons.egg_outlined,
@@ -77,7 +75,7 @@ class NutritionPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.local_drink_outlined,
                   value: '${((today?.waterMl ?? 0) / 1000).toStringAsFixed(1)} L',
-                  label: 'Air Minum',
+                  label: 'Air minum',
                 ),
               ],
             ),
@@ -106,7 +104,7 @@ class NutritionPage extends ConsumerWidget {
                       const _TargetPrompt()
                     else ...[
                       const SectionHeader(
-                        title: 'Progres Target',
+                        title: 'Progres target',
                         icon: Icons.track_changes,
                         color: _color,
                       ),
@@ -114,7 +112,7 @@ class NutritionPage extends ConsumerWidget {
                     ],
                     const SizedBox(height: AppSpacing.lg),
                     SectionHeader(
-                      title: 'Air Minum',
+                      title: 'Air minum',
                       icon: Icons.local_drink_outlined,
                       color: _color,
                       trailing: targets == null
@@ -130,7 +128,7 @@ class NutritionPage extends ConsumerWidget {
                     _WaterCard(waterMl: today!.waterMl, targetMl: targets?.waterMl),
                     const SizedBox(height: AppSpacing.lg),
                     const SectionHeader(
-                      title: 'Makanan Hari Ini',
+                      title: 'Makanan hari ini',
                       icon: Icons.restaurant_menu,
                       color: _color,
                     ),

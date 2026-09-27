@@ -252,7 +252,7 @@ class _KhsImportPageState extends ConsumerState<KhsImportPage> {
                             padding: const EdgeInsets.symmetric(vertical: 13),
                           ),
                           icon: const Icon(Icons.photo_library_outlined, size: 18),
-                          label: const Text('Dari Galeri'),
+                          label: const Text('Dari galeri'),
                         ),
                       ),
                     ],
@@ -655,14 +655,6 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
                     label: Text(huruf),
                     selected: _huruf == huruf,
                     onSelected: (_) => setState(() => _huruf = huruf),
-                    selectedColor: _color.withValues(alpha: 0.18),
-                    labelStyle: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: _huruf == huruf
-                          ? _color
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
                   ),
               ],
             ),

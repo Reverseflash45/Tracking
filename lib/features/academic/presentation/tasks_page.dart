@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/daftar_bergaris.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../data/models/task.dart';
@@ -66,8 +67,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
           await context.push('/academic/tasks/new');
           ref.invalidate(tasksProvider);
         },
-        backgroundColor: AppColors.deadline,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Tugas'),
       ),
@@ -77,7 +76,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader(
-              title: 'Tugas Kuliah',
+              title: 'Tugas kuliah',
               subtitle: 'Pantau deadline dan progres pengerjaan',
               color: AppColors.deadline,
               trailing: Row(
@@ -112,7 +111,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                 HeroStatData(
                   icon: Icons.pending_actions,
                   value: '$unfinished',
-                  label: 'Belum Selesai',
+                  label: 'Belum selesai',
                 ),
                 HeroStatData(
                   icon: Icons.warning_amber_rounded,
@@ -139,14 +138,6 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                         label: Text(filter.label),
                         selected: _filter == filter,
                         onSelected: (_) => setState(() => _filter = filter),
-                        selectedColor: AppColors.deadline.withValues(alpha: 0.18),
-                        checkmarkColor: AppColors.deadline,
-                        labelStyle: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: _filter == filter
-                              ? AppColors.deadline
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
                       ),
                     ],
                   ],
@@ -170,14 +161,9 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                       color: AppColors.deadline,
                     );
                   }
-                  return Column(
-                    children: [
-                      for (final task in filtered)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: TaskTile(task: task),
-                        ),
-                    ],
+                  return DaftarBergaris(
+                    indentGaris: 52,
+                    children: [for (final task in filtered) TaskTile(task: task)],
                   );
                 },
                 loading: () => const Padding(

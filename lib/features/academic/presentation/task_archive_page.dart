@@ -80,7 +80,7 @@ class _TaskArchivePageState extends ConsumerState<TaskArchivePage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Arsip Tugas',
+              title: 'Arsip tugas',
               subtitle: 'Tugas kuliah per mata kuliah',
               color: _color,
               leading: HeroIconButton(
@@ -92,13 +92,13 @@ class _TaskArchivePageState extends ConsumerState<TaskArchivePage> {
                 HeroStatData(
                   icon: Icons.menu_book_outlined,
                   value: '$adaPekerjaan',
-                  label: 'Masih Ada Tugas',
+                  label: 'Masih ada tugas',
                 ),
                 HeroStatData(icon: Icons.task_alt, value: '$totalSelesai', label: 'Selesai'),
                 HeroStatData(
                   icon: Icons.checklist_outlined,
                   value: '$totalTugas',
-                  label: 'Total Tugas',
+                  label: 'Total tugas',
                 ),
               ],
             ),
@@ -119,14 +119,6 @@ class _TaskArchivePageState extends ConsumerState<TaskArchivePage> {
                         label: Text(saring.label),
                         selected: _saring == saring,
                         onSelected: (_) => setState(() => _saring = saring),
-                        selectedColor: _color.withValues(alpha: 0.18),
-                        checkmarkColor: _color,
-                        labelStyle: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: _saring == saring
-                              ? _color
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
                       ),
                     ],
                   ],

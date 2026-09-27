@@ -42,10 +42,8 @@ class RunHistoryPage extends ConsumerWidget {
           await context.push('/workout/run/track');
           ref.invalidate(runsProvider);
         },
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.play_arrow),
-        label: const Text('Mulai Lari'),
+        label: const Text('Mulai lari'),
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(runsProvider),
@@ -65,12 +63,12 @@ class RunHistoryPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.route,
                   value: formatDistance(totalMeters),
-                  label: 'Total Jarak',
+                  label: 'Total jarak',
                 ),
                 HeroStatData(
                   icon: Icons.calendar_month_outlined,
                   value: formatDistance(bulanIni),
-                  label: 'Bulan Ini',
+                  label: 'Bulan ini',
                 ),
                 HeroStatData(
                   icon: Icons.directions_run,
@@ -261,7 +259,7 @@ class _RunDetailPage extends StatelessWidget {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => SharePreviewPage(
-                  title: 'Bagikan Lari',
+                  title: 'Bagikan lari',
                   accent: _color,
                   card: RunShareCard(run: run),
                   fileName: 'lari-'
@@ -290,7 +288,7 @@ class _RunDetailPage extends StatelessWidget {
               Expanded(
                 child: _DetailStat(
                   value: formatDuration(run.durationSeconds),
-                  label: 'Waktu Bergerak',
+                  label: 'Waktu bergerak',
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),

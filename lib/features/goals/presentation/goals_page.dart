@@ -49,8 +49,6 @@ class GoalsPage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _bukaForm(context, ref),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Target'),
       ),
@@ -78,7 +76,7 @@ class GoalsPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.priority_high,
                   value: '$perluPerhatian',
-                  label: 'Perlu Perhatian',
+                  label: 'Perlu perhatian',
                 ),
               ],
             ),

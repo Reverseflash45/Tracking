@@ -121,8 +121,6 @@ class _ProgressPhotoPageState extends ConsumerState<ProgressPhotoPage> {
           ? null
           : FloatingActionButton.extended(
               onPressed: _mengunggah ? null : _pilihSumber,
-              backgroundColor: _color,
-              foregroundColor: Colors.white,
               icon: _mengunggah
                   ? const SizedBox(
                       height: 18,
@@ -138,7 +136,7 @@ class _ProgressPhotoPageState extends ConsumerState<ProgressPhotoPage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Foto Progres',
+              title: 'Foto progres',
               subtitle: _modeBanding
                   ? 'Pilih dua foto untuk dibandingkan'
                   : '${photos.length} foto tersimpan',

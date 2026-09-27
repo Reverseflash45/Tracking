@@ -59,8 +59,6 @@ class _RoutinePageState extends ConsumerState<RoutinePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _bukaForm(),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Kegiatan'),
       ),
@@ -100,7 +98,7 @@ class _RoutinePageState extends ConsumerState<RoutinePage> {
                 HeroStatData(
                   icon: Icons.calendar_view_week_outlined,
                   value: '${terisi.length}',
-                  label: 'Hari Diisi',
+                  label: 'Hari diisi',
                 ),
               ],
             ),

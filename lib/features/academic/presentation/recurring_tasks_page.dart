@@ -29,8 +29,6 @@ class RecurringTasksPage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _bukaForm(context, ref),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Template'),
       ),
@@ -40,7 +38,7 @@ class RecurringTasksPage extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Tugas Berulang',
+              title: 'Tugas berulang',
               subtitle: 'Dibuat otomatis tiap minggu',
               color: _color,
               leading: HeroIconButton(
@@ -436,7 +434,6 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
                         label: Text(weekDayName(day).substring(0, 3)),
                         selected: _weekday == day,
                         onSelected: (_) => setState(() => _weekday = day),
-                        selectedColor: _color.withValues(alpha: 0.18),
                       ),
                     ],
                   ],

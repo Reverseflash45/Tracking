@@ -221,12 +221,6 @@ class _RoutineFormSheetState extends ConsumerState<RoutineFormSheet> {
                     label: Text(jenis.label),
                     selected: _kategori == jenis,
                     onSelected: (_) => setState(() => _kategori = jenis),
-                    selectedColor: _color.withValues(alpha: 0.18),
-                    labelStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _kategori == jenis ? _color : colorScheme.onSurfaceVariant,
-                    ),
                   ),
               ],
             ),

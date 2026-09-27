@@ -31,7 +31,7 @@ class MuscleBuilderPage extends StatelessWidget {
               HeroStatData(
                 icon: Icons.grid_view,
                 value: '${muscleGroups.length}',
-                label: 'Kelompok Otot',
+                label: 'Kelompok otot',
               ),
               HeroStatData(
                 icon: Icons.fitness_center,
@@ -46,7 +46,7 @@ class MuscleBuilderPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SectionHeader(
-                  title: 'Kelompok Otot',
+                  title: 'Kelompok otot',
                   icon: Icons.accessibility_new,
                   color: _color,
                 ),
@@ -64,7 +64,7 @@ class MuscleBuilderPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 const SectionHeader(
-                  title: 'Nutrisi Pendukung',
+                  title: 'Nutrisi pendukung',
                   icon: Icons.restaurant_outlined,
                   color: _color,
                 ),

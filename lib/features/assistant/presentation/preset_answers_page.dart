@@ -56,7 +56,7 @@ class PresetAnswersPage extends ConsumerWidget {
         padding: EdgeInsets.zero,
         children: [
           HeroHeader.sub(
-            title: 'Tanya Data',
+            title: 'Tanya data',
             subtitle: 'Ketuk pertanyaan, jawabannya dihitung dari catatanmu',
             color: _color,
             leading: HeroIconButton(

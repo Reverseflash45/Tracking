@@ -374,7 +374,7 @@ class _RunTrackerPageState extends ConsumerState<RunTrackerPage> {
                       Expanded(
                         child: _SmallStat(
                           value: formatDuration(_elapsedSeconds),
-                          label: 'Waktu Bergerak',
+                          label: 'Waktu bergerak',
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),

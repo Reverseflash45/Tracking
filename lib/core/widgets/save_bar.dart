@@ -40,12 +40,18 @@ class SaveBar extends StatelessWidget {
       ),
       child: FilledButton(
         onPressed: saving ? null : onPressed,
-        style: FilledButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white),
+        style: FilledButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+        ),
         child: saving
             ? const SizedBox(
                 height: 20,
                 width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               )
             : Text(label),
       ),

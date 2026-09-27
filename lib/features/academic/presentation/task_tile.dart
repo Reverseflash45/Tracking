@@ -110,16 +110,12 @@ class TaskTile extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final accent = priorityColor(task.priority);
     final overdue = !task.isDone && task.deadline.isBefore(DateTime.now());
-    final warnaStatus = statusColor(task.status, colorScheme);
 
     return Dismissible(
       key: ValueKey(task.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.errorContainer,
-          borderRadius: BorderRadius.circular(AppTheme.radius),
-        ),
+        color: colorScheme.errorContainer,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Icon(Icons.delete_outline, color: colorScheme.onErrorContainer),
@@ -130,8 +126,14 @@ class TaskTile extends ConsumerWidget {
           title: const Text('Hapus tugas?'),
           content: Text('Tugas "${task.title}" akan dihapus.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Hapus'),
+            ),
           ],
         ),
       ),
@@ -140,137 +142,142 @@ class TaskTile extends ConsumerWidget {
         try {
           await ref.read(academicRepositoryProvider).deleteTask(task.id);
         } catch (error) {
-          messenger.showSnackBar(SnackBar(content: Text('Gagal menghapus: $error')));
+          messenger.showSnackBar(
+            SnackBar(content: Text('Gagal menghapus: $error')),
+          );
         }
         ref.invalidate(tasksProvider);
       },
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => context.push('/academic/tasks/${task.id}'),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: accent, width: 4)),
-            ),
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.sm,
-              AppSpacing.sm,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  tooltip: task.isDone ? 'Tandai belum selesai' : 'Tandai selesai',
-                  onPressed: () => ubahStatusTugas(
-                    context,
-                    ref,
-                    task.id,
-                    task.isDone ? TaskStatus.todo : TaskStatus.done,
-                  ),
-                  icon: Icon(
-                    task.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: task.isDone ? AppColors.statusDone : colorScheme.onSurfaceVariant,
-                  ),
+      // Satu baris datar di dalam DaftarBergaris — bukan kartu berbingkai
+      // dengan garis warna prioritas di kiri. Prioritas tinggi cukup satu
+      // titik merah di depan judul; status "Belum" tidak perlu lencana karena
+      // memang keadaan bawaan.
+      child: InkWell(
+        onTap: () => context.push('/academic/tasks/${task.id}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 6, AppSpacing.md, 6),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: task.isDone
+                    ? 'Tandai belum selesai'
+                    : 'Tandai selesai',
+                onPressed: () => ubahStatusTugas(
+                  context,
+                  ref,
+                  task.id,
+                  task.isDone ? TaskStatus.todo : TaskStatus.done,
                 ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                icon: Icon(
+                  task.isDone
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  size: 22,
+                  color: task.isDone
+                      ? AppColors.statusDone
+                      : colorScheme.outline,
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        if (task.priority == TaskPriority.high &&
+                            !task.isDone) ...[
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: accent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 7),
+                        ],
+                        Flexible(
+                          child: Text(
+                            task.title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14.5,
+                              height: 1.3,
+                              decoration: task.isDone
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                              color: task.isDone
+                                  ? colorScheme.onSurfaceVariant
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      [
+                        if (tampilkanMatkul) task.courseName ?? 'Umum',
+                        task.isDone
+                            ? _dateFormat.format(task.deadline)
+                            : countdownLabel(task.deadline),
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: overdue
+                            ? AppColors.priorityHigh
+                            : colorScheme.onSurfaceVariant,
+                        fontWeight: overdue ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              PopupMenuButton<TaskStatus>(
+                initialValue: task.status,
+                tooltip: 'Ubah status',
+                onSelected: (status) =>
+                    ubahStatusTugas(context, ref, task.id, status),
+                itemBuilder: (context) => TaskStatus.values
+                    .map(
+                      (status) => PopupMenuItem(
+                        value: status,
+                        child: Text(status.label),
+                      ),
+                    )
+                    .toList(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        task.title,
+                        task.status.label,
                         style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          decoration: task.isDone ? TextDecoration.lineThrough : null,
-                          color: task.isDone ? colorScheme.onSurfaceVariant : null,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: task.status == TaskStatus.inProgress
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          if (tampilkanMatkul)
-                            _MetaPill(
-                              icon: Icons.menu_book_outlined,
-                              label: task.courseName ?? 'Umum',
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          _MetaPill(
-                            icon: overdue ? Icons.warning_amber_rounded : Icons.event_outlined,
-                            label: task.isDone
-                                ? _dateFormat.format(task.deadline)
-                                : countdownLabel(task.deadline),
-                            color: overdue ? AppColors.priorityHigh : colorScheme.onSurfaceVariant,
-                          ),
-                        ],
+                      Icon(
+                        Icons.expand_more,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                PopupMenuButton<TaskStatus>(
-                  initialValue: task.status,
-                  tooltip: 'Ubah status',
-                  onSelected: (status) => ubahStatusTugas(context, ref, task.id, status),
-                  itemBuilder: (context) => TaskStatus.values
-                      .map((status) => PopupMenuItem(value: status, child: Text(status.label)))
-                      .toList(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: warnaStatus.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      task.status.label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: warnaStatus,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _MetaPill extends StatelessWidget {
-  const _MetaPill({required this.icon, required this.label, required this.color});
-
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    // Teksnya dipotong dengan elipsis, bukan dibiarkan melebar. Nama mata
-    // kuliah datang dari isian sendiri dan hasil impor KRS — panjangnya tidak
-    // ada batas, dan di layar 320dp dengan huruf diperbesar, "Keamanan Cyber"
-    // saja sudah meluber. Ketahuannya dari uji tampilan, bukan dari melihat.
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 3),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
-          ),
-        ),
-      ],
     );
   }
 }

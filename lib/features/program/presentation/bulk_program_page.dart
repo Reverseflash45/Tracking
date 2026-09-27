@@ -57,7 +57,7 @@ class _BulkProgramPageState extends ConsumerState<BulkProgramPage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Program Naik Berat',
+              title: 'Program naik berat',
               subtitle: aktif == null
                   ? 'Latihan di kos, 3× seminggu'
                   : 'Minggu ke-${mingguKe(aktif.mulai, DateTime.now())}  ·  '
@@ -72,12 +72,12 @@ class _BulkProgramPageState extends ConsumerState<BulkProgramPage> {
                 const HeroStatData(
                   icon: Icons.calendar_view_week_outlined,
                   value: '$kSesiPerMinggu×',
-                  label: 'Per Minggu',
+                  label: 'Per minggu',
                 ),
                 HeroStatData(
                   icon: Icons.timelapse,
                   value: '${program.sesi.first.perkiraanMenit}m',
-                  label: 'Per Sesi',
+                  label: 'Per sesi',
                 ),
                 HeroStatData(
                   icon: Icons.fitness_center,

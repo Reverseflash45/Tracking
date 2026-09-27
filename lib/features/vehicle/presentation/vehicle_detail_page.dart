@@ -52,10 +52,8 @@ class VehicleDetailPage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _catatServis(context, ref, vehicle),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.build_outlined),
-        label: const Text('Catat Servis'),
+        label: const Text('Catat servis'),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -90,7 +88,7 @@ class VehicleDetailPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.build_outlined,
                   value: '${logs.length}',
-                  label: 'Servis Tercatat',
+                  label: 'Servis tercatat',
                 ),
                 HeroStatData(
                   icon: Icons.payments_outlined,
@@ -115,7 +113,7 @@ class VehicleDetailPage extends ConsumerWidget {
                       'jadi totalnya lebih besar daripada yang tertulis di atas.',
                     ),
                   const SectionHeader(
-                    title: 'Jadwal Berikutnya',
+                    title: 'Jadwal berikutnya',
                     icon: Icons.event_available_outlined,
                     color: _color,
                   ),
@@ -143,7 +141,7 @@ class VehicleDetailPage extends ConsumerWidget {
                     ),
                   const SizedBox(height: AppSpacing.md),
                   SectionHeader(
-                    title: 'Riwayat Servis',
+                    title: 'Riwayat servis',
                     icon: Icons.history,
                     color: _color,
                     trailing: logs.isEmpty ? null : Text('${logs.length}'),

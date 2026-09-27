@@ -26,8 +26,6 @@ class WatchlistPage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _bukaForm(context, ref),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Judul'),
       ),
@@ -49,7 +47,7 @@ class WatchlistPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.play_circle_outline,
                   value: '${ringkasan.jumlah(WatchStatus.jalan)}',
-                  label: 'Sedang Jalan',
+                  label: 'Sedang jalan',
                 ),
                 HeroStatData(
                   icon: Icons.bookmark_border,
@@ -59,7 +57,7 @@ class WatchlistPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.done_all,
                   value: '${ringkasan.selesaiTahunIni}',
-                  label: 'Tamat Tahun Ini',
+                  label: 'Tamat tahun ini',
                 ),
               ],
             ),
@@ -247,14 +245,8 @@ class _Chip extends StatelessWidget {
       label: Text(label, style: const TextStyle(fontSize: 12)),
       selected: dipilih,
       onSelected: (_) => onTap(),
-      selectedColor: _color.withValues(alpha: 0.18),
       showCheckmark: false,
       side: dipilih ? const BorderSide(color: _color) : null,
-      labelStyle: TextStyle(
-        fontSize: 12,
-        fontWeight: dipilih ? FontWeight.w700 : FontWeight.w500,
-        color: dipilih ? _color : null,
-      ),
     );
   }
 }

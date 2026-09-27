@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/daftar_bergaris.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../data/models/task.dart';
@@ -65,8 +66,6 @@ class _PersonalTasksPageState extends ConsumerState<PersonalTasksPage> {
           await context.push('/academic/tasks/new?kind=pribadi');
           ref.invalidate(tasksProvider);
         },
-        backgroundColor: AppColors.deadline,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Tugas'),
       ),
@@ -76,7 +75,7 @@ class _PersonalTasksPageState extends ConsumerState<PersonalTasksPage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: 'Tugas Pribadi',
+              title: 'Tugas pribadi',
               subtitle: 'Urusan di luar kuliah',
               color: AppColors.deadline,
               leading: HeroIconButton(
@@ -88,7 +87,7 @@ class _PersonalTasksPageState extends ConsumerState<PersonalTasksPage> {
                 HeroStatData(
                   icon: Icons.pending_actions,
                   value: '$belum',
-                  label: 'Belum Selesai',
+                  label: 'Belum selesai',
                 ),
                 HeroStatData(
                   icon: Icons.warning_amber_rounded,
@@ -116,14 +115,6 @@ class _PersonalTasksPageState extends ConsumerState<PersonalTasksPage> {
                         label: Text(saring.label),
                         selected: _saring == saring,
                         onSelected: (_) => setState(() => _saring = saring),
-                        selectedColor: AppColors.deadline.withValues(alpha: 0.18),
-                        checkmarkColor: AppColors.deadline,
-                        labelStyle: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: _saring == saring
-                              ? AppColors.deadline
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
                       ),
                     ],
                   ],
@@ -148,16 +139,13 @@ class _PersonalTasksPageState extends ConsumerState<PersonalTasksPage> {
                       color: AppColors.deadline,
                     );
                   }
-                  return Column(
+                  return DaftarBergaris(
+                    indentGaris: 52,
                     children: [
-                      for (final task in tampil)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          // Mata kuliah tidak ditampilkan: tugas pribadi memang
-                          // tidak punya, dan menuliskan "Umum" di tiap baris
-                          // cuma menambah tinggi tanpa menambah arti.
-                          child: TaskTile(task: task, tampilkanMatkul: false),
-                        ),
+                      // Mata kuliah tidak ditampilkan: tugas pribadi memang
+                      // tidak punya, dan menuliskan "Umum" di tiap baris
+                      // cuma menambah tinggi tanpa menambah arti.
+                      for (final task in tampil) TaskTile(task: task, tampilkanMatkul: false),
                     ],
                   );
                 },

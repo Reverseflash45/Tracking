@@ -22,7 +22,7 @@ class MuscleDetailPage extends StatelessWidget {
 
     if (group == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Kelompok Otot')),
+        appBar: AppBar(title: const Text('Kelompok otot')),
         body: const EmptyState(
           icon: Icons.search_off,
           title: 'Kelompok otot tidak ditemukan',
@@ -48,7 +48,7 @@ class MuscleDetailPage extends StatelessWidget {
               HeroStatData(
                 icon: Icons.repeat,
                 value: '${group.frequencyPerWeek}x',
-                label: 'Per Minggu',
+                label: 'Per minggu',
               ),
               HeroStatData(
                 icon: Icons.fitness_center,
@@ -58,7 +58,7 @@ class MuscleDetailPage extends StatelessWidget {
               HeroStatData(
                 icon: Icons.layers_outlined,
                 value: '${group.exercises.fold<int>(0, (s, e) => s + e.sets)}',
-                label: 'Total Set',
+                label: 'Total set',
               ),
             ],
           ),
@@ -68,7 +68,7 @@ class MuscleDetailPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SectionHeader(
-                  title: 'Rekomendasi Latihan',
+                  title: 'Rekomendasi latihan',
                   icon: Icons.fitness_center,
                   color: _color,
                 ),
@@ -82,7 +82,7 @@ class MuscleDetailPage extends StatelessWidget {
                     minimumSize: const Size.fromHeight(48),
                   ),
                   icon: const Icon(Icons.add),
-                  label: const Text('Catat Sesi Workout'),
+                  label: const Text('Catat sesi workout'),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 const SectionHeader(
@@ -100,7 +100,7 @@ class MuscleDetailPage extends StatelessWidget {
                 _BulletCard(items: group.recovery, icon: Icons.bedtime_outlined),
                 const SizedBox(height: AppSpacing.lg),
                 const SectionHeader(
-                  title: 'Nutrisi Pendukung',
+                  title: 'Nutrisi pendukung',
                   icon: Icons.restaurant_outlined,
                   color: _color,
                 ),

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/daftar_bergaris.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../data/academic_repository.dart';
@@ -30,8 +31,7 @@ class SchedulePage extends ConsumerWidget {
     // menghasilkan nol untuk semester yang justru sedang berjalan. Jadwal
     // kelas cuma ada untuk semester yang sedang diambil, dan itu bukti yang
     // lebih dapat dipercaya daripada kolom yang sering kosong.
-    final matkulSemesterIni =
-        schedulesAsync.value?.map((s) => s.courseId).toSet().length ?? 0;
+    final matkulSemesterIni = schedulesAsync.value?.map((s) => s.courseId).toSet().length ?? 0;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -39,8 +39,6 @@ class SchedulePage extends ConsumerWidget {
           await context.push('/academic/schedule/new');
           ref.invalidate(classSchedulesProvider);
         },
-        backgroundColor: AppColors.academic,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Jadwal'),
       ),
@@ -53,7 +51,7 @@ class SchedulePage extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader(
-              title: 'Jadwal Kuliah',
+              title: 'Jadwal kuliah',
               subtitle: 'Semua jadwal perkuliahanmu dalam seminggu',
               color: AppColors.academic,
               trailing: Row(
@@ -85,16 +83,16 @@ class SchedulePage extends ConsumerWidget {
                 ],
               ),
               stats: [
-                HeroStatData(icon: Icons.today_outlined, value: '$todayCount', label: 'Hari Ini'),
+                HeroStatData(icon: Icons.today_outlined, value: '$todayCount', label: 'Hari ini'),
                 HeroStatData(
                   icon: Icons.event_note_outlined,
                   value: '$totalCount',
-                  label: 'Total Jadwal',
+                  label: 'Total jadwal',
                 ),
                 HeroStatData(
                   icon: Icons.menu_book_outlined,
                   value: '$matkulSemesterIni',
-                  label: 'Matkul Aktif',
+                  label: 'Matkul aktif',
                 ),
               ],
             ),
@@ -151,18 +149,17 @@ class SchedulePage extends ConsumerWidget {
 
     for (final day in days) {
       widgets.add(_DayHeader(day: day, count: byDay[day]!.length, isToday: day == today));
-      for (final schedule in byDay[day]!) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: ScheduleTile(
-              schedule: schedule,
-              conflicts: bentrok[schedule.id] ?? const [],
-            ),
-          ),
-        );
-      }
-      widgets.add(const SizedBox(height: AppSpacing.md));
+      widgets.add(
+        DaftarBergaris(
+          // Garis pemisah mulai sejajar nama mata kuliah, melewati kolom jam.
+          indentGaris: AppSpacing.md + _lebarJam + AppSpacing.md,
+          children: [
+            for (final schedule in byDay[day]!)
+              ScheduleTile(schedule: schedule, conflicts: bentrok[schedule.id] ?? const []),
+          ],
+        ),
+      );
+      widgets.add(const SizedBox(height: AppSpacing.lg));
     }
     return widgets;
   }
@@ -207,11 +204,7 @@ class _ConflictBanner extends StatelessWidget {
                 Text(
                   'Kartunya ditandai di bawah. Biasanya ini sisa import KRS '
                   'yang terlanjur dijalankan dua kali.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.35,
-                    color: colorScheme.onErrorContainer,
-                  ),
+                  style: TextStyle(fontSize: 12, height: 1.35, color: colorScheme.onErrorContainer),
                 ),
               ],
             ),
@@ -231,43 +224,37 @@ class _DayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final redup = TextStyle(fontSize: 12.5, color: colorScheme.onSurfaceVariant);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, AppSpacing.sm),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
         children: [
           Text(
             weekDayName(day),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: isToday ? AppColors.academic : null,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -0.3),
           ),
           if (isToday) ...[
             const SizedBox(width: AppSpacing.sm),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.academic,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: const Text(
-                'Hari ini',
-                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
-              ),
+            Text(
+              'Hari ini',
+              style: redup.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w600),
             ),
           ],
           const Spacer(),
-          Text(
-            '$count kelas',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
+          Text('$count kelas', style: redup),
         ],
       ),
     );
   }
 }
+
+/// Lebar kolom jam. Cukup untuk "08:00" dalam angka tabular pada ukuran
+/// huruf 1.3x tanpa patah baris.
+const double _lebarJam = 50;
 
 /// Satu baris jadwal. Publik supaya tata letaknya bisa digambar langsung di
 /// test tampilan tanpa perlu menghidupkan seluruh halaman beserta Supabase-nya.
@@ -285,10 +272,7 @@ class ScheduleTile extends ConsumerWidget {
       key: ValueKey(schedule.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.errorContainer,
-          borderRadius: BorderRadius.circular(AppTheme.radius),
-        ),
+        color: colorScheme.errorContainer,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Icon(Icons.delete_outline, color: colorScheme.onErrorContainer),
@@ -308,123 +292,128 @@ class ScheduleTile extends ConsumerWidget {
         await ref.read(academicRepositoryProvider).deleteSchedule(schedule.id);
         ref.invalidate(classSchedulesProvider);
       },
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => context.push('/academic/schedule/${schedule.id}/edit'),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm + 4,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 48,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
+      child: InkWell(
+        onTap: () => context.push('/academic/schedule/${schedule.id}/edit'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 4,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: _lebarJam,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
                         schedule.startTime.substring(0, 5),
                         style: const TextStyle(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           fontSize: 15,
-                          color: AppColors.academic,
-                          height: 1.2,
+                          height: 1.3,
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
-                      Text(
+                    ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
                         schedule.endTime.substring(0, 5),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.5,
                           color: colorScheme.onSurfaceVariant,
-                          height: 1.2,
+                          height: 1.3,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      schedule.courseName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Ruangan dan kode berbagi satu baris. Keduanya pendek,
+                    // dan menaruhnya sendiri-sendiri membuat kartunya tinggi
+                    // tanpa menambah apa pun yang bisa dibaca.
+                    Row(
+                      children: [
+                        Flexible(
+                          child: _MetaLine(
+                            icon: Icons.place_outlined,
+                            text: schedule.room ?? 'Ruangan belum diatur',
+                          ),
+                        ),
+                        // Kode mata kuliah dan kode kelas yang dipakai saat
+                        // mencocokkan dengan portal kampus atau grup kelas.
+                        // Nama mata kuliah saja sering tidak cukup kalau satu
+                        // mata kuliah dibuka untuk beberapa kelas.
+                        if (_kodeGabungan(schedule) case final kode?) ...[
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: _MetaLine(icon: Icons.tag, text: kode),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (schedule.lecturer != null && schedule.lecturer!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      _MetaLine(icon: Icons.person_outline, text: schedule.lecturer!),
+                    ],
+                    if (conflicts.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      _MetaLine(
+                        icon: Icons.warning_amber_rounded,
+                        // Nama lawannya disebut, bukan cuma "bentrok" —
+                        // supaya kamu tahu mana yang harus dihapus tanpa
+                        // membandingkan jam satu per satu.
+                        text:
+                            'Bentrok: '
+                            '${conflicts.map((c) => c.lawan.courseName).join(', ')}',
+                        color: colorScheme.error,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (schedule.isPhl)
                 Container(
-                  width: 3,
-                  height: 40,
-                  margin: const EdgeInsets.only(right: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.academic.withValues(alpha: 0.35),
+                    border: Border.all(color: colorScheme.outlineVariant),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        schedule.courseName,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                      ),
-                      const SizedBox(height: 4),
-                      // Ruangan dan kode berbagi satu baris. Keduanya pendek,
-                      // dan menaruhnya sendiri-sendiri membuat kartunya tinggi
-                      // tanpa menambah apa pun yang bisa dibaca.
-                      Row(
-                        children: [
-                          Flexible(
-                            child: _MetaLine(
-                              icon: Icons.place_outlined,
-                              text: schedule.room ?? 'Ruangan belum diatur',
-                            ),
-                          ),
-                          // Kode mata kuliah dan kode kelas yang dipakai saat
-                          // mencocokkan dengan portal kampus atau grup kelas.
-                          // Nama mata kuliah saja sering tidak cukup kalau satu
-                          // mata kuliah dibuka untuk beberapa kelas.
-                          if (_kodeGabungan(schedule) case final kode?) ...[
-                            const SizedBox(width: 10),
-                            Flexible(child: _MetaLine(icon: Icons.tag, text: kode)),
-                          ],
-                        ],
-                      ),
-                      if (schedule.lecturer != null && schedule.lecturer!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        _MetaLine(icon: Icons.person_outline, text: schedule.lecturer!),
-                      ],
-                      if (conflicts.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        _MetaLine(
-                          icon: Icons.warning_amber_rounded,
-                          // Nama lawannya disebut, bukan cuma "bentrok" —
-                          // supaya kamu tahu mana yang harus dihapus tanpa
-                          // membandingkan jam satu per satu.
-                          text: 'Bentrok: '
-                              '${conflicts.map((c) => c.lawan.courseName).join(', ')}',
-                          color: colorScheme.error,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (schedule.isPhl)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.academic.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      schedule.specificDate != null
-                          ? 'PHL ${_phlDateFormat.format(schedule.specificDate!)}'
-                          : 'PHL',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.academic,
-                      ),
+                  child: Text(
+                    schedule.specificDate != null
+                        ? 'PHL ${_phlDateFormat.format(schedule.specificDate!)}'
+                        : 'PHL',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),

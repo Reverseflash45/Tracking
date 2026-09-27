@@ -26,8 +26,6 @@ class VehiclePage extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => bukaFormKendaraan(context, ref),
-        backgroundColor: _color,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Kendaraan'),
       ),
@@ -57,7 +55,7 @@ class VehiclePage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.warning_amber_rounded,
                   value: '$lewat',
-                  label: 'Sudah Lewat',
+                  label: 'Sudah lewat',
                 ),
                 HeroStatData(
                   icon: Icons.schedule,

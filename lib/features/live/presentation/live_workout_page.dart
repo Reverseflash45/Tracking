@@ -38,7 +38,7 @@ class LiveWorkoutPage extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           HeroHeader.sub(
-            title: 'Latihan Terpandu',
+            title: 'Latihan terpandu',
             subtitle: 'Kamera menghitung repetisimu',
             color: _color,
             leading: HeroIconButton(

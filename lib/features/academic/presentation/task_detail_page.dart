@@ -25,7 +25,7 @@ class TaskDetailPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Tugas'),
+        title: const Text('Detail tugas'),
         actions: [
           IconButton(
             tooltip: 'Edit',
@@ -163,7 +163,7 @@ class _TaskDetailBody extends ConsumerWidget {
             children: [
               _InfoRow(
                 icon: Icons.menu_book_outlined,
-                label: 'Mata Kuliah',
+                label: 'Mata kuliah',
                 value: task.courseName ?? 'Umum',
               ),
               _InfoRow(
@@ -213,7 +213,7 @@ class _TaskDetailBody extends ConsumerWidget {
             if (context.mounted) context.pop();
           },
           icon: Icon(Icons.delete_outline, color: colorScheme.error),
-          label: Text('Hapus Tugas', style: TextStyle(color: colorScheme.error)),
+          label: Text('Hapus tugas', style: TextStyle(color: colorScheme.error)),
           style: OutlinedButton.styleFrom(side: BorderSide(color: colorScheme.error)),
         ),
       ],

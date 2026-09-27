@@ -109,7 +109,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       body: Column(
         children: [
           HeroHeader.sub(
-            title: 'Tanya Data',
+            title: 'Tanya data',
             subtitle: 'Tanya apa saja tentang catatanmu sendiri',
             color: _color,
             leading: HeroIconButton(

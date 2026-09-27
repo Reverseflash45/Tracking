@@ -355,14 +355,6 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                       label: Text(meal.label),
                       selected: _meal == meal,
                       onSelected: (_) => setState(() => _meal = meal),
-                      selectedColor: _color.withValues(alpha: 0.18),
-                      labelStyle: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _meal == meal
-                            ? _color
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
                     ),
                 ],
               ),

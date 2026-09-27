@@ -63,7 +63,7 @@ class GradesPage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.menu_book_outlined,
                   value: '${ipk?.matkulTotal ?? 0}',
-                  label: 'Mata Kuliah',
+                  label: 'Mata kuliah',
                 ),
               ],
             ),
@@ -467,14 +467,6 @@ class _CourseGradeSheetState extends ConsumerState<_CourseGradeSheet> {
                     // Menekan huruf yang sudah terpilih akan melepasnya —
                     // hitungannya kembali ke komponen.
                     onSelected: (pilih) => _setHuruf(pilih ? huruf : null),
-                    selectedColor: _color.withValues(alpha: 0.18),
-                    labelStyle: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: course.finalLetter == huruf
-                          ? _color
-                          : colorScheme.onSurfaceVariant,
-                    ),
                   ),
               ],
             ),

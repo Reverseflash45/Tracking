@@ -90,7 +90,8 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver {
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -131,13 +132,11 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
       body: navigationShell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, -4),
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
-          ],
+          ),
         ),
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
@@ -149,7 +148,7 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
             for (final tab in _tabs)
               NavigationDestination(
                 icon: Icon(tab.icon),
-                selectedIcon: Icon(tab.selectedIcon, color: tab.color),
+                selectedIcon: Icon(tab.selectedIcon),
                 label: tab.label,
               ),
           ],

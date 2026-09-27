@@ -90,17 +90,17 @@ class AttendancePage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.event_available_outlined,
                   value: '${catatan.length}',
-                  label: 'Pertemuan Dicatat',
+                  label: 'Pertemuan dicatat',
                 ),
                 HeroStatData(
                   icon: Icons.warning_amber_outlined,
                   value: '$perluDiperhatikan',
-                  label: 'Perlu Dijaga',
+                  label: 'Perlu dijaga',
                 ),
                 HeroStatData(
                   icon: Icons.menu_book_outlined,
                   value: '${courses.length}',
-                  label: 'Mata Kuliah',
+                  label: 'Mata kuliah',
                 ),
               ],
             ),

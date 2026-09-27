@@ -39,8 +39,6 @@ class WorkoutHomePage extends ConsumerWidget {
           await context.push('/workout/new');
           ref.invalidate(workoutSessionsProvider);
         },
-        backgroundColor: AppColors.workout,
-        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Workout'),
       ),
@@ -65,17 +63,17 @@ class WorkoutHomePage extends ConsumerWidget {
                 HeroStatData(
                   icon: Icons.local_fire_department,
                   value: '${streak?.current ?? 0}',
-                  label: 'Streak Aktif',
+                  label: 'Streak aktif',
                 ),
                 HeroStatData(
                   icon: Icons.emoji_events_outlined,
                   value: '${streak?.best ?? 0}',
-                  label: 'Streak Terbaik',
+                  label: 'Streak terbaik',
                 ),
                 HeroStatData(
                   icon: Icons.calendar_month_outlined,
                   value: '$bulanIni',
-                  label: 'Bulan Ini',
+                  label: 'Bulan ini',
                 ),
               ],
             ),
@@ -113,7 +111,7 @@ class WorkoutHomePage extends ConsumerWidget {
                     items: [
                       MenuItemData(
                         icon: Icons.history,
-                        label: 'Riwayat Latihan',
+                        label: 'Riwayat latihan',
                         rute: '/workout/history',
                         warna: AppColors.workout,
                         keterangan: _keteranganRiwayat(sessions.length + restDays.length),
@@ -126,14 +124,14 @@ class WorkoutHomePage extends ConsumerWidget {
                       ),
                       const MenuItemData(
                         icon: Icons.videocam_outlined,
-                        label: 'Latihan Terpandu',
+                        label: 'Latihan terpandu',
                         rute: '/workout/live',
                         warna: AppColors.workout,
                         keterangan: 'Dipandu hitungan dan waktu istirahat',
                       ),
                       const MenuItemData(
                         icon: Icons.trending_up,
-                        label: 'Program Naik Berat',
+                        label: 'Program naik berat',
                         rute: '/workout/program',
                         warna: AppColors.workout,
                         keterangan: 'Latihan di kos, versi punya kursi & tanpa kursi',
@@ -150,7 +148,7 @@ class WorkoutHomePage extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.lg),
 
                   const SectionHeader(
-                    title: 'Catatan Harian',
+                    title: 'Catatan harian',
                     icon: Icons.event_repeat_outlined,
                     color: AppColors.priorityMedium,
                   ),
@@ -189,21 +187,21 @@ class WorkoutHomePage extends ConsumerWidget {
                       ),
                       MenuItemData(
                         icon: Icons.accessibility_new,
-                        label: 'Profil Tubuh',
+                        label: 'Profil tubuh',
                         rute: '/workout/body',
                         warna: AppColors.dashboard,
                         keterangan: 'Tinggi, berat, dan target',
                       ),
                       MenuItemData(
                         icon: Icons.local_fire_department,
-                        label: 'Kalkulator Kalori',
+                        label: 'Kalkulator kalori',
                         rute: '/workout/calories',
                         warna: AppColors.dashboard,
                         keterangan: 'Kebutuhan kalori dan makro harian',
                       ),
                       MenuItemData(
                         icon: Icons.photo_camera_outlined,
-                        label: 'Foto Progres',
+                        label: 'Foto progres',
                         rute: '/workout/photos',
                         warna: AppColors.dashboard,
                       ),
