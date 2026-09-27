@@ -22,7 +22,9 @@ import '../../body/data/body_repository.dart';
 import '../../body/domain/calorie_calculator.dart';
 import '../../finance/data/finance_repository.dart';
 import '../../finance/domain/finance_stats.dart';
+import '../../finance/presentation/transaction_sheet.dart';
 import '../../nutrition/data/nutrition_repository.dart';
+import '../../nutrition/presentation/food_form_sheet.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 
@@ -42,6 +44,11 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _bukaCatatCepat(context, ref),
+        icon: const Icon(Icons.add),
+        label: const Text('Catat'),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(classSchedulesProvider);
@@ -76,6 +83,7 @@ class DashboardPage extends ConsumerWidget {
             _KartuUang(),
             _Judul('Lainnya'),
             _PintasanLainnya(),
+            SizedBox(height: 72),
           ],
         ),
       ),
@@ -1433,4 +1441,132 @@ class _AchievementsRow extends ConsumerWidget {
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Catat cepat
+// ---------------------------------------------------------------------------
+
+/// Satu pintu untuk empat catatan yang paling sering: tidak perlu pindah tab
+/// dulu hanya untuk mencatat jajan atau tugas yang baru diumumkan dosen.
+Future<void> _bukaCatatCepat(BuildContext context, WidgetRef ref) {
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheet) {
+      Future<void> pilih(Future<void> Function() aksi) async {
+        Navigator.pop(sheet);
+        await aksi();
+      }
+
+      final isi = [
+        (
+          'Tugas',
+          'Tenggat baru',
+          Icons.assignment_rounded,
+          AppColors.deadline,
+          () => pilih(() async {
+            await context.push('/academic/tasks/new');
+            ref.invalidate(tasksProvider);
+          }),
+        ),
+        (
+          'Pengeluaran',
+          'Jajan, ongkos, tagihan',
+          Icons.payments_rounded,
+          AppColors.finance,
+          () => pilih(() => showTransactionSheet(context)),
+        ),
+        (
+          'Makan',
+          'Kalori & makro',
+          Icons.restaurant_rounded,
+          _warnaAsupan,
+          () => pilih(() => showFoodFormSheet(context)),
+        ),
+        (
+          'Latihan',
+          'Sesi workout',
+          Icons.fitness_center_rounded,
+          AppColors.workout,
+          () => pilih(() async {
+            await context.push('/workout/new');
+            ref.invalidate(workoutSessionsProvider);
+          }),
+        ),
+      ];
+
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 4, bottom: 12),
+                child: Text(
+                  'Catat cepat',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+                ),
+              ),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.55,
+                children: [
+                  for (final (judul, sub, ikon, warna, aksi) in isi)
+                    Material(
+                      color: warna.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(18),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: aksi,
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: warna,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                                child: Icon(ikon, color: Colors.white, size: 20),
+                              ),
+                              const Spacer(),
+                              Text(
+                                judul,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              Text(
+                                sub,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(sheet).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

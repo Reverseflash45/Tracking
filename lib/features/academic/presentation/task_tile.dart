@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -106,6 +107,24 @@ class TaskTile extends ConsumerWidget {
   /// menuliskan "Umum" di tiap baris cuma menambah tinggi tanpa menambah arti.
   final bool tampilkanMatkul;
 
+  Future<bool?> _konfirmasiHapus(BuildContext context) => showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Hapus tugas?'),
+      content: Text('Tugas "${task.title}" akan dihapus.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Hapus'),
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -114,30 +133,52 @@ class TaskTile extends ConsumerWidget {
 
     return Dismissible(
       key: ValueKey(task.id),
-      direction: DismissDirection.endToStart,
+      // Geser ke kanan: tandai selesai (atau batalkan). Geser ke kiri: hapus.
+      direction: DismissDirection.horizontal,
       background: Container(
+        color: task.isDone
+            ? colorScheme.surfaceContainerHighest
+            : AppColors.statusDone,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: [
+            Icon(
+              task.isDone ? Icons.undo_rounded : Icons.check_rounded,
+              color: task.isDone ? colorScheme.onSurface : Colors.white,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              task.isDone ? 'Belum selesai' : 'Selesai',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: task.isDone ? colorScheme.onSurface : Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+      secondaryBackground: Container(
         color: colorScheme.errorContainer,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Icon(Icons.delete_outline, color: colorScheme.onErrorContainer),
       ),
-      confirmDismiss: (_) => showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Hapus tugas?'),
-          content: Text('Tugas "${task.title}" akan dihapus.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Batal'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Hapus'),
-            ),
-          ],
-        ),
-      ),
+      confirmDismiss: (arah) async {
+        if (arah == DismissDirection.startToEnd) {
+          // Barisnya tidak dihapus dari daftar: statusnya saja yang berganti,
+          // dan baris pindah sendiri ke kelompok "Selesai".
+          HapticFeedback.mediumImpact();
+          await ubahStatusTugas(
+            context,
+            ref,
+            task.id,
+            task.isDone ? TaskStatus.todo : TaskStatus.done,
+          );
+          return false;
+        }
+        return _konfirmasiHapus(context);
+      },
       onDismissed: (_) async {
         final messenger = ScaffoldMessenger.of(context);
         try {
@@ -163,12 +204,15 @@ class TaskTile extends ConsumerWidget {
                 tooltip: task.isDone
                     ? 'Tandai belum selesai'
                     : 'Tandai selesai',
-                onPressed: () => ubahStatusTugas(
-                  context,
-                  ref,
-                  task.id,
-                  task.isDone ? TaskStatus.todo : TaskStatus.done,
-                ),
+                onPressed: () {
+                  if (!task.isDone) HapticFeedback.lightImpact();
+                  ubahStatusTugas(
+                    context,
+                    ref,
+                    task.id,
+                    task.isDone ? TaskStatus.todo : TaskStatus.done,
+                  );
+                },
                 icon: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
                   transitionBuilder: (child, anim) =>

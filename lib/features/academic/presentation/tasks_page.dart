@@ -159,7 +159,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       for (final (judul, isi, warna) in kelompok) ...[
-                        _JudulKelompok(judul: judul, jumlah: isi.length, warna: warna),
+                        JudulKelompokTugas(judul: judul, jumlah: isi.length, warna: warna),
                         DaftarBergaris(
                           indentGaris: 52,
                           children: [for (final task in isi) TaskTile(task: task)],
@@ -240,8 +240,8 @@ List<(String, List<AcademicTask>, Color?)> kelompokkanTugas(
   ];
 }
 
-class _JudulKelompok extends StatelessWidget {
-  const _JudulKelompok({required this.judul, required this.jumlah, this.warna});
+class JudulKelompokTugas extends StatelessWidget {
+  const JudulKelompokTugas({super.key, required this.judul, required this.jumlah, this.warna});
 
   final String judul;
   final int jumlah;

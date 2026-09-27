@@ -10,6 +10,7 @@ import '../../../core/widgets/hero_header.dart';
 import '../data/models/task.dart';
 import 'academic_providers.dart';
 import 'task_tile.dart';
+import 'tasks_page.dart';
 
 /// Daftar tugas pribadi — halaman tersendiri, bukan saringan di daftar tugas
 /// kuliah.
@@ -139,13 +140,20 @@ class _PersonalTasksPageState extends ConsumerState<PersonalTasksPage> {
                       color: AppColors.deadline,
                     );
                   }
-                  return DaftarBergaris(
-                    indentGaris: 52,
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Mata kuliah tidak ditampilkan: tugas pribadi memang
-                      // tidak punya, dan menuliskan "Umum" di tiap baris
-                      // cuma menambah tinggi tanpa menambah arti.
-                      for (final task in tampil) TaskTile(task: task, tampilkanMatkul: false),
+                      for (final (judul, isi, warna) in kelompokkanTugas(tampil)) ...[
+                        JudulKelompokTugas(judul: judul, jumlah: isi.length, warna: warna),
+                        DaftarBergaris(
+                          indentGaris: 52,
+                          children: [
+                            // Mata kuliah tidak ditampilkan: tugas pribadi
+                            // memang tidak punya.
+                            for (final task in isi) TaskTile(task: task, tampilkanMatkul: false),
+                          ],
+                        ),
+                      ],
                     ],
                   );
                 },

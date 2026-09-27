@@ -138,7 +138,30 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: _buildDayGroups(context, ref, items),
                       )
-                    : _TimelineHari(hari: _hari, semua: items),
+                    : GestureDetector(
+                        // Geser kiri/kanan untuk pindah hari, seperti kalender.
+                        behavior: HitTestBehavior.translucent,
+                        onHorizontalDragEnd: (d) {
+                          final v = d.primaryVelocity ?? 0;
+                          if (v.abs() < 250) return;
+                          setState(() => _hari = ((_hari - 1 + (v < 0 ? 1 : -1)) % 7) + 1);
+                        },
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeOut,
+                          transitionBuilder: (child, anim) => FadeTransition(
+                            opacity: anim,
+                            child: SlideTransition(
+                              position: Tween(
+                                begin: const Offset(0.04, 0),
+                                end: Offset.zero,
+                              ).animate(anim),
+                              child: child,
+                            ),
+                          ),
+                          child: _TimelineHari(key: ValueKey(_hari), hari: _hari, semua: items),
+                        ),
+                      ),
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: 48),
                   child: Center(child: CircularProgressIndicator()),
@@ -347,7 +370,7 @@ class _PemilihHari extends StatelessWidget {
 /// Satu hari sebagai garis waktu: blok kelas berwarna per mata kuliah, jeda
 /// di antaranya disebut panjangnya, dan — kalau hari ini — garis "sekarang".
 class _TimelineHari extends StatelessWidget {
-  const _TimelineHari({required this.hari, required this.semua});
+  const _TimelineHari({super.key, required this.hari, required this.semua});
 
   final int hari;
   final List<ClassSchedule> semua;

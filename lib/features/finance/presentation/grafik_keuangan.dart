@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../domain/finance_stats.dart';
@@ -25,7 +26,7 @@ DateTime _tgl(DateTime d) => DateTime(d.year, d.month, d.day);
 /// Batang pengeluaran per hari sepanjang periode anggaran, dengan garis
 /// putus-putus di jatah rata-rata. Hari yang melewati jatah berwarna koral,
 /// jadi pola "boros tiap akhir pekan" kelihatan tanpa membaca angka.
-class GrafikPengeluaranHarian extends StatelessWidget {
+class GrafikPengeluaranHarian extends StatefulWidget {
   const GrafikPengeluaranHarian({
     super.key,
     required this.transaksi,
@@ -40,9 +41,20 @@ class GrafikPengeluaranHarian extends StatelessWidget {
   final double? anggaran;
 
   @override
+  State<GrafikPengeluaranHarian> createState() => _GrafikPengeluaranHarianState();
+}
+
+class _GrafikPengeluaranHarianState extends State<GrafikPengeluaranHarian> {
+  /// Batang yang sedang diketuk. Null berarti menampilkan rata-rata.
+  int? _pilih;
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final awal = _tgl(mulai);
+    final transaksi = widget.transaksi;
+    final anggaran = widget.anggaran;
+    final akhir = widget.akhir;
+    final awal = _tgl(widget.mulai);
     final jumlahHari = _tgl(akhir).difference(awal).inDays + 1;
     if (jumlahHari <= 0 || jumlahHari > 62) return const SizedBox.shrink();
 
@@ -53,7 +65,7 @@ class GrafikPengeluaranHarian extends StatelessWidget {
       if (i >= 0 && i < jumlahHari) perHari[i] += t.amount;
     }
     final hariIni = _tgl(DateTime.now()).difference(awal).inDays;
-    final jatah = (anggaran != null && anggaran! > 0) ? anggaran! / jumlahHari : null;
+    final jatah = (anggaran != null && anggaran > 0) ? anggaran / jumlahHari : null;
     final terisi = perHari.take(math.min(hariIni + 1, jumlahHari)).toList();
     final rataRata = terisi.isEmpty ? 0.0 : terisi.reduce((a, b) => a + b) / terisi.length;
     // Skala dipatok supaya satu hari yang luar biasa (bayar kos, beli
@@ -62,10 +74,10 @@ class GrafikPengeluaranHarian extends StatelessWidget {
     final urut = [...perHari]..sort();
     final tertinggi = urut.isEmpty ? 0.0 : urut.last;
     final keduaTertinggi = urut.length > 1 ? urut[urut.length - 2] : tertinggi;
-    final puncak = math.min(
-      tertinggi,
-      math.max((jatah ?? 0) * 2.5, keduaTertinggi * 1.25),
-    ).clamp(0.0, double.infinity).toDouble();
+    final puncak = math
+        .min(tertinggi, math.max((jatah ?? 0) * 2.5, keduaTertinggi * 1.25))
+        .clamp(0.0, double.infinity)
+        .toDouble();
 
     return Card(
       margin: EdgeInsets.zero,
@@ -82,11 +94,16 @@ class GrafikPengeluaranHarian extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Rata-rata per hari',
+                        _pilih == null
+                            ? 'Rata-rata per hari'
+                            : DateFormat(
+                                'EEEE, d MMM',
+                                'id_ID',
+                              ).format(awal.add(Duration(days: _pilih!))),
                         style: TextStyle(fontSize: 12.5, color: colorScheme.onSurfaceVariant),
                       ),
                       Text(
-                        formatRupiah(rataRata),
+                        formatRupiah(_pilih == null ? rataRata : perHari[_pilih!]),
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
@@ -123,22 +140,37 @@ class GrafikPengeluaranHarian extends StatelessWidget {
                         style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                       ),
                     )
-                  : TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: 1),
-                      duration: const Duration(milliseconds: 700),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, t, _) => CustomPaint(
-                        size: Size.infinite,
-                        painter: _LukisBatang(
-                          nilai: perHari,
-                          puncak: puncak,
-                          jatah: jatah,
-                          hariIni: hariIni,
-                          t: t,
-                          aman: AppColors.finance,
-                          lewat: AppColors.deadline,
-                          kosong: colorScheme.surfaceContainerHigh,
-                          garis: colorScheme.onSurfaceVariant,
+                  : LayoutBuilder(
+                      builder: (context, c) => GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        // Ketuk batang untuk melihat angka hari itu; ketuk
+                        // lagi untuk kembali ke rata-rata.
+                        onTapDown: (d) {
+                          final i = (d.localPosition.dx / c.maxWidth * jumlahHari).floor().clamp(
+                            0,
+                            jumlahHari - 1,
+                          );
+                          setState(() => _pilih = (_pilih == i || i > hariIni) ? null : i);
+                        },
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: 1),
+                          duration: const Duration(milliseconds: 700),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, t, _) => CustomPaint(
+                            size: Size.infinite,
+                            painter: _LukisBatang(
+                              nilai: perHari,
+                              puncak: puncak,
+                              jatah: jatah,
+                              hariIni: _pilih ?? hariIni,
+                              batasIsi: hariIni,
+                              t: t,
+                              aman: AppColors.finance,
+                              lewat: AppColors.deadline,
+                              kosong: colorScheme.surfaceContainerHigh,
+                              garis: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -170,6 +202,7 @@ class _LukisBatang extends CustomPainter {
     required this.puncak,
     required this.jatah,
     required this.hariIni,
+    required this.batasIsi,
     required this.t,
     required this.aman,
     required this.lewat,
@@ -180,7 +213,12 @@ class _LukisBatang extends CustomPainter {
   final List<double> nilai;
   final double puncak;
   final double? jatah;
+
+  /// Batang yang digambar paling pekat (hari ini, atau yang diketuk).
   final int hariIni;
+
+  /// Indeks hari ini: batang sesudahnya belum terjadi.
+  final int batasIsi;
   final double t;
   final Color aman;
   final Color lewat;
@@ -196,7 +234,7 @@ class _LukisBatang extends CustomPainter {
 
     for (var i = 0; i < n; i++) {
       final x = i * (lebar + celah);
-      final nanti = i > hariIni;
+      final nanti = i > batasIsi;
       final v = nilai[i];
       if (v <= 0 || nanti) {
         canvas.drawRRect(
@@ -243,7 +281,8 @@ class _LukisBatang extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LukisBatang old) => old.t != t || old.nilai != nilai;
+  bool shouldRepaint(_LukisBatang old) =>
+      old.t != t || old.nilai != nilai || old.hariIni != hariIni;
 }
 
 class _GarisPutus extends CustomPainter {
