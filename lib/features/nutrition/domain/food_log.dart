@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 enum Meal {
   sarapan('sarapan', 'Sarapan', Icons.free_breakfast_outlined),
-  makanSiang('makan_siang', 'Makan Siang', Icons.lunch_dining_outlined),
-  makanMalam('makan_malam', 'Makan Malam', Icons.dinner_dining_outlined),
+  makanSiang('makan_siang', 'Makan siang', Icons.lunch_dining_outlined),
+  makanMalam('makan_malam', 'Makan malam', Icons.dinner_dining_outlined),
   camilan('camilan', 'Camilan', Icons.cookie_outlined);
 
   const Meal(this.dbValue, this.label, this.icon);

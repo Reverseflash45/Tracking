@@ -83,7 +83,7 @@ class VehicleDetailPage extends ConsumerWidget {
                   value: odo == null ? '—' : '$odo',
                   label: odo == null
                       ? 'Odometer'
-                      : (laju == null ? 'Km Tercatat' : 'Km Perkiraan'),
+                      : (laju == null ? 'Km tercatat' : 'Km perkiraan'),
                 ),
                 HeroStatData(
                   icon: Icons.build_outlined,
@@ -547,7 +547,7 @@ class _SheetServisState extends ConsumerState<_SheetServis> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEdit ? 'Edit Servis' : 'Catat Servis',
+                _isEdit ? 'Edit servis' : 'Catat servis',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),

@@ -603,7 +603,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Perbaiki Nilai',
+              'Perbaiki nilai',
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
@@ -683,7 +683,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: const Text('Simpan Perubahan'),
+              child: const Text('Simpan perubahan'),
             ),
           ],
         ),

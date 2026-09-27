@@ -483,7 +483,7 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
           HeroHeader.sub(
             title: _isEdit
                 ? 'Edit Sesi Workout'
-                : (_isRepeat ? 'Ulangi Sesi' : 'Catat Sesi Workout'),
+                : (_isRepeat ? 'Ulangi sesi' : 'Catat Sesi Workout'),
             subtitle: _isRepeat
                 ? 'Latihan disalin dari sesi sebelumnya, tinggal sesuaikan'
                 : 'Catat latihanmu, saran beban muncul otomatis',

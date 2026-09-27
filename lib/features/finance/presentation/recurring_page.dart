@@ -312,7 +312,7 @@ class _RecurringSheetState extends ConsumerState<_RecurringSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                widget.existing == null ? 'Pengeluaran Rutin' : 'Edit Pengeluaran Rutin',
+                widget.existing == null ? 'Pengeluaran rutin' : 'Edit pengeluaran rutin',
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium

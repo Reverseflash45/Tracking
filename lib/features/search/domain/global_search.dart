@@ -33,7 +33,7 @@ const int kMaxPerKind = 8;
 
 enum SearchKind {
   tugas('Tugas', Icons.checklist, '/academic/tasks'),
-  matkul('Mata Kuliah', Icons.menu_book_outlined, '/academic/schedule/grades'),
+  matkul('Mata kuliah', Icons.menu_book_outlined, '/academic/schedule/grades'),
   latihan('Latihan', Icons.fitness_center, '/workout/history'),
   makanan('Makanan', Icons.restaurant_menu, '/workout/nutrition'),
   transaksi('Pengeluaran', Icons.savings_outlined, '/finance'),

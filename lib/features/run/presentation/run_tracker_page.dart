@@ -593,7 +593,7 @@ class _Controls extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               )
             : const Icon(Icons.play_arrow),
-        label: Text(busy ? 'Menyiapkan GPS...' : 'Mulai Lari'),
+        label: Text(busy ? 'Menyiapkan GPS...' : 'Mulai lari'),
       );
     }
 

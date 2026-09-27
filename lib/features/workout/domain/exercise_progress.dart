@@ -32,8 +32,8 @@ enum ProgressMetric {
 /// database sejak awal, cuma tidak pernah ikut dihitung maupun ditampilkan.
 enum MetrikBeban {
   volume('Volume', 'kg'),
-  totalRep('Total Rep', 'rep'),
-  totalTahanan('Total Tahanan', 'detik');
+  totalRep('Total rep', 'rep'),
+  totalTahanan('Total tahanan', 'detik');
 
   const MetrikBeban(this.label, this.unit);
 

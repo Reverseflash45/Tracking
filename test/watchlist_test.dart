@@ -264,7 +264,7 @@ void main() {
     test('kata kerjanya menyesuaikan bentuk media', () {
       expect(WatchStatus.rencana.labelUntuk(MediaKind.series), 'Mau Ditonton');
       expect(WatchStatus.rencana.labelUntuk(MediaKind.buku), 'Mau Dibaca');
-      expect(WatchStatus.jalan.labelUntuk(MediaKind.komik), 'Sedang Dibaca');
+      expect(WatchStatus.jalan.labelUntuk(MediaKind.komik), 'Sedang dibaca');
     });
   });
 

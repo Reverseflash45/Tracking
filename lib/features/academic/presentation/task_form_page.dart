@@ -172,7 +172,7 @@ class _TaskFormPageState extends ConsumerState<TaskFormPage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: _isEdit ? 'Edit Tugas' : 'Tambah Tugas',
+              title: _isEdit ? 'Edit tugas' : 'Tambah tugas',
               subtitle: 'Catat tugas beserta deadline dan prioritasnya',
               color: _deadlineColor,
               leading: HeroIconButton(

@@ -321,7 +321,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
           padding: EdgeInsets.zero,
           children: [
             HeroHeader.sub(
-              title: _isEdit ? 'Edit Jadwal' : 'Tambah Jadwal',
+              title: _isEdit ? 'Edit jadwal' : 'Tambah jadwal',
               subtitle: 'Atur mata kuliah, hari, dan jam perkuliahan',
               color: _academicColor,
               leading: HeroIconButton(

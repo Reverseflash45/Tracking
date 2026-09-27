@@ -740,7 +740,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEdit ? 'Edit Barang' : 'Barang Baru',
+                _isEdit ? 'Edit barang' : 'Barang baru',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),

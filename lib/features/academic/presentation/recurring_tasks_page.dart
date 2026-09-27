@@ -378,7 +378,7 @@ class _TemplateSheetState extends ConsumerState<_TemplateSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEdit ? 'Edit Template' : 'Tugas Berulang Baru',
+                _isEdit ? 'Edit template' : 'Tugas berulang baru',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),

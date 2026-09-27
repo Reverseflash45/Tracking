@@ -211,8 +211,8 @@ class _TransactionSheetState extends ConsumerState<_TransactionSheet> {
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     _isEdit
-                        ? 'Edit Transaksi'
-                        : (_fromReceipt ? 'Periksa Hasil Struk' : 'Catat Transaksi'),
+                        ? 'Edit transaksi'
+                        : (_fromReceipt ? 'Periksa hasil struk' : 'Catat transaksi'),
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium

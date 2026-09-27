@@ -437,7 +437,7 @@ class _GoalSheetState extends ConsumerState<_GoalSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEdit ? 'Edit Target' : 'Target Baru',
+                _isEdit ? 'Edit target' : 'Target baru',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),

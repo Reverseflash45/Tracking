@@ -272,7 +272,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    _isEdit ? 'Edit Makanan' : 'Catat Makanan',
+                    _isEdit ? 'Edit makanan' : 'Catat makanan',
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -431,7 +431,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                       )
                     : const Icon(Icons.check),
                 label: Text(
-                  _saving ? 'Menyimpan...' : (_isEdit ? 'Simpan Perubahan' : 'Simpan'),
+                  _saving ? 'Menyimpan...' : (_isEdit ? 'Simpan perubahan' : 'Simpan'),
                 ),
               ),
             ],

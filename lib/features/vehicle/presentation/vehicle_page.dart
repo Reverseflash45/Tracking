@@ -417,7 +417,7 @@ class _SheetKendaraanState extends ConsumerState<_SheetKendaraan> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEdit ? 'Edit Kendaraan' : 'Kendaraan Baru',
+                _isEdit ? 'Edit kendaraan' : 'Kendaraan baru',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),

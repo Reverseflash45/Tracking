@@ -60,10 +60,10 @@ enum TxCategory {
 /// bukan resto offline. Tanpa pilihan ini, pesan-antar makanan tidak punya
 /// tempat yang benar.
 enum PlaceKind {
-  tokoOffline('toko_offline', 'Toko Offline', Icons.storefront_outlined),
-  tokoOnline('toko_online', 'Toko Online', Icons.shopping_cart_outlined),
-  restoOffline('resto_offline', 'Resto Offline', Icons.restaurant_menu),
-  restoOnline('resto_online', 'Resto Online', Icons.delivery_dining_outlined);
+  tokoOffline('toko_offline', 'Toko offline', Icons.storefront_outlined),
+  tokoOnline('toko_online', 'Toko online', Icons.shopping_cart_outlined),
+  restoOffline('resto_offline', 'Resto offline', Icons.restaurant_menu),
+  restoOnline('resto_online', 'Resto online', Icons.delivery_dining_outlined);
 
   const PlaceKind(this.dbValue, this.label, this.icon);
 

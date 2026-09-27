@@ -647,7 +647,7 @@ class _ComponentSheetState extends ConsumerState<_ComponentSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              widget.komponen == null ? 'Komponen Baru' : 'Edit Komponen',
+              widget.komponen == null ? 'Komponen baru' : 'Edit komponen',
               style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
             ),
             const SizedBox(height: AppSpacing.md),

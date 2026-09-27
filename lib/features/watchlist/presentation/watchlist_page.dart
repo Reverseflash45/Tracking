@@ -811,7 +811,7 @@ class _SheetMediaState extends ConsumerState<_SheetMedia> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEdit ? 'Edit Judul' : 'Judul Baru',
+                _isEdit ? 'Edit judul' : 'Judul baru',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),

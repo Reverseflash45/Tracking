@@ -213,7 +213,7 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage> {
         body: Column(
           children: [
             HeroHeader.sub(
-              title: widget.noteId == null ? 'Catatan Baru' : 'Catatan',
+              title: widget.noteId == null ? 'Catatan baru' : 'Catatan',
               subtitle: _diubah == null
                   ? 'Judul boleh dikosongkan'
                   : 'Diubah ${_lengkap.format(_diubah!)}',

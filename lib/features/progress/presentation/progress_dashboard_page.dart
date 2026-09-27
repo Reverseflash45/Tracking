@@ -197,7 +197,7 @@ class _WeightSection extends StatelessWidget {
         message: 'Belum ada catatan berat di periode ini. '
             'Berat tercatat setiap kamu menyimpan Profil Tubuh.',
         route: '/workout/body',
-        actionLabel: 'Catat Berat',
+        actionLabel: 'Catat berat',
       );
     }
 
@@ -338,7 +338,7 @@ class _NutritionSection extends StatelessWidget {
         icon: Icons.restaurant_menu,
         message: 'Belum ada catatan makan di periode ini.',
         route: '/workout/nutrition',
-        actionLabel: 'Catat Makanan',
+        actionLabel: 'Catat makanan',
       );
     }
 
@@ -478,7 +478,7 @@ class _WorkoutSection extends StatelessWidget {
         icon: Icons.fitness_center,
         message: 'Belum ada sesi workout di periode ini.',
         route: '/workout/new',
-        actionLabel: 'Catat Sesi',
+        actionLabel: 'Catat sesi',
       );
     }
 

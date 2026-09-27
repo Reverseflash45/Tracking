@@ -481,7 +481,7 @@ class _SheetDokumenState extends ConsumerState<_SheetDokumen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEdit ? 'Edit Dokumen' : 'Dokumen Baru',
+                _isEdit ? 'Edit dokumen' : 'Dokumen baru',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               const SizedBox(height: AppSpacing.md),

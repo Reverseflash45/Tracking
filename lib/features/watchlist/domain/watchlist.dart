@@ -85,7 +85,7 @@ enum WatchStatus {
     final kerja = kind.ditonton ? 'Ditonton' : 'Dibaca';
     return switch (this) {
       WatchStatus.rencana => 'Mau $kerja',
-      WatchStatus.jalan => kind.ditonton ? 'Sedang Ditonton' : 'Sedang Dibaca',
+      WatchStatus.jalan => kind.ditonton ? 'Sedang ditonton' : 'Sedang dibaca',
       WatchStatus.selesai => 'Selesai',
       WatchStatus.berhenti => 'Berhenti di Tengah',
     };
