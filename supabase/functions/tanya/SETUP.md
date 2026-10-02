@@ -119,8 +119,8 @@ supabase functions logs tanya
 Tiap pertanyaan mengirim ringkasan 30 hari terakhir (bukan data mentah — itu
 sengaja, supaya murah) plus jawabannya.
 
-Dengan `claude-opus-5` seperti di kode sekarang, kasarnya **Rp 300–550 per
-pertanyaan**. Saldo 5 dolar berarti sekitar **150–250 pertanyaan**. Angka pasnya
+Dengan `claude-opus-5-5` seperti di kode sekarang, kasarnya **Rp 250–450 per
+pertanyaan**. Saldo 5 dolar berarti sekitar **180–300 pertanyaan**. Angka pasnya
 tergantung seberapa banyak datamu — makin banyak yang tercatat, makin panjang
 ringkasannya, makin mahal.
 
@@ -128,13 +128,16 @@ Kalau itu terlalu mahal untuk dipakai santai, ganti satu baris di
 [index.ts](index.ts):
 
 ```ts
-model: "claude-haiku-4-5",
+model: "claude-sonnet-5-5",
 ```
 
-Haiku sekitar **lima kali lebih murah** — kira-kira Rp 60–110 per pertanyaan,
-jadi 5 dolar cukup untuk seribuan pertanyaan. Untuk tanya-jawab sederhana atas
-ringkasan yang angkanya sudah dihitung app, selisih kualitasnya kecil. Naikkan
-lagi ke Opus kalau jawabannya terasa dangkal.
+Sonnet 5.5 kira-kira **separuh harganya** — sekitar Rp 120–220 per pertanyaan.
+Untuk tanya-jawab sederhana atas ringkasan yang angkanya sudah dihitung app,
+selisih kualitasnya kecil. Naikkan lagi ke Opus kalau jawabannya terasa dangkal.
+
+Jangan ganti ke `claude-haiku-4-5` tanpa mengubah kode lainnya: Haiku 4.5 tidak
+menerima `output_config.effort` maupun `fallbacks`, jadi permintaannya akan
+ditolak.
 
 Pengaman yang sudah terpasang di kode:
 

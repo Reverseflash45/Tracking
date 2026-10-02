@@ -29,6 +29,7 @@ class FoodPhotoRepository {
     Uint8List foto, {
     String mediaType = 'image/jpeg',
     String? keterangan,
+    List<PorsiKebiasaan> kebiasaan = const [],
   }) async {
     try {
       final response = await _client.functions.invoke(
@@ -37,6 +38,7 @@ class FoodPhotoRepository {
           'image': base64Encode(foto),
           'media_type': mediaType,
           if (keterangan != null && keterangan.trim().isNotEmpty) 'note': keterangan.trim(),
+          if (kebiasaan.isNotEmpty) 'habits': [for (final k in kebiasaan) k.toJson()],
         },
       );
 

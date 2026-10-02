@@ -166,3 +166,66 @@ String? jenisGambar(List<int> bytes) {
   }
   return null;
 }
+
+/// Porsi yang biasa kamu catat untuk satu makanan.
+class PorsiKebiasaan {
+  const PorsiKebiasaan({required this.nama, required this.gram, required this.kali});
+
+  final String nama;
+
+  /// Median berat — bukan rata-rata, supaya satu kali makan porsi jumbo tidak
+  /// menggeser patokannya.
+  final double gram;
+  final int kali;
+
+  Map<String, dynamic> toJson() => {'nama': nama, 'gram': gram.round(), 'kali': kali};
+}
+
+/// Porsi kebiasaan dari riwayat makan, dikirim bersama foto sebagai patokan.
+///
+/// Hanya catatan yang punya berat. Nama dicocokkan tanpa beda huruf besar
+/// kecil, dan yang ditampilkan adalah ejaan yang paling sering kamu pakai.
+/// Makanan yang baru sekali dicatat belum dianggap kebiasaan.
+List<PorsiKebiasaan> porsiKebiasaan(
+  List<FoodLog> logs, {
+  required DateTime now,
+  int hari = 90,
+  int minKali = 2,
+  int maks = 15,
+}) {
+  final batas = now.subtract(Duration(days: hari));
+  final berat = <String, List<double>>{};
+  final ejaan = <String, Map<String, int>>{};
+
+  for (final log in logs) {
+    final gram = log.servingGrams;
+    if (gram == null || gram <= 0 || log.loggedOn.isBefore(batas)) continue;
+    final nama = log.name.trim();
+    if (nama.isEmpty) continue;
+    final kunci = nama.toLowerCase();
+    berat.putIfAbsent(kunci, () => []).add(gram);
+    final e = ejaan.putIfAbsent(kunci, () => {});
+    e[nama] = (e[nama] ?? 0) + 1;
+  }
+
+  double median(List<double> xs) {
+    final s = [...xs]..sort();
+    final m = s.length ~/ 2;
+    return s.length.isOdd ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+
+  final hasil = [
+    for (final MapEntry(key: kunci, value: xs) in berat.entries)
+      if (xs.length >= minKali)
+        PorsiKebiasaan(
+          nama: (ejaan[kunci]!.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).first.key,
+          gram: median(xs),
+          kali: xs.length,
+        ),
+  ]..sort((a, b) {
+      final k = b.kali.compareTo(a.kali);
+      return k != 0 ? k : a.nama.compareTo(b.nama);
+    });
+
+  return hasil.length > maks ? hasil.sublist(0, maks) : hasil;
+}

@@ -29,6 +29,7 @@
         android:id="@+id/baris0"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingTop="5dp"
         android:visibility="gone">
@@ -50,11 +51,20 @@
             android:textColor="@color/widget_redup"
             android:textSize="12sp"
             android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/selesai0"
+            android:layout_width="28dp"
+            android:layout_height="22dp"
+            android:paddingStart="6dp"
+            android:contentDescription="Tandai sudah"
+            android:src="@drawable/ic_widget_selesai"
+            android:visibility="gone" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/baris1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingTop="5dp"
         android:visibility="gone">
@@ -76,11 +86,20 @@
             android:textColor="@color/widget_redup"
             android:textSize="12sp"
             android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/selesai1"
+            android:layout_width="28dp"
+            android:layout_height="22dp"
+            android:paddingStart="6dp"
+            android:contentDescription="Tandai sudah"
+            android:src="@drawable/ic_widget_selesai"
+            android:visibility="gone" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/baris2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingTop="5dp"
         android:visibility="gone">
@@ -102,11 +121,20 @@
             android:textColor="@color/widget_redup"
             android:textSize="12sp"
             android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/selesai2"
+            android:layout_width="28dp"
+            android:layout_height="22dp"
+            android:paddingStart="6dp"
+            android:contentDescription="Tandai sudah"
+            android:src="@drawable/ic_widget_selesai"
+            android:visibility="gone" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/baris3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingTop="5dp"
         android:visibility="gone">
@@ -128,11 +156,20 @@
             android:textColor="@color/widget_redup"
             android:textSize="12sp"
             android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/selesai3"
+            android:layout_width="28dp"
+            android:layout_height="22dp"
+            android:paddingStart="6dp"
+            android:contentDescription="Tandai sudah"
+            android:src="@drawable/ic_widget_selesai"
+            android:visibility="gone" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/baris4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingTop="5dp"
         android:visibility="gone">
@@ -154,5 +191,13 @@
             android:textColor="@color/widget_redup"
             android:textSize="12sp"
             android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/selesai4"
+            android:layout_width="28dp"
+            android:layout_height="22dp"
+            android:paddingStart="6dp"
+            android:contentDescription="Tandai sudah"
+            android:src="@drawable/ic_widget_selesai"
+            android:visibility="gone" />
     </LinearLayout>
 </LinearLayout>

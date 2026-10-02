@@ -6,16 +6,43 @@ import '../../watchlist/domain/watchlist.dart';
 import '../../workout/data/models/workout_session.dart';
 
 enum WrappedPeriod {
-  mingguan('Mingguan', 'minggu ini'),
-  bulanan('Bulanan', 'bulan ini'),
-  tahunan('Tahunan', 'tahun ini');
+  mingguan('Mingguan', 'minggu ini', 'minggu lalu'),
+  bulanan('Bulanan', 'bulan ini', 'bulan lalu'),
+  tahunan('Tahunan', 'tahun ini', 'tahun lalu');
 
-  const WrappedPeriod(this.label, this.phrase);
+  const WrappedPeriod(this.label, this.phrase, this.phraseSebelumnya);
 
   final String label;
 
   /// Dipakai di kalimat, mis. "kamu menyelesaikan 12 tugas `minggu ini`".
   final String phrase;
+
+  /// Untuk perbandingan, mis. "3 lebih banyak dari `bulan lalu`".
+  final String phraseSebelumnya;
+}
+
+/// Momen yang setara dengan [now] di periode sebelumnya.
+///
+/// Perbandingannya harus adil: "bulan ini" yang baru berjalan dua hari
+/// dibandingkan dengan dua hari pertama bulan lalu, bukan dengan sebulan
+/// penuh — kalau tidak, awal bulan selalu terlihat seperti kemunduran.
+/// Tanggal yang tidak ada di bulan sebelumnya (31 Maret → Februari) jatuh ke
+/// hari terakhir bulan itu.
+DateTime momenSebelumnya(WrappedPeriod period, DateTime now) {
+  int hariDalamBulan(int tahun, int bulan) => DateTime(tahun, bulan + 1, 0).day;
+
+  return switch (period) {
+    WrappedPeriod.mingguan => now.subtract(const Duration(days: 7)),
+    WrappedPeriod.bulanan => () {
+        final awal = DateTime(now.year, now.month - 1);
+        final hari = now.day.clamp(1, hariDalamBulan(awal.year, awal.month));
+        return DateTime(awal.year, awal.month, hari, now.hour, now.minute);
+      }(),
+    WrappedPeriod.tahunan => () {
+        final hari = now.day.clamp(1, hariDalamBulan(now.year - 1, now.month));
+        return DateTime(now.year - 1, now.month, hari, now.hour, now.minute);
+      }(),
+  };
 }
 
 /// Rentang periode, inklusif di kedua ujung pada level hari.
@@ -152,6 +179,7 @@ class WrappedStats {
     required this.jarakLariMeter,
     required this.lariTerjauhMeter,
     required this.persona,
+    this.aktivitasPerHari = const [0, 0, 0, 0, 0, 0, 0],
   });
 
   final WrappedPeriod period;
@@ -181,6 +209,9 @@ class WrappedStats {
   final double lariTerjauhMeter;
 
   final String persona;
+
+  /// Banyaknya hari aktif per hari dalam minggu, Senin di indeks 0.
+  final List<int> aktivitasPerHari;
 
   bool get kosong =>
       tugasSelesai == 0 &&
@@ -289,6 +320,9 @@ WrappedStats computeWrappedStats({
     sesiLari: lariPeriode.length,
     jarakLariMeter: jarakLari,
     lariTerjauhMeter: lariTerjauh,
+    aktivitasPerHari: [
+      for (var hari = 1; hari <= 7; hari++) hariAktif.where((d) => d.weekday == hari).length,
+    ],
     persona: _persona(
       tugasSelesai: selesai.length,
       tepatWaktu: tepatWaktu,

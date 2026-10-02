@@ -6,11 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/academic/data/recurring_task_generator.dart';
+import '../crash/crash_reporter.dart';
 import '../../features/routine/domain/berkala.dart';
 import '../notifications/notification_service.dart';
 import '../notifications/notification_settings_controller.dart';
 import '../notifications/reminder_sync.dart';
 import '../offline/pending_writes.dart';
+import '../supabase/supabase_client_provider.dart';
+import '../update/update_checker.dart';
+import '../update/update_dialog.dart';
 import '../theme/app_colors.dart';
 
 class _TabData {
@@ -110,6 +114,7 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
       // App dibuka dari notifikasi yang diketuk saat app tertutup.
       final pembuka = await ref.read(notificationServiceProvider).responsPembuka();
       if (pembuka != null) _tanggapiNotifikasi(pembuka);
+      await _tawarkanVersiBaru();
     });
   }
 
@@ -131,6 +136,17 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
     }
   }
 
+  /// Sekali per pembukaan app, dan dibatasi [kJedaCekUpdate] — bukan tiap
+  /// kali kembali dari latar belakang.
+  Future<void> _tawarkanVersiBaru() async {
+    final checker = ref.read(updateCheckerProvider);
+    final rilis = await checker.cekOtomatis();
+    if (rilis == null) return;
+    final versi = await checker.versiTerpasang();
+    if (!mounted) return;
+    await tawarkanUpdate(context, ref, rilis, versiSekarang: versi, otomatis: true);
+  }
+
   /// Notifikasi rutinitas berkala yang diketuk membuka halamannya. Tombol
   /// "Sudah" sudah dicatat di antrean; di sini tinggal dikirim dan dimuat
   /// ulang.
@@ -146,6 +162,7 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
   Future<void> _kerjaLatar() async {
     await _kirimAntrean();
     if (!mounted) return;
+    unawaited(CrashReporter.instance.kirim(ref.read(supabaseClientProvider)));
     // Setelah antrean, bukan sebelum: tugas berulang dibuat lewat jaringan, dan
     // percuma mencobanya kalau tulisan yang tertunda saja belum bisa terkirim.
     await ref.read(recurringTaskGeneratorProvider).jalankan();

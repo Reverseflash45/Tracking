@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../assistant/domain/preset_answers.dart' show questionCatalog;
+import '../../../core/crash/crash_reporter.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notification_settings_controller.dart';
 import '../../../core/notifications/smart_reminders.dart';
@@ -11,6 +12,8 @@ import '../../../core/supabase/supabase_client_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../../core/update/update_checker.dart';
+import '../../../core/update/update_dialog.dart';
 import '../../../core/widgets/daftar_bergaris.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../auth/presentation/auth_controller.dart';
@@ -307,6 +310,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const SectionHeader(
+                  title: 'Tentang',
+                  icon: Icons.info_outline,
+                  color: AppColors.profile,
+                ),
+                const _KartuTentang(),
+                const SizedBox(height: AppSpacing.md),
+                const SectionHeader(
                   title: 'Akun',
                   icon: Icons.person_outline,
                   color: AppColors.profile,
@@ -319,6 +329,45 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Versi, cek pembaruan, dan saklar laporan error.
+class _KartuTentang extends ConsumerWidget {
+  const _KartuTentang();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final versi = ref.watch(versiAppProvider).value;
+
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            leading: const SizedBox(width: 34, child: Icon(Icons.system_update_alt, size: 18)),
+            title: const Text('Cek pembaruan'),
+            subtitle: Text(versi == null ? 'Versi terpasang: …' : 'Versi terpasang: $versi'),
+            onTap: () => cekUpdateManual(context, ref),
+          ),
+          const Divider(height: 1),
+          ValueListenableBuilder<bool>(
+            valueListenable: CrashReporter.instance.aktif,
+            builder: (context, aktif, _) => SwitchListTile(
+              secondary: const SizedBox(width: 34, child: Icon(Icons.bug_report_outlined, size: 18)),
+              title: const Text('Kirim laporan error'),
+              subtitle: const Text(
+                'Kalau app error, pesan teknis dan letak error-nya di kode dikirim ke '
+                'database app ini supaya bisa diperbaiki.',
+                style: TextStyle(fontSize: 11.5),
+              ),
+              activeThumbColor: AppColors.profile,
+              value: aktif,
+              onChanged: (v) => CrashReporter.instance.setAktif(v),
             ),
           ),
         ],

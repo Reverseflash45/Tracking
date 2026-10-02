@@ -1,0 +1,36 @@
+# Analyze dan tes setiap push ke main dan setiap pull request.
+#
+# Tidak butuh secret apa pun: .env diisi nilai tiruan, karena tes tidak
+# menghubungi Supabase — file itu cuma harus ada supaya aset app bisa dirakit.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Samakan dengan versi di laptop, supaya "lolos di sini" berarti
+          # "lolos di sana" juga.
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+
+      - name: .env tiruan
+        run: printf 'SUPABASE_URL=https://contoh.supabase.co\nSUPABASE_ANON_KEY=contoh\n' > .env
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test

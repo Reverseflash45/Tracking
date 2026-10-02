@@ -98,9 +98,12 @@ class _FoodPhotoPageState extends ConsumerState<FoodPhotoPage> {
       _galat = null;
     });
     try {
-      final hasil = await ref
-          .read(foodPhotoRepositoryProvider)
-          .taksir(foto, mediaType: _jenis, keterangan: _keterangan.text);
+      final hasil = await ref.read(foodPhotoRepositoryProvider).taksir(
+            foto,
+            mediaType: _jenis,
+            keterangan: _keterangan.text,
+            kebiasaan: _kebiasaan(),
+          );
       if (!mounted) return;
       setState(() {
         _hasil = hasil;
@@ -115,6 +118,13 @@ class _FoodPhotoPageState extends ConsumerState<FoodPhotoPage> {
       if (mounted) setState(() => _menganalisis = false);
     }
   }
+
+  /// Porsi yang biasa kamu catat, sebagai patokan untuk AI. Kosong kalau
+  /// riwayat makan belum termuat atau belum cukup.
+  List<PorsiKebiasaan> _kebiasaan() => porsiKebiasaan(
+        ref.read(foodLogsProvider).value ?? const [],
+        now: DateTime.now(),
+      );
 
   void _ubahGram(int i, double gram) {
     setState(() {
@@ -197,6 +207,8 @@ class _FoodPhotoPageState extends ConsumerState<FoodPhotoPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    // Dijaga tetap termuat supaya porsi kebiasaan sudah siap saat foto dikirim.
+    ref.watch(foodLogsProvider);
     final foto = _foto;
     final hasil = _hasil;
     final total = totalTebakan([for (final i in _dipilih) _items[i]]);
@@ -244,7 +256,9 @@ class _FoodPhotoPageState extends ConsumerState<FoodPhotoPage> {
                   decoration: const InputDecoration(
                     labelText: 'Keterangan (opsional)',
                     hintText: 'Misal: nasi setengah porsi, ayamnya paha',
-                    helperText: 'Membantu kalau ada yang tidak terlihat di foto',
+                    helperText: 'Membantu kalau ada yang tidak terlihat di foto. '
+                      'Porsi yang biasa kamu catat ikut dipakai sebagai patokan.',
+                  helperMaxLines: 2,
                     counterText: '',
                   ),
                 ),

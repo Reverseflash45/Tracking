@@ -12,6 +12,7 @@ import '../data/models/workout_session.dart';
 import '../data/rest_day_repository.dart';
 import '../data/workout_repository.dart';
 import '../domain/history_filter.dart';
+import 'export_workout_sheet.dart';
 import 'workout_providers.dart';
 
 final _weekDayFormat = DateFormat('EEEE', 'id_ID');
@@ -89,6 +90,11 @@ class _WorkoutHistoryPageState extends ConsumerState<WorkoutHistoryPage> {
                 icon: Icons.arrow_back,
                 tooltip: 'Kembali',
                 onPressed: () => context.pop(),
+              ),
+              trailing: HeroIconButton(
+                icon: Icons.file_download_outlined,
+                tooltip: 'Ekspor ke TXT',
+                onPressed: () => showEksporWorkoutSheet(context),
               ),
               stats: [
                 HeroStatData(

@@ -1,9 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Kunci rilis dari android/key.properties (tidak di-commit). Di laptop file ini
+// menunjuk ke keystore di luar repo; di GitHub Actions file ini ditulis dari
+// Secrets oleh workflow rilis. Tanpa file ini, build rilis jatuh ke debug key —
+// cukup untuk mencoba, tapi APK-nya tidak bisa jadi update dari rilis resmi.
+val keyProperties = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+val punyaKunciRilis = keyProperties.getProperty("storeFile") != null
 
 android {
     namespace = "com.rafifernandito.tracking"
@@ -34,11 +46,20 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (punyaKunciRilis) {
+            create("release") {
+                storeFile = file(keyProperties.getProperty("storeFile"))
+                storePassword = keyProperties.getProperty("storePassword")
+                keyAlias = keyProperties.getProperty("keyAlias")
+                keyPassword = keyProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (punyaKunciRilis) "release" else "debug")
 
             // ML Kit text recognition merujuk pengenal aksara non-Latin yang
             // tidak ikut ditarik; tanpa aturan ini R8 menggagalkan build rilis.

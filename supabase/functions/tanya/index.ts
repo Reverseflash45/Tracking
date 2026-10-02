@@ -86,15 +86,20 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-opus-5",
-      // Di Opus 5 thinking menyala secara bawaan, dan max_tokens membatasi
+    const message = await anthropic.beta.messages.create({
+      model: "claude-opus-5-5",
+      // Di Opus 5.5 thinking selalu menyala, dan max_tokens membatasi
       // thinking DITAMBAH teks jawaban. Angka ini longgar supaya jawabannya
       // tidak terpotong di tengah; yang ditagih tetap hanya yang terpakai.
       max_tokens: 8192,
       // Pertanyaan sederhana atas ringkasan yang sudah dihitung app tidak butuh
-      // penalaran dalam. Naikkan ke "medium" kalau jawabannya terasa dangkal.
+      // penalaran dalam. Ditulis eksplisit karena bawaan Opus 5.5 "medium".
+      // Naikkan ke "medium" kalau jawabannya terasa dangkal.
       output_config: { effort: "low" },
+      // Kalau classifier keamanan menolak, permintaan yang sama diulang di
+      // model cadangan pilihan Anthropic, bukan langsung gagal.
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
       system: SYSTEM_PROMPT,
       messages: [
         {
@@ -104,7 +109,7 @@ Deno.serve(async (req: Request) => {
       ],
     });
 
-    // Opus 5 bisa menolak permintaan lewat classifier keamanan; itu datang
+    // Opus 5.5 bisa menolak permintaan lewat classifier keamanan; itu datang
     // sebagai HTTP 200 dengan stop_reason "refusal", bukan error. Membaca
     // content[0] tanpa memeriksa ini akan meledak.
     if (message.stop_reason === "refusal") {

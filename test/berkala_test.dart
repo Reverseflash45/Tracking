@@ -233,10 +233,13 @@ void main() {
         jadwal: const [],
       )) as Map<String, dynamic>;
 
-      expect(data['berkala'], [
-        {'t': 'A', 'd': '2026-09-26'},
-        {'t': 'B', 'd': '2026-10-25'},
+      final berkala = data['berkala'] as List;
+      expect([for (final b in berkala) (b['t'], b['d'])], [
+        ('A', '2026-09-26'),
+        ('B', '2026-10-25'),
       ]);
+      // Payload tombol "Sudah" di widget sama dengan payload notifikasi.
+      expect(PayloadBerkala.decode(berkala.first['p'] as String)!.routineId, 'A');
       expect(data['harian']['5'], [
         {'m': '05:45', 't': 'Bangun'},
       ]);

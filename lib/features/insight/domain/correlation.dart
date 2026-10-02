@@ -24,6 +24,8 @@ class Insight {
     required this.detail,
     required this.weeksHigh,
     required this.weeksLow,
+    this.nilaiAktif,
+    this.nilaiSantai,
   });
 
   final InsightKind kind;
@@ -36,6 +38,12 @@ class Insight {
 
   final int weeksHigh;
   final int weeksLow;
+
+  /// Angka pembanding untuk digambar sebagai dua batang: minggu aktif vs
+  /// minggu jarang olahraga. Null untuk pola yang tidak membandingkan
+  /// (konsistensi).
+  final double? nilaiAktif;
+  final double? nilaiSantai;
 
   int get totalWeeks => weeksHigh + weeksLow;
 }
@@ -165,6 +173,8 @@ List<Insight> findInsights({
             '${tepatSantai.round()}% saat jarang olahraga.',
         weeksHigh: aktif.length,
         weeksLow: santai.length,
+        nilaiAktif: tepatAktif,
+        nilaiSantai: tepatSantai,
       ));
     }
 
@@ -186,6 +196,8 @@ List<Insight> findInsights({
                 'padahal ${_hari(awalSantai)} hari saat jarang olahraga.',
         weeksHigh: aktif.length,
         weeksLow: santai.length,
+        nilaiAktif: awalAktif,
+        nilaiSantai: awalSantai,
       ));
     }
   }
@@ -225,6 +237,28 @@ int? weeksUntilReady({
       .where((w) => w.start.isBefore(mingguIni) && w.tugasSelesai > 0)
       .length;
 
-  final butuh = kMinWeeksPerGroup * 2;
-  return selesai >= butuh ? null : butuh - selesai;
+  return selesai >= kMingguDibutuhkan ? null : kMingguDibutuhkan - selesai;
+}
+
+/// Minggu (yang ada tugas selesainya) yang dibutuhkan sebelum pola pertama
+/// bisa dihitung.
+const int kMingguDibutuhkan = kMinWeeksPerGroup * 2;
+
+/// [jumlah] minggu terakhir sampai minggu ini, berurutan dan tanpa lubang —
+/// minggu tanpa aktivitas tetap ada dengan angka nol. Dipakai grafik di
+/// halaman Pola, yang justru perlu menunjukkan minggu kosong.
+List<WeekBucket> mingguTerakhir({
+  required List<AcademicTask> tasks,
+  required List<WorkoutSession> sessions,
+  required List<RunLog> runs,
+  required DateTime now,
+  int jumlah = 12,
+}) {
+  final weeks = buildWeeks(tasks: tasks, sessions: sessions, runs: runs);
+  final mingguIni = _mondayOf(now);
+  return [
+    for (var i = jumlah - 1; i >= 0; i--)
+      weeks[DateTime(mingguIni.year, mingguIni.month, mingguIni.day - 7 * i)] ??
+          WeekBucket(DateTime(mingguIni.year, mingguIni.month, mingguIni.day - 7 * i)),
+  ];
 }

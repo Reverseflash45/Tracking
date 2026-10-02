@@ -51,5 +51,11 @@ app.*.map.json
 # psql. Sengaja bukan di .env: .env ikut terbundel ke APK sebagai aset.
 supabase/.db-url
 
+# Token Supabase CLI dan API key Anthropic untuk deploy Edge Function.
+supabase/.kredensial
+
 # Isi awal yang berisi data pribadi (user id, jadwal harian)
 supabase/seed/
+
+# Cache CLI Supabase
+supabase/.temp/

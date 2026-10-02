@@ -1,43 +1,53 @@
-# Mengaktifkan "Foto makanan"
+# Fitur "Foto makanan"
 
-Kodenya sudah lengkap, tapi tombol **Foto makanan** baru berfungsi setelah
-fungsi ini di-deploy ke Supabase. Sampai saat itu, app menampilkan pesan
-"Fitur ini belum aktif".
+Fungsi ini menaksir isi piring dari foto. Dia memakai **Gemini** kalau secret
+`GEMINI_API_KEY` ada (paket gratis Google AI Studio), dan **Claude** kalau
+hanya `ANTHROPIC_API_KEY` yang diatur. App di HP tidak perlu tahu yang mana.
 
-Langkahnya sama dengan fitur "Tanya data" — lihat
-[../tanya/SETUP.md](../tanya/SETUP.md) untuk detail tiap langkah.
-
-1. **API key Anthropic** — Langkah 1 di SETUP "tanya". Kalau "Tanya data"
-   sudah jalan, lewati: kedua fungsi memakai secret yang sama.
-2. **Supabase CLI** terpasang dan ter-link ke proyekmu — Langkah 2.
-3. **Secret** `ANTHROPIC_API_KEY` sudah diatur — Langkah 3.
-4. **Deploy:**
-
-   ```powershell
-   supabase functions deploy foto-makanan
-   ```
-
-Lalu buka app: **Workout → Nutrisi → ikon kamera**, atau tombol
-**Foto makanan** di form catat makanan.
+Status sekarang (Oktober 2026): sudah di-deploy dan memakai Gemini.
 
 ---
 
-## Soal biaya
+## Gemini (gratis)
 
-Foto diperkecil di HP ke sisi terpanjang 1024 px sebelum dikirim, jadi satu
-foto sekitar 1.000–1.400 token gambar. Dengan `claude-opus-5-5` pada effort
-`low` seperti di kode, kasarnya **Rp 300–600 per foto** — saldo 5 dolar cukup
-untuk sekitar 150–250 foto. Analisis ulang dengan keterangan dihitung sebagai
-foto baru.
+1. Buat atau lihat key di https://aistudio.google.com/app/apikey
+2. Pasang sebagai secret dan deploy:
 
-Kalau terlalu mahal untuk tiga kali makan sehari, ganti model di
-[index.ts](index.ts) menjadi `claude-sonnet-5-5` — kira-kira separuh harganya.
-Kalau taksirannya terasa ceroboh, naikkan `effort` ke `"medium"` (lebih teliti,
-lebih mahal).
+   ```powershell
+   supabase secrets set GEMINI_API_KEY=key-kamu
+   supabase functions deploy foto-makanan --use-api
+   ```
 
-## Yang perlu diingat
+Model yang dicoba berurutan: `gemini-3.8-flash` (lebih teliti, bisa sampai
+±20 detik), lalu `gemini-flash-lite-latest` kalau yang pertama sedang penuh.
+Daftarnya ada di `GEMINI_MODELS` di [index.ts](index.ts). Google sering
+mengganti nama model; kalau muncul error 404 "no longer available", ganti ke
+model Flash terbaru dari halaman di atas.
+
+Yang perlu diingat:
+- **Kuota gratis bisa berubah** tanpa pemberitahuan. Kalau habis, app
+  menampilkan "Kuota gratis Gemini hari ini habis" sampai besok — tidak ada
+  tagihan.
+- **Di paket gratis, Google boleh memakai foto yang dikirim** untuk
+  memperbaiki produknya. Untuk foto makanan itu wajar; untuk data pribadi
+  (seperti "Tanya data") sebaiknya tidak.
+- Jangan memutar beberapa key dari akun berbeda untuk menambah kuota —
+  itu melanggar ketentuan Google dan akunnya bisa diblokir.
+
+## Claude (berbayar)
+
+Hapus secret Gemini (`supabase secrets unset GEMINI_API_KEY`) dan atur
+`ANTHROPIC_API_KEY` — lihat [../tanya/SETUP.md](../tanya/SETUP.md). Dengan
+`claude-opus-5-5` pada effort `low`, kasarnya Rp 300–600 per foto. Langganan
+Claude Pro tidak bisa dipakai: API ditagih terpisah lewat console.anthropic.com.
+
+---
+
+## Yang perlu diingat soal hasilnya
 
 - Hasilnya **perkiraan**. Berat dari foto bisa meleset 20–30%, dan minyak,
   santan, atau gula yang larut tidak terlihat. Karena itu app selalu
   menampilkan hasilnya untuk diperiksa dulu, dan berat tiap item bisa diubah.
-- Foto dikirim ke Anthropic untuk dianalisis dan tidak disimpan di Supabase.
+- Porsi yang biasa kamu catat ikut dikirim sebagai patokan, jadi taksirannya
+  makin pas seiring waktu.
+- Foto tidak disimpan di Supabase.

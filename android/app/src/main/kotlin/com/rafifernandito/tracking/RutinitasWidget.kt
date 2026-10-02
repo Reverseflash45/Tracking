@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
+import es.antonborri.home_widget.HomeWidgetBackgroundIntent
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
 import org.json.JSONObject
@@ -22,7 +23,16 @@ import java.time.temporal.ChronoUnit
  */
 class RutinitasWidget : HomeWidgetProvider() {
 
-    private data class Baris(val judul: String, val label: String, val mendesak: Boolean)
+    /**
+     * Satu baris widget. [payload] hanya ada untuk rutinitas berkala — itu yang
+     * dibawa tombol "Sudah" ke Dart, sama persis dengan payload notifikasinya.
+     */
+    private data class Baris(
+        val judul: String,
+        val label: String,
+        val mendesak: Boolean,
+        val payload: String? = null,
+    )
 
     override fun onUpdate(
         context: Context,
@@ -56,6 +66,22 @@ class RutinitasWidget : HomeWidgetProvider() {
                     ID_LABEL[i],
                     context.getColor(if (item.mendesak) R.color.widget_mendesak else R.color.widget_redup),
                 )
+
+                // Tombol "Sudah" hanya untuk rutinitas berkala. Kegiatan
+                // mingguan tidak punya status selesai.
+                val payload = item.payload
+                views.setViewVisibility(ID_SELESAI[i], if (payload == null) View.GONE else View.VISIBLE)
+                if (payload != null) {
+                    val uri = Uri.Builder()
+                        .scheme("tracking")
+                        .authority(HOST_SELESAI)
+                        .appendQueryParameter("p", payload)
+                        .build()
+                    views.setOnClickPendingIntent(
+                        ID_SELESAI[i],
+                        HomeWidgetBackgroundIntent.getBroadcast(context, uri),
+                    )
+                }
             }
 
             views.setOnClickPendingIntent(
@@ -84,7 +110,7 @@ class RutinitasWidget : HomeWidgetProvider() {
                 val sisa = ChronoUnit.DAYS.between(hariIni, tempo).toInt()
                 // Yang masih jauh tidak perlu memakan tempat di layar utama.
                 if (sisa > JARAK_TAMPIL_HARI) continue
-                hasil.add(Baris(item.getString("t"), labelSisa(sisa), sisa <= 1))
+                hasil.add(Baris(item.getString("t"), labelSisa(sisa), sisa <= 1, item.optString("p").ifEmpty { null }))
             }
         }
 
@@ -115,6 +141,9 @@ class RutinitasWidget : HomeWidgetProvider() {
         /** Kunci yang sama dengan `kKunciWidget` di sisi Dart. */
         private const val KUNCI_DATA = "rutinitas_widget"
 
+        /** Host URI tombol "Sudah". Sama dengan `_kHostSelesai` di sisi Dart. */
+        private const val HOST_SELESAI = "berkala-selesai"
+
         private const val MAKS_BARIS = 5
         private const val MAKS_BERKALA = 3
         private const val JARAK_TAMPIL_HARI = 7
@@ -122,5 +151,6 @@ class RutinitasWidget : HomeWidgetProvider() {
         private val ID_BARIS = intArrayOf(R.id.baris0, R.id.baris1, R.id.baris2, R.id.baris3, R.id.baris4)
         private val ID_JUDUL = intArrayOf(R.id.judul0, R.id.judul1, R.id.judul2, R.id.judul3, R.id.judul4)
         private val ID_LABEL = intArrayOf(R.id.label0, R.id.label1, R.id.label2, R.id.label3, R.id.label4)
+        private val ID_SELESAI = intArrayOf(R.id.selesai0, R.id.selesai1, R.id.selesai2, R.id.selesai3, R.id.selesai4)
     }
 }
