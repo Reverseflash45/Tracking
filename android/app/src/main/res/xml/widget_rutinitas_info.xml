@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Diperbarui tiap 3 jam supaya label "hari ini/besok" dan kegiatan
+     berikutnya tetap benar walau app tidak dibuka. Batas bawah Android 30 menit;
+     lebih sering dari 3 jam cuma menghabiskan baterai untuk teks yang sama. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="110dp"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="10800000"
+    android:initialLayout="@layout/widget_rutinitas"
+    android:previewLayout="@layout/widget_rutinitas"
+    android:description="@string/widget_rutinitas_deskripsi"
+    android:widgetCategory="home_screen" />

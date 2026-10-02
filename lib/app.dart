@@ -5,6 +5,7 @@ import 'core/notifications/reminder_sync.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
+import 'features/routine/data/rutinitas_widget_sync.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -16,6 +17,8 @@ class App extends ConsumerWidget {
 
     // Menjaga penjadwal pengingat tetap hidup selama app berjalan.
     ref.watch(reminderSyncProvider);
+    // Begitu juga isi widget layar utama.
+    ref.watch(rutinitasWidgetSyncProvider);
 
     return MaterialApp.router(
       title: 'Produktivitas Mahasiswa',

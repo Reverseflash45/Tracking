@@ -8,7 +8,7 @@
 PRODUCT_NAME = tracking
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.tracking
+PRODUCT_BUNDLE_IDENTIFIER = com.rafifernandito.tracking
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Rafi Fernandito. All rights reserved.

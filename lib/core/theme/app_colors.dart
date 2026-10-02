@@ -34,7 +34,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // --- Lima warna tab utama. Rona: 227, 268, 9, 174, 128. ---
+  // --- Warna tab utama. Rona: 227, 268, 9, 174, plus satu netral. ---
 
   /// Biru, 227°. Beranda.
   static const Color dashboard = Color(0xFF4667D9);
@@ -54,6 +54,14 @@ class AppColors {
   /// berlumpur di sebelah warna lain; sekarang lebih terang dan sedikit
   /// digeser menjauh dari teal Workout.
   static const Color finance = Color(0xFF3D9E4A);
+
+  /// Abu kebiruan, nyaris tanpa kroma. Tab Lainnya.
+  ///
+  /// Sengaja netral: Lainnya bukan satu kategori, melainkan tempat semua yang
+  /// tidak punya tab sendiri — termasuk Keuangan, yang dulu menempati tab ini.
+  /// Memberinya rona sendiri akan berebut dengan warna isinya, dan Plum
+  /// Profil terlalu dekat dengan ungu Jadwal di sebelahnya.
+  static const Color lainnya = Color(0xFF6B7287);
 
   // --- Kategori sekunder. Rona tetap berjarak, kroma diturunkan. ---
 

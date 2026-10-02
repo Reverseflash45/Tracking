@@ -9,6 +9,7 @@ const _aktifPrefsKey = 'reminder_enabled';
 const _menitPrefsKey = 'reminder_minute_of_day';
 const _jenisPrefsKey = 'reminder_kinds';
 const _sebelumKelasPrefsKey = 'reminder_minutes_before_class';
+const _tepatWaktuPrefsKey = 'reminder_exact';
 
 /// Default jam 08.00 — cukup pagi untuk masih sempat mengerjakan.
 const int kDefaultReminderMinute = 8 * 60;
@@ -24,6 +25,7 @@ const Set<ReminderKind> kDefaultReminderKinds = {
   ReminderKind.tagihan,
   ReminderKind.dokumen,
   ReminderKind.kendaraan,
+  ReminderKind.berkala,
 };
 
 class NotificationSettingsController extends Notifier<NotificationSettings> {
@@ -48,6 +50,7 @@ class NotificationSettingsController extends Notifier<NotificationSettings> {
       // pernah memilih" — yang pertama harus tetap kosong.
       jenisAktif: tersimpan == null ? kDefaultReminderKinds : _parseJenis(tersimpan),
       menitSebelumKelas: prefs.getInt(_sebelumKelasPrefsKey) ?? kMenitSebelumKelasDefault,
+      tepatWaktu: prefs.getBool(_tepatWaktuPrefsKey) ?? false,
     );
   }
 
@@ -93,6 +96,19 @@ class NotificationSettingsController extends Notifier<NotificationSettings> {
     state = state.copyWith(jenisAktif: jenis);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_jenisPrefsKey, jenis.map((k) => k.name).toList());
+  }
+
+  /// Menyalakan alarm presisi membuka layar izin sistem kalau izinnya belum
+  /// ada. Setelannya tetap disimpan menyala: begitu izinnya diberikan,
+  /// penjadwalan berikutnya langsung memakainya.
+  Future<void> setTepatWaktu(bool value) async {
+    if (value) {
+      final service = ref.read(notificationServiceProvider);
+      if (!await service.bisaAlarmTepat()) await service.mintaIzinAlarmTepat();
+    }
+    state = state.copyWith(tepatWaktu: value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_tepatWaktuPrefsKey, value);
   }
 
   Future<void> setMenitSebelumKelas(int menit) async {

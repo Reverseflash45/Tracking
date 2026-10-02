@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#000000</color>
+
+    <!-- Widget Rutinitas. Versi gelapnya di values-night. Biru dan koral sama
+         dengan AppColors.dashboard dan AppColors.deadline di app. -->
+    <color name="widget_bg">#FFFFFF</color>
+    <color name="widget_teks">#1B1D24</color>
+    <color name="widget_redup">#6B7080</color>
+    <color name="widget_aksen">#4667D9</color>
+    <color name="widget_mendesak">#E2553D</color>
 </resources>

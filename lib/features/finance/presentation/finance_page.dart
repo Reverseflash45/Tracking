@@ -44,15 +44,20 @@ class FinancePage extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            HeroHeader(
+            HeroHeader.sub(
               title: 'Keuangan',
               subtitle: summary == null
                   ? 'Memuat...'
                   : '${_rangeFormat.format(summary.start)} - '
                         '${_rangeFormat.format(summary.end)}',
               color: _color,
-              // Tanpa tombol kembali: ini akar tab, bukan halaman yang dibuka
-              // dari halaman lain.
+              // Bukan akar tab lagi: dibuka dari kartu Uang di Beranda atau
+              // dari tab Lainnya, jadi butuh jalan pulang.
+              leading: HeroIconButton(
+                icon: Icons.arrow_back,
+                tooltip: 'Kembali',
+                onPressed: () => context.canPop() ? context.pop() : context.go('/lainnya'),
+              ),
               trailing: HeroIconButton(
                 icon: Icons.tune,
                 tooltip: 'Atur anggaran',

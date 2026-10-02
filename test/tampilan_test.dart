@@ -357,6 +357,7 @@ void main() {
       'Tugas': AppColors.deadline,
       'Workout': AppColors.workout,
       'Keuangan': AppColors.finance,
+      'Lainnya': AppColors.lainnya,
       'Profil': AppColors.profile,
       'Watchlist': AppColors.watchlist,
       'Kendaraan': AppColors.vehicle,
@@ -402,7 +403,6 @@ void main() {
         'Jadwal': AppColors.academic,
         'Tugas': AppColors.deadline,
         'Workout': AppColors.workout,
-        'Keuangan': AppColors.finance,
       };
 
       final terlaluMirip = <String>[];
@@ -422,6 +422,13 @@ void main() {
       expect(terlaluMirip, isEmpty,
           reason: 'pasangan warna tab ini terlalu berdekatan ronanya: '
               '${terlaluMirip.join(", ")}');
+    });
+
+    test('tab Lainnya netral, jadi tidak bisa bertabrakan dengan rona tab lain', () {
+      // Lainnya sengaja tidak ikut uji rona di atas: dia tidak punya rona
+      // yang terbaca. Yang dijaga di sini justru itu — begitu kromanya naik,
+      // dia mulai terbaca sebagai warna dan harus ikut diuji jaraknya.
+      expect(HSLColor.fromColor(AppColors.lainnya).saturation, lessThan(0.2));
     });
   });
 

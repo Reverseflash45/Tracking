@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/ocr/barcode_scanner.dart';
 import '../../../core/offline/pending_writes.dart';
@@ -280,6 +281,24 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                   ),
                 ],
               ),
+              // Foto makanan punya halaman sendiri: hasilnya bisa beberapa item
+              // sekaligus (nasi, lauk, sayur), dan itu tidak muat di form satu
+              // makanan ini. Waktu makan yang sudah dipilih ikut dibawa.
+              if (!_isEdit) ...[
+                const SizedBox(height: AppSpacing.md),
+                FilledButton.tonalIcon(
+                  onPressed: () {
+                    final router = GoRouter.of(context);
+                    Navigator.of(context).pop();
+                    router.push('/workout/nutrition/foto?meal=${_meal.dbValue}');
+                  },
+                  icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                  label: const Text(
+                    'Foto makanan — taksir kalori otomatis',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
               // Scan barcode juga menimpa seluruh isi form, jadi ikut aturan
               // yang sama dengan pintasan di bawahnya.
               if (!_isEdit && barcodeScanSupported) ...[

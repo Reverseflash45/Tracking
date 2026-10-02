@@ -9,7 +9,9 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../academic/data/models/class_schedule.dart';
 import '../../academic/presentation/academic_providers.dart';
+import '../data/berkala_repository.dart';
 import '../data/routine_repository.dart';
+import '../domain/berkala.dart';
 import '../domain/routine.dart';
 import 'routine_form_sheet.dart';
 
@@ -66,6 +68,7 @@ class _RoutinePageState extends ConsumerState<RoutinePage> {
         onRefresh: () async {
           ref.invalidate(routinesProvider);
           ref.invalidate(classSchedulesProvider);
+          ref.invalidate(berkalaProvider);
         },
         child: ListView(
           padding: EdgeInsets.zero,
@@ -102,6 +105,7 @@ class _RoutinePageState extends ConsumerState<RoutinePage> {
                 ),
               ],
             ),
+            const _PintuBerkala(),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
@@ -270,6 +274,54 @@ class _RoutinePageState extends ConsumerState<RoutinePage> {
       return;
     }
     ref.invalidate(routinesProvider);
+  }
+}
+
+/// Jalan masuk ke rutinitas berkala. Tinggal di halaman ini karena keduanya
+/// sama-sama "hal yang berulang" — bedanya cuma diulang menurut nama hari
+/// atau menurut jarak hari.
+class _PintuBerkala extends ConsumerWidget {
+  const _PintuBerkala();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final semua = ref.watch(berkalaProvider).value ?? const <RutinitasBerkala>[];
+    final now = DateTime.now();
+    final perlu = semua.where((r) => r.perluDikerjakan(now)).length;
+
+    final keterangan = semua.isEmpty
+        ? 'Absen akun tiap 25 hari, ganti sprei tiap 14 hari'
+        : perlu > 0
+            ? '$perlu perlu dikerjakan sekarang'
+            : '${semua.length} rutinitas · terdekat ${labelSisaHari(semua.first.sisaHari(now)).toLowerCase()}';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+      child: Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          onTap: () => context.push('/routine/berkala'),
+          leading: Icon(
+            Icons.event_repeat_outlined,
+            color: perlu > 0 ? AppColors.deadline : _color,
+          ),
+          title: const Text(
+            'Rutinitas berkala',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          ),
+          subtitle: Text(
+            keterangan,
+            style: TextStyle(
+              fontSize: 12,
+              color: perlu > 0 ? AppColors.deadline : colorScheme.onSurfaceVariant,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+        ),
+      ),
+    );
   }
 }
 

@@ -250,8 +250,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 const _NotificationSettingsCard(),
                 const SizedBox(height: AppSpacing.md),
                 // Watchlist, Kendaraan, dan Dokumen dulu ada di sini. Sekarang
-                // pindah ke pintasan di Beranda: Profil tempat orang mencari
-                // setelan dan akun, bukan tempat mencari fitur.
+                // tinggal di tab Lainnya: Profil tempat orang mencari setelan
+                // dan akun, bukan tempat mencari fitur.
                 const SectionHeader(
                   title: 'Rekap',
                   icon: Icons.auto_awesome,
@@ -407,6 +407,86 @@ class _MenuTile extends StatelessWidget {
   }
 }
 
+/// Alarm presisi. Izinnya diberikan di layar setelan sistem, jadi saklar ini
+/// juga memberi tahu kalau setelannya menyala tapi izinnya belum ada —
+/// kalau tidak, kamu mengira alarmnya tepat padahal masih bisa bergeser.
+class _SaklarTepatWaktu extends ConsumerStatefulWidget {
+  const _SaklarTepatWaktu({required this.settings});
+
+  final NotificationSettings settings;
+
+  @override
+  ConsumerState<_SaklarTepatWaktu> createState() => _SaklarTepatWaktuState();
+}
+
+class _SaklarTepatWaktuState extends ConsumerState<_SaklarTepatWaktu>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) ref.invalidate(izinAlarmTepatProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = widget.settings;
+    final controller = ref.read(notificationSettingsProvider.notifier);
+    final diizinkan = ref.watch(izinAlarmTepatProvider).value ?? true;
+    final kurangIzin = settings.tepatWaktu && !diizinkan;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SwitchListTile(
+          secondary: const SizedBox(width: 34, child: Icon(Icons.alarm_on_outlined, size: 18)),
+          title: const Text('Alarm tepat waktu', style: TextStyle(fontSize: 14)),
+          subtitle: const Text(
+            'Berbunyi tepat di jamnya. Tanpa ini Android bisa menggesernya beberapa menit.',
+            style: TextStyle(fontSize: 11.5),
+          ),
+          dense: true,
+          activeThumbColor: AppColors.profile,
+          value: settings.tepatWaktu,
+          onChanged: settings.aktif
+              ? (value) async {
+                  await controller.setTepatWaktu(value);
+                  ref.invalidate(izinAlarmTepatProvider);
+                }
+              : null,
+        ),
+        if (kurangIzin)
+          ListTile(
+            dense: true,
+            leading: const SizedBox(
+              width: 34,
+              child: Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.deadline),
+            ),
+            title: const Text(
+              'Izin "Alarm & pengingat" belum diberikan',
+              style: TextStyle(fontSize: 13, color: AppColors.deadline),
+            ),
+            subtitle: const Text(
+              'Sampai diizinkan, alarmnya tetap mode biasa. Ketuk untuk membuka setelan.',
+              style: TextStyle(fontSize: 11.5),
+            ),
+            onTap: () => ref.read(notificationServiceProvider).mintaIzinAlarmTepat(),
+          ),
+      ],
+    );
+  }
+}
+
 class _NotificationSettingsCard extends ConsumerWidget {
   const _NotificationSettingsCard();
 
@@ -471,6 +551,8 @@ class _NotificationSettingsCard extends ConsumerWidget {
               if (picked != null) await controller.setJam(picked);
             },
           ),
+          const Divider(height: 1),
+          _SaklarTepatWaktu(settings: settings),
           const Divider(height: 1),
           for (final kind in ReminderKind.values)
             SwitchListTile(
@@ -550,5 +632,6 @@ class _NotificationSettingsCard extends ConsumerWidget {
     ReminderKind.dokumen => 'H-60, H-14, dan hari-H sebelum masa berlaku habis',
     ReminderKind.kendaraan => 'Pajak H-30, plat H-60, servis H-7',
     ReminderKind.catatMakan => 'Jam 20.30, kalau belum ada catatan makan',
+    ReminderKind.berkala => 'H-1 dan hari-H, diulang sampai ditandai selesai',
   };
 }

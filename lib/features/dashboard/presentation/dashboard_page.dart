@@ -26,6 +26,9 @@ import '../../finance/presentation/transaction_sheet.dart';
 import '../../nutrition/data/nutrition_repository.dart';
 import '../../nutrition/presentation/food_form_sheet.dart';
 import '../../profile/data/profile_repository.dart';
+import '../../routine/data/berkala_repository.dart';
+import '../../routine/domain/berkala.dart';
+import '../../routine/presentation/berkala_page.dart';
 import '../../workout/presentation/workout_providers.dart';
 
 final _dayFormat = DateFormat('EEEE, d MMMM', 'id_ID');
@@ -57,6 +60,7 @@ class DashboardPage extends ConsumerWidget {
           ref.invalidate(profileProvider);
           ref.invalidate(foodLogsProvider);
           ref.invalidate(waterLogsProvider);
+          ref.invalidate(berkalaProvider);
         },
         child: ListView(
           padding: EdgeInsets.fromLTRB(
@@ -72,6 +76,7 @@ class DashboardPage extends ConsumerWidget {
             // kamu menganggap semuanya sudah tersimpan.
             OfflineBanner(),
             _KartuSorotan(),
+            _BerkalaJatuhTempo(),
             SizedBox(height: AppSpacing.md),
             _KartuCincin(),
             SizedBox(height: AppSpacing.md),
@@ -79,9 +84,9 @@ class DashboardPage extends ConsumerWidget {
             _AchievementsRow(),
             _Judul('Tenggat', aksi: 'Semua', tab: kTabTugas),
             _DaftarTenggat(),
-            _Judul('Uang', aksi: 'Detail', tab: kTabKeuangan),
+            _Judul('Uang', aksi: 'Detail', rute: '/finance'),
             _KartuUang(),
-            _Judul('Lainnya'),
+            _Judul('Pintasan', aksi: 'Semua', tab: kTabLainnya),
             _PintasanLainnya(),
             SizedBox(height: 72),
           ],
@@ -968,11 +973,14 @@ class _Titik extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _Judul extends StatelessWidget {
-  const _Judul(this.teks, {this.aksi, this.tab});
+  const _Judul(this.teks, {this.aksi, this.tab, this.rute});
 
   final String teks;
   final String? aksi;
+
+  /// Tujuan tombol [aksi]: pindah tab, atau buka halaman di [rute].
   final int? tab;
+  final String? rute;
 
   @override
   Widget build(BuildContext context) {
@@ -990,14 +998,61 @@ class _Judul extends StatelessWidget {
               ),
             ),
           ),
-          if (aksi != null && tab != null)
+          if (aksi != null && (tab != null || rute != null))
             TextButton(
-              onPressed: () => _keTab(context, tab!),
+              onPressed: () =>
+                  rute != null ? context.push(rute!) : _keTab(context, tab!),
               style: TextButton.styleFrom(
                 visualDensity: VisualDensity.compact,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               child: Text(aksi!),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rutinitas berkala yang sudah waktunya
+// ---------------------------------------------------------------------------
+
+/// Rutinitas berkala yang jatuh tempo hari ini atau sudah telat, lengkap
+/// dengan tombol "Sudah". Tidak tampil sama sekali kalau tidak ada — Beranda
+/// tidak perlu satu kartu lagi yang bilang "semua aman".
+class _BerkalaJatuhTempo extends ConsumerWidget {
+  const _BerkalaJatuhTempo();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final now = DateTime.now();
+    final perlu = [
+      for (final r in ref.watch(berkalaProvider).value ?? const <RutinitasBerkala>[])
+        if (r.perluDikerjakan(now)) r,
+    ];
+    if (perlu.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, item) in perlu.take(3).indexed) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.sm),
+            KartuBerkala(
+              item: item,
+              onTap: () => context.push('/routine/berkala'),
+              onSelesai: () => tandaiBerkalaSelesai(context, item),
+            ),
+          ],
+          if (perlu.length > 3)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => context.push('/routine/berkala'),
+                child: Text('${perlu.length - 3} lainnya'),
+              ),
             ),
         ],
       ),
@@ -1227,7 +1282,7 @@ class _KartuUang extends ConsumerWidget {
           margin: EdgeInsets.zero,
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () => _keTab(context, kTabKeuangan),
+            onTap: () => context.push('/finance'),
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
@@ -1339,16 +1394,29 @@ class _KartuUang extends ConsumerWidget {
 // Pintasan
 // ---------------------------------------------------------------------------
 
-/// Fitur yang tidak punya tab sendiri, sebagai deretan ubin berwarna yang
-/// bisa digeser — seperti pintasan di aplikasi dompet atau ojek daring.
+/// Pintasan ke fitur yang paling sering dibuka, sebagai deretan ubin berwarna
+/// yang bisa digeser — seperti pintasan di aplikasi dompet atau ojek daring.
+/// Daftar lengkapnya ada di tab Lainnya; "Semua" di judulnya membawa ke sana.
 class _PintasanLainnya extends StatelessWidget {
   const _PintasanLainnya();
 
   static const _isi = [
     MenuItemData(
+      icon: Icons.account_balance_wallet_rounded,
+      label: 'Keuangan',
+      rute: '/finance',
+      warna: AppColors.finance,
+    ),
+    MenuItemData(
       icon: Icons.schedule_rounded,
       label: 'Rutinitas',
       rute: '/routine',
+      warna: AppColors.dashboard,
+    ),
+    MenuItemData(
+      icon: Icons.event_repeat_rounded,
+      label: 'Berkala',
+      rute: '/routine/berkala',
       warna: AppColors.dashboard,
     ),
     MenuItemData(

@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/academic/data/recurring_task_generator.dart';
+import '../../features/routine/domain/berkala.dart';
+import '../notifications/notification_service.dart';
+import '../notifications/notification_settings_controller.dart';
+import '../notifications/reminder_sync.dart';
 import '../offline/pending_writes.dart';
 import '../theme/app_colors.dart';
 
@@ -26,15 +33,15 @@ class _TabData {
 ///
 /// Lima, bukan enam. Material membatasi bar bawah di 3–5 tujuan, dan alasannya
 /// bukan estetika: di bawah itu tiap tujuan kehilangan lebar sentuh dan
-/// labelnya mulai terpotong. Yang dikeluarkan Profil — dia berisi setelan,
-/// rekap, dan ekspor, hal-hal yang dibuka sesekali, bukan tiap hari seperti
-/// empat lainnya. Jalan masuknya pindah ke foto profil di Beranda, tempat
-/// orang memang mencarinya.
+/// labelnya mulai terpotong. Tab terakhir adalah Lainnya: profil di atasnya,
+/// lalu semua fitur yang tidak punya tab sendiri, Keuangan salah satunya.
+/// Satu tempat yang pasti berisi semuanya lebih mudah diingat daripada fitur
+/// yang tersebar di pintasan Beranda dan halaman Profil.
 const int kTabBeranda = 0;
 const int kTabJadwal = 1;
 const int kTabTugas = 2;
 const int kTabWorkout = 3;
-const int kTabKeuangan = 4;
+const int kTabLainnya = 4;
 
 const _tabs = [
   _TabData(
@@ -64,13 +71,13 @@ const _tabs = [
     color: AppColors.workout,
   ),
   _TabData(
-    icon: Icons.account_balance_wallet_outlined,
-    selectedIcon: Icons.account_balance_wallet,
-    // "Keuangan", sama persis dengan judul halaman yang dituju. Label yang
-    // berbeda dari judul tujuannya membuat orang ragu apakah sudah sampai di
-    // tempat yang benar.
-    label: 'Keuangan',
-    color: AppColors.finance,
+    icon: Icons.grid_view_outlined,
+    selectedIcon: Icons.grid_view_rounded,
+    // Profil, Keuangan, dan semua fitur yang tidak punya tab sendiri. Keuangan
+    // dulu menempati tab ini; sekarang dia satu dari banyak isi Lainnya, dan
+    // ringkasannya tetap di Beranda.
+    label: 'Lainnya',
+    color: AppColors.lainnya,
   ),
 ];
 
@@ -91,22 +98,49 @@ class AppShell extends ConsumerStatefulWidget {
 }
 
 class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver {
+  StreamSubscription<NotificationResponse>? _notifikasi;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _kerjaLatar());
+    _notifikasi = responsNotifikasi.listen(_tanggapiNotifikasi);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _kerjaLatar();
+      // App dibuka dari notifikasi yang diketuk saat app tertutup.
+      final pembuka = await ref.read(notificationServiceProvider).responsPembuka();
+      if (pembuka != null) _tanggapiNotifikasi(pembuka);
+    });
   }
 
   @override
   void dispose() {
+    _notifikasi?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _kerjaLatar();
+    if (state != AppLifecycleState.resumed) return;
+    _kerjaLatar();
+    // Izin alarm presisi diberikan di layar setelan sistem, jadi satu-satunya
+    // saat untuk tahu hasilnya adalah ketika kamu kembali ke app.
+    if (ref.read(notificationSettingsProvider).tepatWaktu) {
+      ref.invalidate(reminderSyncProvider);
+    }
+  }
+
+  /// Notifikasi rutinitas berkala yang diketuk membuka halamannya. Tombol
+  /// "Sudah" sudah dicatat di antrean; di sini tinggal dikirim dan dimuat
+  /// ulang.
+  void _tanggapiNotifikasi(NotificationResponse respons) {
+    if (!mounted || PayloadBerkala.decode(respons.payload) == null) return;
+    if (respons.actionId == kAksiSelesai) {
+      _kerjaLatar();
+    } else {
+      context.push('/routine/berkala');
+    }
   }
 
   Future<void> _kerjaLatar() async {
@@ -119,7 +153,11 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
 
   Future<void> _kirimAntrean() async {
     final hasil = await ref.read(pendingWriteQueueProvider).flush();
-    if (hasil.terkirim > 0 && mounted) {
+    if (!mounted) return;
+    // Jumlahnya juga bisa berubah tanpa ada yang terkirim: tombol "Sudah" di
+    // notifikasi menulis ke antrean dari luar app.
+    final terakhir = ref.read(pendingWritesProvider).value?.length ?? 0;
+    if (hasil.terkirim > 0 || hasil.tersisa != terakhir) {
       ref.invalidate(pendingWritesProvider);
     }
   }

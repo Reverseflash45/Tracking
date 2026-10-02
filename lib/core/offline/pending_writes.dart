@@ -64,9 +64,16 @@ class FlushResult {
 }
 
 class PendingWriteQueue {
-  PendingWriteQueue(this._client);
+  PendingWriteQueue(SupabaseClient this._client);
 
-  final SupabaseClient _client;
+  /// Antrean tanpa klien, hanya untuk [antrekan] dan [pending].
+  ///
+  /// Dipakai dari luar app (tombol di notifikasi), yang sengaja tidak
+  /// menyentuh sesi login: dua isolate yang sama-sama me-refresh token bisa
+  /// membuat Supabase menganggap token-nya dipakai ulang dan mencabut sesimu.
+  PendingWriteQueue.lokal() : _client = null;
+
+  final SupabaseClient? _client;
 
   File? _file;
   bool _flushing = false;
@@ -114,21 +121,13 @@ class PendingWriteQueue {
     required String label,
   }) async {
     try {
-      await _client.from(table).insert(payload);
+      await _client!.from(table).insert(payload);
       return true;
     } catch (error) {
       if (!supported) rethrow;
 
-      final items = await pending();
-      items.add(PendingWrite(
-        id: '${DateTime.now().microsecondsSinceEpoch}',
-        table: table,
-        payload: payload,
-        queuedAt: DateTime.now(),
-        label: label,
-      ));
       try {
-        await _tulis(items);
+        await antrekan(table: table, payload: payload, label: label);
       } catch (e) {
         debugPrint('Gagal menulis antrean: $e');
         // Antreannya sendiri gagal ditulis, jadi catatan ini benar-benar
@@ -139,9 +138,29 @@ class PendingWriteQueue {
     }
   }
 
+  /// Masukkan langsung ke antrean tanpa mencoba mengirim dulu.
+  ///
+  /// Dipakai tombol di notifikasi, yang berjalan di luar app dan tidak selalu
+  /// punya sesi login yang siap. Antrean ini dikirim begitu app dibuka lagi.
+  Future<void> antrekan({
+    required String table,
+    required Map<String, dynamic> payload,
+    required String label,
+  }) async {
+    final items = await pending();
+    items.add(PendingWrite(
+      id: '${DateTime.now().microsecondsSinceEpoch}',
+      table: table,
+      payload: payload,
+      queuedAt: DateTime.now(),
+      label: label,
+    ));
+    await _tulis(items);
+  }
+
   /// Kirim ulang seluruh antrean. Aman dipanggil berkali-kali.
   Future<FlushResult> flush() async {
-    if (!supported || _flushing) {
+    if (!supported || _flushing || _client == null) {
       return FlushResult(terkirim: 0, tersisa: (await pending()).length);
     }
 

@@ -69,6 +69,11 @@ class NutritionPage extends ConsumerWidget {
                 tooltip: 'Kembali',
                 onPressed: () => context.pop(),
               ),
+              trailing: HeroIconButton(
+                icon: Icons.photo_camera_outlined,
+                tooltip: 'Foto makanan',
+                onPressed: () => context.push('/workout/nutrition/foto'),
+              ),
               stats: [
                 HeroStatData(
                   icon: Icons.local_fire_department,

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_bg">#1B1D24</color>
+    <color name="widget_teks">#F1F2F6</color>
+    <color name="widget_redup">#A4A8B6</color>
+    <color name="widget_aksen">#8FA4F0</color>
+    <color name="widget_mendesak">#F08A77</color>
+</resources>

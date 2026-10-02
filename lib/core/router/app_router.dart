@@ -28,7 +28,9 @@ import '../../features/finance/presentation/finance_page.dart';
 import '../../features/finance/presentation/recurring_page.dart';
 import '../../features/goals/presentation/goals_page.dart';
 import '../../features/insight/presentation/insight_page.dart';
+import '../../features/lainnya/presentation/lainnya_page.dart';
 import '../../features/live/presentation/live_workout_page.dart';
+import '../../features/routine/presentation/berkala_page.dart';
 import '../../features/routine/presentation/routine_page.dart';
 import '../../features/run/presentation/run_history_page.dart';
 import '../../features/run/presentation/run_tracker_page.dart';
@@ -37,6 +39,8 @@ import '../../features/muscle/presentation/muscle_builder_page.dart';
 import '../../features/muscle/presentation/muscle_detail_page.dart';
 import '../../features/note/presentation/note_editor_page.dart';
 import '../../features/note/presentation/note_page.dart';
+import '../../features/nutrition/domain/food_log.dart' show Meal;
+import '../../features/nutrition/presentation/food_photo_page.dart';
 import '../../features/nutrition/presentation/nutrition_page.dart';
 import '../../features/program/presentation/bulk_program_page.dart';
 import '../../features/progress/presentation/progress_dashboard_page.dart';
@@ -85,64 +89,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'search',
                   builder: (context, state) => const SearchPage(),
-                ),
-                GoRoute(
-                  path: 'goals',
-                  builder: (context, state) => const GoalsPage(),
-                ),
-                GoRoute(
-                  // Sejajar dengan Keuangan, bukan di dalamnya. Wishlist memang
-                  // memakai angka keuangan, tapi yang kamu lakukan di sini
-                  // adalah menginginkan sesuatu — bukan mencatat pengeluaran,
-                  // dan tidak seharusnya lewat halaman itu dulu.
-                  path: 'wishlist',
-                  builder: (context, state) => const WishlistPage(),
-                ),
-                GoRoute(
-                  path: 'watchlist',
-                  builder: (context, state) => const WatchlistPage(),
-                ),
-                GoRoute(
-                  path: 'documents',
-                  builder: (context, state) => const DocumentPage(),
-                ),
-                GoRoute(
-                  // Catatan tinggal di cabang Beranda, bukan di bawah Tugas.
-                  // Isinya justru hal yang bukan tugas — menaruhnya di sana
-                  // berarti mengatakan sebaliknya.
-                  path: 'notes',
-                  builder: (context, state) => const NotePage(),
-                  routes: [
-                    // Rute literal sebelum yang berparameter, supaya 'new'
-                    // tidak ikut tertangkap sebagai ':id'.
-                    GoRoute(
-                      path: 'new',
-                      builder: (context, state) => const NoteEditorPage(),
-                    ),
-                    GoRoute(
-                      path: ':id',
-                      builder: (context, state) =>
-                          NoteEditorPage(noteId: state.pathParameters['id']),
-                    ),
-                  ],
-                ),
-                GoRoute(
-                  // Rutinitas tinggal di cabang Beranda, bukan di bawah Jadwal
-                  // Kuliah. Isinya justru hidupmu di luar kelas; kelas cuma
-                  // ikut ditampilkan supaya harinya terbaca utuh.
-                  path: 'routine',
-                  builder: (context, state) => const RoutinePage(),
-                ),
-                GoRoute(
-                  path: 'vehicle',
-                  builder: (context, state) => const VehiclePage(),
-                  routes: [
-                    GoRoute(
-                      path: ':id',
-                      builder: (context, state) =>
-                          VehicleDetailPage(vehicleId: state.pathParameters['id']!),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -306,6 +252,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'nutrition',
                   builder: (context, state) => const NutritionPage(),
+                  routes: [
+                    GoRoute(
+                      // ?meal=sarapan|makan_siang|... ikut dari form yang
+                      // membukanya, supaya waktu makan yang sudah kamu pilih
+                      // tidak perlu dipilih ulang.
+                      path: 'foto',
+                      builder: (context, state) {
+                        final meal = state.uri.queryParameters['meal'];
+                        return FoodPhotoPage(meal: meal == null ? null : Meal.fromDb(meal));
+                      },
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: 'stats',
@@ -337,9 +295,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ]),
           StatefulShellBranch(routes: [
-            // Keuangan punya cabang sendiri, bukan menumpang di bawah Dashboard.
-            // Sebelumnya satu-satunya jalan masuk adalah menekan kartu di
-            // Dashboard — jalan yang tidak dimiliki bagian utama mana pun.
+            // Tab Lainnya. Rute pertama jadi tujuan saat tab-nya diketuk; sisanya
+            // fitur yang tinggal di cabang ini.
+            //
+            // Path-nya sengaja tetap '/finance', '/notes', dst. — bukan
+            // '/lainnya/finance'. Dibuka dari Beranda (kartu Uang, pintasan),
+            // halaman itu ditumpuk di atas Beranda dan tombol kembali pulang ke
+            // Beranda; dibuka dari tab Lainnya, kembalinya ke Lainnya.
+            GoRoute(
+              path: '/lainnya',
+              builder: (context, state) => const LainnyaPage(),
+            ),
+            // Keuangan dulu punya tab sendiri. Sekarang tinggal di sini, dan
+            // ringkasannya tetap tampil di kartu Uang di Beranda.
             GoRoute(
               path: '/finance',
               builder: (context, state) => const FinancePage(),
@@ -350,13 +318,77 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ),
               ],
             ),
+            GoRoute(
+              path: '/goals',
+              builder: (context, state) => const GoalsPage(),
+            ),
+            GoRoute(
+              // Sejajar dengan Keuangan, bukan di dalamnya. Wishlist memang
+              // memakai angka keuangan, tapi yang kamu lakukan di sini
+              // adalah menginginkan sesuatu — bukan mencatat pengeluaran,
+              // dan tidak seharusnya lewat halaman itu dulu.
+              path: '/wishlist',
+              builder: (context, state) => const WishlistPage(),
+            ),
+            GoRoute(
+              path: '/watchlist',
+              builder: (context, state) => const WatchlistPage(),
+            ),
+            GoRoute(
+              path: '/documents',
+              builder: (context, state) => const DocumentPage(),
+            ),
+            GoRoute(
+              // Catatan tinggal di Lainnya, bukan di bawah Tugas.
+              // Isinya justru hal yang bukan tugas — menaruhnya di sana
+              // berarti mengatakan sebaliknya.
+              path: '/notes',
+              builder: (context, state) => const NotePage(),
+              routes: [
+                // Rute literal sebelum yang berparameter, supaya 'new'
+                // tidak ikut tertangkap sebagai ':id'.
+                GoRoute(
+                  path: 'new',
+                  builder: (context, state) => const NoteEditorPage(),
+                ),
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) =>
+                      NoteEditorPage(noteId: state.pathParameters['id']),
+                ),
+              ],
+            ),
+            GoRoute(
+              // Rutinitas tinggal di Lainnya, bukan di bawah Jadwal
+              // Kuliah. Isinya justru hidupmu di luar kelas; kelas cuma
+              // ikut ditampilkan supaya harinya terbaca utuh.
+              path: '/routine',
+              builder: (context, state) => const RoutinePage(),
+              routes: [
+                GoRoute(
+                  path: 'berkala',
+                  builder: (context, state) => const BerkalaPage(),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/vehicle',
+              builder: (context, state) => const VehiclePage(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) =>
+                      VehicleDetailPage(vehicleId: state.pathParameters['id']!),
+                ),
+              ],
+            ),
           ]),
         ],
       ),
       // Profil di luar rangka tab: dia berisi setelan, rekap, dan ekspor —
-      // dibuka sesekali, bukan tiap hari. Dibuka dari foto profil di Beranda,
-      // dan karena berdiri di atas rangka, bar bawahnya ikut menghilang selama
-      // kamu di dalamnya. Itu memang yang diinginkan: sedang mengatur app,
+      // dibuka sesekali, bukan tiap hari. Dibuka dari kartu profil di tab
+      // Lainnya atau foto profil di Beranda, dan karena berdiri di atas rangka,
+      // bar bawahnya ikut menghilang selama kamu di dalamnya. Itu memang yang diinginkan: sedang mengatur app,
       // bukan sedang memakainya.
       GoRoute(
         path: '/profile',

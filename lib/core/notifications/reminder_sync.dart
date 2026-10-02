@@ -11,6 +11,8 @@ import '../../features/finance/domain/finance_stats.dart';
 import '../../features/vehicle/data/vehicle_repository.dart';
 import '../../features/vehicle/domain/vehicle.dart';
 import '../../features/nutrition/data/nutrition_repository.dart';
+import '../../features/routine/data/berkala_repository.dart';
+import '../../features/routine/domain/berkala.dart';
 import '../../features/nutrition/domain/food_log.dart';
 import '../../features/workout/data/rest_day_repository.dart';
 import '../../features/workout/presentation/workout_providers.dart';
@@ -64,6 +66,7 @@ final reminderSyncProvider = Provider<void>((ref) {
   final documents = ref.watch(documentsProvider).value ?? const <Document>[];
   final vehicles = ref.watch(vehiclesProvider).value ?? const <Vehicle>[];
   final services = ref.watch(vehicleServicesProvider).value ?? const <ServiceLog>[];
+  final berkala = ref.watch(berkalaProvider).value ?? const <RutinitasBerkala>[];
 
   final input = ReminderInput(
     tasks: tasks,
@@ -72,6 +75,7 @@ final reminderSyncProvider = Provider<void>((ref) {
     documents: documents,
     vehicles: vehicles,
     services: services,
+    berkala: berkala,
     streakHari: streak?.current ?? 0,
     bergerakHariIni: activeDates.any((date) => _tanggalSama(date, now)),
     istirahatHariIni: restDays.any((day) => _tanggalSama(day.restOn, now)),
@@ -82,6 +86,7 @@ final reminderSyncProvider = Provider<void>((ref) {
   unawaited(
     service.syncReminders(
       planReminders(data: input, settings: settings, now: now),
+      tepatWaktu: settings.tepatWaktu,
     ),
   );
 });

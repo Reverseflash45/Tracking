@@ -10,6 +10,13 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Alarm presisi, hanya kalau "Tepat waktu" dinyalakan di Profil. Di
+         Android 14+ izin ini mati secara default dan kamu yang menyalakannya
+         lewat layar setelan "Alarm & pengingat". USE_EXACT_ALARM sengaja tidak
+         dipakai: Play Store hanya mengizinkannya untuk app jam alarm dan
+         kalender. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+
     <!-- Latihan Terpandu: kamera menganalisis pose secara on-device. Tidak ada
          gambar yang dikirim ke mana pun, dan tidak ada yang direkam ke disk.
          `required=false` supaya app tetap bisa dipasang di perangkat tanpa
@@ -78,6 +85,19 @@
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"
             android:exported="false" />
+
+        <!-- Widget layar utama "Rutinitas". Isinya dikirim app lewat home_widget
+             setiap kali rutinitasnya berubah. -->
+        <receiver
+            android:name=".RutinitasWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_rutinitas_info"/>
+        </receiver>
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

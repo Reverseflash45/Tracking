@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.tracking"
+    namespace = "com.rafifernandito.tracking"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -23,8 +23,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.tracking"
+        // Bukan lagi com.example.*: Play Store menolak ID itu, dan ID ini tidak
+        // bisa diganti lagi setelah app pertama kali dirilis.
+        applicationId = "com.rafifernandito.tracking"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

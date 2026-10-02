@@ -16,6 +16,7 @@ import '../../features/academic/data/models/task.dart';
 import '../../features/academic/domain/schedule_conflict.dart' show menitDariJam;
 import '../../features/document/domain/document.dart';
 import '../../features/finance/domain/finance_stats.dart';
+import '../../features/routine/domain/berkala.dart';
 import '../../features/vehicle/domain/vehicle.dart';
 
 /// Berapa hari sebelum deadline pengingat dikirim. H-0 = hari-H.
@@ -72,6 +73,18 @@ const List<int> kOffsetServis = [7, 0];
 const int kJumlahAjakanOdometer = 3;
 const int kJarakAjakanOdometerHari = 30;
 
+/// Berapa kali pengingat rutinitas berkala dipasang mulai hari jatuh temponya.
+///
+/// Tidak berhenti di hari-H: absen yang terlewat tetap perlu dikerjakan besok,
+/// dan justru hari-hari sesudahnya yang paling rawan lupa. Begitu kamu
+/// menandainya selesai, seluruh sisa pengingatnya ikut hilang.
+const int kUlangPengingatBerkala = 3;
+
+/// Pengingat sehari sebelumnya hanya untuk yang jaraknya cukup panjang. Untuk
+/// rutinitas dua harian, "besok" berarti sehari setelah kamu mengerjakannya —
+/// itu bukan pengingat, itu gangguan.
+const int kMinJarakUntukHMinus1 = 3;
+
 enum ReminderKind {
   deadline('Deadline tugas', Icons.assignment_late_outlined),
   kelas('Jadwal kuliah', Icons.school_outlined),
@@ -79,7 +92,8 @@ enum ReminderKind {
   tagihan('Tagihan rutin', Icons.receipt_long_outlined),
   dokumen('Masa berlaku dokumen', Icons.badge_outlined),
   kendaraan('Servis & pajak kendaraan', Icons.two_wheeler),
-  catatMakan('Catat makan', Icons.restaurant_outlined);
+  catatMakan('Catat makan', Icons.restaurant_outlined),
+  berkala('Rutinitas berkala', Icons.event_repeat_outlined);
 
   const ReminderKind(this.label, this.icon);
 
@@ -99,8 +113,10 @@ class NotificationSettings {
       ReminderKind.tagihan,
       ReminderKind.dokumen,
       ReminderKind.kendaraan,
+      ReminderKind.berkala,
     },
     this.menitSebelumKelas = kMenitSebelumKelasDefault,
+    this.tepatWaktu = false,
   });
 
   /// Saklar utama. Kalau mati, tidak ada satu pun pengingat yang dipasang.
@@ -120,6 +136,11 @@ class NotificationSettings {
   /// Berapa menit sebelum kelas dimulai pengingatnya berbunyi.
   final int menitSebelumKelas;
 
+  /// Pakai alarm presisi. Mati secara default: Android boleh menggeser
+  /// alarm biasa beberapa menit demi baterai, dan untuk kebanyakan pengingat
+  /// itu tidak masalah. Yang punya batas jam (absen, kelas) yang butuh ini.
+  final bool tepatWaktu;
+
   TimeOfDay get jam => TimeOfDay(hour: menitDalamHari ~/ 60, minute: menitDalamHari % 60);
 
   bool nyala(ReminderKind kind) => aktif && jenisAktif.contains(kind);
@@ -129,12 +150,14 @@ class NotificationSettings {
     int? menitDalamHari,
     Set<ReminderKind>? jenisAktif,
     int? menitSebelumKelas,
+    bool? tepatWaktu,
   }) =>
       NotificationSettings(
         aktif: aktif ?? this.aktif,
         menitDalamHari: menitDalamHari ?? this.menitDalamHari,
         jenisAktif: jenisAktif ?? this.jenisAktif,
         menitSebelumKelas: menitSebelumKelas ?? this.menitSebelumKelas,
+        tepatWaktu: tepatWaktu ?? this.tepatWaktu,
       );
 
   @override
@@ -143,6 +166,7 @@ class NotificationSettings {
       other.aktif == aktif &&
       other.menitDalamHari == menitDalamHari &&
       other.menitSebelumKelas == menitSebelumKelas &&
+      other.tepatWaktu == tepatWaktu &&
       other.jenisAktif.length == jenisAktif.length &&
       other.jenisAktif.containsAll(jenisAktif);
 
@@ -151,6 +175,7 @@ class NotificationSettings {
         aktif,
         menitDalamHari,
         menitSebelumKelas,
+        tepatWaktu,
         Object.hashAllUnordered(jenisAktif),
       );
 }
@@ -163,12 +188,16 @@ class PlannedReminder {
     required this.waktu,
     required this.judul,
     required this.isi,
+    this.payload,
   });
 
   final ReminderKind kind;
   final DateTime waktu;
   final String judul;
   final String isi;
+
+  /// Dibawa notifikasinya; dipakai tombol "Sudah" di rutinitas berkala.
+  final String? payload;
 }
 
 /// Potret keadaan yang dibutuhkan untuk menyusun rencana.
@@ -182,6 +211,7 @@ class ReminderInput {
     this.documents = const [],
     this.vehicles = const [],
     this.services = const [],
+    this.berkala = const [],
     this.streakHari = 0,
     this.bergerakHariIni = false,
     this.istirahatHariIni = false,
@@ -197,6 +227,8 @@ class ReminderInput {
 
   /// Seluruh catatan servis, belum dipilah per kendaraan.
   final List<ServiceLog> services;
+
+  final List<RutinitasBerkala> berkala;
 
   /// Panjang streak berjalan. 0 berarti tidak ada yang bisa hilang malam ini.
   final int streakHari;
@@ -261,6 +293,7 @@ List<PlannedReminder> planReminders({
     if (settings.nyala(ReminderKind.dokumen)) ..._dokumenReminders(data, settings, now),
     if (settings.nyala(ReminderKind.kendaraan)) ..._kendaraanReminders(data, settings, now),
     if (settings.nyala(ReminderKind.catatMakan)) ..._catatMakanReminders(data, now),
+    if (settings.nyala(ReminderKind.berkala)) ..._berkalaReminders(data, settings, now),
   ]..sort((a, b) => a.waktu.compareTo(b.waktu));
 
   return hasil.length > kMaxReminders ? hasil.sublist(0, kMaxReminders) : hasil;
@@ -577,5 +610,72 @@ List<PlannedReminder> _catatMakanReminders(ReminderInput data, DateTime now) {
       isi: 'Sebelum lupa apa saja yang masuk hari ini.',
     ));
   }
+  return hasil;
+}
+
+/// Pengingat rutinitas berkala: H-1 untuk jarak yang cukup panjang, lalu
+/// hari-H dan beberapa hari sesudahnya selama belum ditandai selesai.
+///
+/// Yang sudah telat tidak diberi jadwal di masa lalu — mulainya dari
+/// kemunculan jam pengingat berikutnya yang masih di depan.
+List<PlannedReminder> _berkalaReminders(
+  ReminderInput data,
+  NotificationSettings settings,
+  DateTime now,
+) {
+  final hasil = <PlannedReminder>[];
+  final hariIni = _hari(now);
+
+  for (final item in data.berkala) {
+    final jam = item.remindAt == null
+        ? settings.menitDalamHari
+        : (menitDariJam(item.remindAt!) ?? settings.menitDalamHari);
+    final tempo = item.jatuhTempo;
+    final payload = PayloadBerkala(
+      routineId: item.id,
+      userId: item.userId,
+      title: item.title,
+      intervalDays: item.intervalDays,
+      menitPengingat: jam,
+    ).encode();
+
+    if (item.intervalDays >= kMinJarakUntukHMinus1) {
+      final waktu = _padaJam(tempo.subtract(const Duration(days: 1)), jam);
+      if (waktu.isAfter(now)) {
+        hasil.add(PlannedReminder(
+          payload: payload,
+          kind: ReminderKind.berkala,
+          waktu: waktu,
+          judul: 'Besok: ${item.title}',
+          isi: 'Jadwal tiap ${item.intervalDays} hari. Siapkan dari sekarang.',
+        ));
+      }
+    }
+
+    // Mulai dari hari jatuh tempo, atau hari ini kalau sudah lewat.
+    var hari = tempo.isBefore(hariIni) ? hariIni : tempo;
+    var terpasang = 0;
+    // Batas putaran menjaga dari loop tanpa akhir; satu hari ekstra cukup
+    // untuk menutup jam hari ini yang sudah lewat.
+    for (var i = 0; i <= kUlangPengingatBerkala && terpasang < kUlangPengingatBerkala; i++) {
+      final waktu = _padaJam(hari, jam);
+      hari = hari.add(const Duration(days: 1));
+      if (!waktu.isAfter(now)) continue;
+
+      final telat = _hari(waktu).difference(tempo).inDays;
+      hasil.add(PlannedReminder(
+        payload: payload,
+        kind: ReminderKind.berkala,
+        waktu: waktu,
+        judul: telat == 0 ? '${item.title} hari ini' : '${item.title} telat $telat hari',
+        isi: telat == 0
+            ? 'Sudah ${item.intervalDays} hari sejak terakhir. Tandai selesai '
+                'di app supaya hitungannya mulai lagi.'
+            : 'Belum ditandai selesai. Kerjakan sekarang sebelum makin lama.',
+      ));
+      terpasang++;
+    }
+  }
+
   return hasil;
 }

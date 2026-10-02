@@ -47,5 +47,9 @@ app.*.map.json
 # Environment secrets
 .env
 
+# Connection string database (berisi password) untuk menjalankan migrasi lewat
+# psql. Sengaja bukan di .env: .env ikut terbundel ke APK sebagai aset.
+supabase/.db-url
+
 # Isi awal yang berisi data pribadi (user id, jadwal harian)
 supabase/seed/
