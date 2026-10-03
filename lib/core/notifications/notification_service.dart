@@ -45,6 +45,8 @@ String _channelDescription(ReminderKind kind) => switch (kind) {
       ReminderKind.catatMakan => 'Pengingat mencatat makanan di penghujung hari',
       ReminderKind.berkala =>
         'Pengingat rutinitas tiap beberapa hari, diulang sampai ditandai selesai',
+      ReminderKind.rekapMingguan =>
+        'Ringkasan latihan, tidur, dan pengeluaran tiap Minggu malam',
     };
 
 /// Tag Android untuk notifikasi milik satu rutinitas berkala. Dipakai mencari
@@ -52,13 +54,16 @@ String _channelDescription(ReminderKind kind) => switch (kind) {
 /// mengembalikan payload untuk itu, hanya tag.
 String _tagBerkala(String routineId) => 'berkala:$routineId';
 
-NotificationDetails _detailsFor(ReminderKind kind, {String? tag}) {
+NotificationDetails _detailsFor(ReminderKind kind, {String? tag, String? isi}) {
   final berkala = kind == ReminderKind.berkala;
   return NotificationDetails(
     android: AndroidNotificationDetails(
       _channelId(kind),
       kind.label,
       channelDescription: _channelDescription(kind),
+      // Isi yang panjang (rekap mingguan, deadline dengan nama matkul) tetap
+      // terbaca utuh saat notifikasinya dibentangkan.
+      styleInformation: isi == null ? null : BigTextStyleInformation(isi),
       importance: Importance.high,
       priority: Priority.high,
       tag: tag,
@@ -284,6 +289,7 @@ class NotificationService {
         notificationDetails: _detailsFor(
           reminder.kind,
           tag: berkala == null ? null : _tagBerkala(berkala.routineId),
+          isi: reminder.isi,
         ),
         androidScheduleMode: mode,
       );

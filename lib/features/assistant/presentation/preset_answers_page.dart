@@ -282,7 +282,7 @@ class _CatatanBawah extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
             ),
             subtitle: const Text(
-              'Ketik bebas — butuh setup & berbayar',
+              'Ketik bebas, dijawab AI',
               style: TextStyle(fontSize: 11.5),
             ),
             trailing: const Icon(Icons.chevron_right, size: 20),

@@ -1,27 +1,17 @@
-// Edge Function "tanya" — proksi ke Claude API.
+// Edge Function "tanya" — menjawab pertanyaan dari ringkasan data pengguna.
 //
 // KENAPA HARUS LEWAT SINI, TIDAK LANGSUNG DARI APP:
 // API key yang ditaruh di kode Flutter ikut terbundel ke dalam APK. APK bisa
 // dibongkar siapa pun dalam hitungan menit, dan key-nya bisa dipakai orang lain
-// atas tagihanmu. Key hanya hidup di sini, sebagai secret Supabase, dan tidak
-// pernah dikirim ke perangkat.
+// atas kuota atau tagihanmu. Key hanya hidup di sini, sebagai secret Supabase.
 //
-// App mengirim pertanyaan plus ringkasan datanya sendiri; fungsi ini tidak
-// membaca database sama sekali.
+// Penyedianya Gemini atau Claude; lihat ../_shared/ai.ts. App mengirim
+// pertanyaan plus RINGKASAN datanya sendiri (total dan rata-rata, bukan
+// catatan mentah); fungsi ini tidak membaca database sama sekali.
 
-import Anthropic from "npm:@anthropic-ai/sdk";
+import { json, mintaAi, periksaAwal, responsGalat } from "../_shared/ai.ts";
 
-const anthropic = new Anthropic({
-  apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
-});
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-/** Batas panjang supaya satu permintaan tidak bisa membengkakkan tagihan. */
+/** Batas panjang supaya satu permintaan tidak bisa membengkakkan kuota. */
 const MAX_QUESTION_CHARS = 500;
 const MAX_CONTEXT_CHARS = 12000;
 
@@ -45,27 +35,8 @@ Jawab HANYA berdasarkan data yang diberikan di bawah. Aturan:
 `.trim();
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  if (req.method !== "POST") {
-    return json({ error: "Gunakan POST." }, 405);
-  }
-
-  // Supabase memverifikasi JWT sebelum fungsi ini jalan (verify_jwt aktif secara
-  // bawaan). Pemeriksaan di sini hanya jaring pengaman kalau setelan itu
-  // sengaja dimatikan — tanpa ini, endpoint-nya jadi terbuka untuk umum.
-  if (!req.headers.get("Authorization")) {
-    return json({ error: "Butuh login." }, 401);
-  }
-
-  if (!Deno.env.get("ANTHROPIC_API_KEY")) {
-    return json(
-      { error: "ANTHROPIC_API_KEY belum diatur di secret Supabase." },
-      500,
-    );
-  }
+  const awal = periksaAwal(req);
+  if (awal) return awal;
 
   let question: string;
   let context: string;
@@ -85,64 +56,12 @@ Deno.serve(async (req: Request) => {
     context = context.slice(0, MAX_CONTEXT_CHARS);
   }
 
-  try {
-    const message = await anthropic.beta.messages.create({
-      model: "claude-opus-5-5",
-      // Di Opus 5.5 thinking selalu menyala, dan max_tokens membatasi
-      // thinking DITAMBAH teks jawaban. Angka ini longgar supaya jawabannya
-      // tidak terpotong di tengah; yang ditagih tetap hanya yang terpakai.
-      max_tokens: 8192,
-      // Pertanyaan sederhana atas ringkasan yang sudah dihitung app tidak butuh
-      // penalaran dalam. Ditulis eksplisit karena bawaan Opus 5.5 "medium".
-      // Naikkan ke "medium" kalau jawabannya terasa dangkal.
-      output_config: { effort: "low" },
-      // Kalau classifier keamanan menolak, permintaan yang sama diulang di
-      // model cadangan pilihan Anthropic, bukan langsung gagal.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `Data saya:\n\n${context}\n\n---\n\nPertanyaan: ${question}`,
-        },
-      ],
-    });
-
-    // Opus 5.5 bisa menolak permintaan lewat classifier keamanan; itu datang
-    // sebagai HTTP 200 dengan stop_reason "refusal", bukan error. Membaca
-    // content[0] tanpa memeriksa ini akan meledak.
-    if (message.stop_reason === "refusal") {
-      return json(
-        { error: "Pertanyaan itu tidak bisa saya jawab." },
-        200,
-      );
-    }
-
-    const answer = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => (block as { text: string }).text)
-      .join("\n")
-      .trim();
-
-    return json({ answer: answer || "Tidak ada jawaban yang dihasilkan." });
-  } catch (error) {
-    console.error("Panggilan Claude gagal:", error);
-
-    const status = (error as { status?: number })?.status;
-    if (status === 401) {
-      return json({ error: "API key ditolak. Cek lagi secret-nya." }, 500);
-    }
-    if (status === 429) {
-      return json({ error: "Terlalu banyak permintaan. Coba lagi sebentar." }, 429);
-    }
-    return json({ error: "Gagal menghubungi layanan AI." }, 502);
-  }
-});
-
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  const hasil = await mintaAi({
+    system: SYSTEM_PROMPT,
+    teks: `Data saya:\n\n${context}\n\n---\n\nPertanyaan: ${question}`,
+    label: "Pertanyaan itu",
   });
-}
+  if (!hasil.ok) return responsGalat(hasil);
+
+  return json({ answer: hasil.teks || "Tidak ada jawaban yang dihasilkan." });
+});

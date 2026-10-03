@@ -3,17 +3,22 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/academic/data/models/class_schedule.dart';
+import '../../features/academic/data/models/task.dart';
 import '../../features/academic/presentation/academic_providers.dart';
 import '../../features/document/data/document_repository.dart';
 import '../../features/document/domain/document.dart';
 import '../../features/finance/data/finance_repository.dart';
 import '../../features/finance/domain/finance_stats.dart';
+import '../../features/finance/domain/transaction.dart';
 import '../../features/vehicle/data/vehicle_repository.dart';
 import '../../features/vehicle/domain/vehicle.dart';
 import '../../features/nutrition/data/nutrition_repository.dart';
 import '../../features/routine/data/berkala_repository.dart';
+import '../../features/run/data/run_repository.dart';
+import '../../features/sleep/data/sleep_repository.dart';
 import '../../features/routine/domain/berkala.dart';
 import '../../features/nutrition/domain/food_log.dart';
+import '../../features/workout/data/models/workout_session.dart';
 import '../../features/workout/data/rest_day_repository.dart';
 import '../../features/workout/presentation/workout_providers.dart';
 import 'notification_service.dart';
@@ -69,6 +74,15 @@ final reminderSyncProvider = Provider<void>((ref) {
   final berkala = ref.watch(berkalaProvider).value ?? const <RutinitasBerkala>[];
 
   final input = ReminderInput(
+    mingguIni: ringkasMinggu(
+      now: now,
+      sessions: ref.watch(workoutSessionsProvider).value ?? const [],
+      runs: ref.watch(runsProvider).value ?? const [],
+      sleeps: ref.watch(sleepLogsProvider).value ?? const [],
+      transactions: ref.watch(transactionsProvider).value ?? const [],
+      tasks: tasks,
+      berkala: berkala,
+    ),
     tasks: tasks,
     schedules: schedules,
     recurring: recurring,
@@ -90,3 +104,33 @@ final reminderSyncProvider = Provider<void>((ref) {
     ),
   );
 });
+
+/// Angka minggu berjalan (Senin sampai [now]) untuk notifikasi rekap.
+RingkasanMinggu ringkasMinggu({
+  required DateTime now,
+  List<WorkoutSession> sessions = const [],
+  List<RunLog> runs = const [],
+  List<SleepLog> sleeps = const [],
+  List<Transaction> transactions = const [],
+  List<AcademicTask> tasks = const [],
+  List<RutinitasBerkala> berkala = const [],
+}) {
+  final senin = awalMinggu(now);
+  bool mingguIni(DateTime t) => !t.isBefore(senin) && !t.isAfter(now);
+
+  final tidur = sleeps.where((s) => mingguIni(s.loggedOn)).toList();
+  final hariIni = DateTime(now.year, now.month, now.day);
+
+  return RingkasanMinggu(
+    sesiLatihan: sessions.where((s) => mingguIni(s.sessionDate)).length,
+    lari: runs.where((r) => mingguIni(r.startedAt)).length,
+    rataTidurJam: tidur.isEmpty
+        ? null
+        : tidur.fold<double>(0, (n, s) => n + s.hours) / tidur.length,
+    pengeluaran: transactions
+        .where((t) => t.kind == TxKind.pengeluaran && mingguIni(t.occurredOn))
+        .fold<double>(0, (n, t) => n + t.amount),
+    tugasSelesai: tasks.where((t) => t.completedAt != null && mingguIni(t.completedAt!)).length,
+    berkalaTerlewat: berkala.where((b) => b.jatuhTempo.isBefore(hariIni)).length,
+  );
+}

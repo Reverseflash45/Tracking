@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/ocr/text_scanner.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
@@ -9,7 +10,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_header.dart';
 import '../../../core/widgets/save_bar.dart';
+import '../../nutrition/domain/food_photo.dart' show jenisGambar;
 import '../data/academic_repository.dart';
+import '../data/krs_ai_repository.dart';
 import '../data/models/class_schedule.dart';
 import '../domain/krs_parser.dart';
 import 'academic_providers.dart';
@@ -35,27 +38,109 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
   bool _saving = false;
   String? _error;
 
+  /// Kirim foto ke AI dulu. Dimatikan kalau tidak mau foto KRS (berisi nama
+  /// dan NIM) keluar dari HP; pembacaannya lalu sepenuhnya on-device.
+  bool _pakaiAi = true;
+
+  /// Tahap yang sedang berjalan, untuk label tombol.
+  String _tahap = 'Membaca...';
+
+  /// Hasil terakhir dibaca AI (true) atau penebak on-device (false).
+  bool? _olehAi;
+
+  /// Catatan dari AI, atau alasan kenapa jatuh ke pembaca on-device.
+  String? _catatan;
+
   Future<void> _scan({required bool fromCamera}) async {
     setState(() {
       _scanning = true;
+      _tahap = 'Membaca...';
       _error = null;
+      _catatan = null;
     });
 
-    final hasil = await scanTextFromPhoto(fromCamera: fromCamera);
+    final XFile? foto;
+    try {
+      foto = await ImagePicker().pickImage(
+        source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+        // Lebih besar dari foto makanan: teks tabel KRS kecil, dan AI maupun
+        // OCR butuh hurufnya tetap tajam. Hasilnya masih di bawah
+        // [kMaksBytesKrs] untuk foto JPEG biasa.
+        maxWidth: 2000,
+        maxHeight: 2000,
+        imageQuality: 85,
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _scanning = false;
+          _error = 'Gagal membuka foto: $e';
+        });
+      }
+      return;
+    }
+    if (!mounted) return;
+    if (foto == null) {
+      setState(() => _scanning = false);
+      return;
+    }
+
+    String? alasanCadangan;
+    if (_pakaiAi) {
+      setState(() => _tahap = 'Membaca dengan AI...');
+      try {
+        final bytes = await foto.readAsBytes();
+        final jenis = jenisGambar(bytes);
+        if (jenis == null) {
+          throw const BacaKrsException('Format gambarnya tidak didukung AI.');
+        }
+        final hasil = await ref.read(krsAiRepositoryProvider).baca(bytes, mediaType: jenis);
+        if (!mounted) return;
+        if (hasil.entries.isNotEmpty) {
+          _tampilkan(hasil.entries, olehAi: true, catatan: hasil.catatan, rawText: null);
+          return;
+        }
+        alasanCadangan = hasil.catatan.isNotEmpty ? hasil.catatan : 'AI tidak menemukan jadwal.';
+      } on BacaKrsException catch (e) {
+        alasanCadangan = e.message;
+      } catch (_) {
+        // Biasanya tidak ada internet. Pembaca on-device tetap jalan.
+        alasanCadangan = 'AI tidak bisa dihubungi.';
+      }
+      if (!mounted) return;
+    }
+
+    setState(() => _tahap = 'Membaca di HP...');
+    final hasil = await scanTextFromFile(foto.path);
     if (!mounted) return;
 
     if (hasil.gagal) {
       setState(() {
         _scanning = false;
-        _error = hasil.error == 'Batal' ? null : hasil.error;
+        _error = [?alasanCadangan, hasil.error!].join(' ');
       });
       return;
     }
 
-    final entries = parseKrs(hasil.text);
+    _tampilkan(
+      parseKrs(hasil.text),
+      olehAi: false,
+      catatan: alasanCadangan == null ? null : '$alasanCadangan Dibaca di HP sebagai gantinya.',
+      rawText: hasil.text,
+    );
+  }
+
+  void _tampilkan(
+    List<KrsEntry> entries, {
+    required bool olehAi,
+    required String? catatan,
+    required String? rawText,
+  }) {
     setState(() {
       _scanning = false;
-      _rawText = hasil.text;
+      _olehAi = olehAi;
+      _catatan = catatan == null || catatan.isEmpty ? null : catatan;
+      _rawText = rawText;
       _entries = entries;
       _selected
         ..clear()
@@ -94,6 +179,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
           userId: userId,
           name: entry.courseName,
           lecturer: entry.lecturer,
+          sks: entry.sks,
           // Kode mata kuliah menempel di mata kuliahnya — sama di kelas mana
           // pun. Pembaca KRS sebenarnya sudah menemukannya sejak dulu; dia
           // harus menemukannya justru untuk bisa membuangnya dari nama.
@@ -176,10 +262,15 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
-                              'Format KRS berbeda tiap kampus, jadi ini tebakan — '
-                              'bukan pembacaan sempurna. Baris yang hari dan '
-                              'jamnya tidak jelas sengaja dilewati daripada '
-                              'dikarang. Periksa dulu sebelum menyimpan.',
+                              _pakaiAi
+                                  ? 'Fotonya dibaca AI (Gemini dari Google) lewat '
+                                      'server-mu. Kalau offline atau kuotanya habis, '
+                                      'dibaca di HP sebagai gantinya. Periksa dulu '
+                                      'sebelum menyimpan.'
+                                  : 'Dibaca di HP saja, foto tidak dikirim ke mana '
+                                      'pun. Format KRS berbeda tiap kampus, jadi ini '
+                                      'tebakan: baris yang hari dan jamnya tidak '
+                                      'jelas dilewati. Periksa dulu sebelum menyimpan.',
                               style: TextStyle(
                                 fontSize: 12,
                                 height: 1.45,
@@ -191,7 +282,18 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _pakaiAi,
+                    onChanged: _scanning ? null : (v) => setState(() => _pakaiAi = v),
+                    activeThumbColor: _color,
+                    title: const Text('Baca dengan AI', style: TextStyle(fontSize: 13)),
+                    subtitle: Text(
+                      'Lebih tepat untuk tabel yang berantakan',
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
                       Expanded(
@@ -212,7 +314,7 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                                   ),
                                 )
                               : const Icon(Icons.photo_camera_outlined, size: 18),
-                          label: Text(_scanning ? 'Membaca...' : 'Foto KRS'),
+                          label: Text(_scanning ? _tahap : 'Foto KRS'),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -260,12 +362,18 @@ class _KrsImportPageState extends ConsumerState<KrsImportPage> {
                   ),
                 ],
 
+                if (_catatan != null) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  _KartuCatatan(teks: _catatan!),
+                ],
+
                 if (_entries.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.lg),
                   Row(
                     children: [
                       Text(
-                        '${_entries.length} baris terbaca',
+                        '${_entries.length} baris terbaca'
+                        '${_olehAi == true ? ' oleh AI' : ''}',
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                       ),
                       const Spacer(),
@@ -390,11 +498,22 @@ class _EntryTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${weekDayName(entry.dayOfWeek)} · '
-                      '${entry.startTime}-${entry.endTime}'
-                      '${entry.room != null ? ' · ${entry.room}' : ''}',
+                      [
+                        weekDayName(entry.dayOfWeek),
+                        '${entry.startTime}-${entry.endTime}',
+                        ?entry.room,
+                        ?entry.classCode,
+                        if (entry.sks != null) '${entry.sks} SKS',
+                      ].join(' · '),
                       style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
                     ),
+                    if (entry.lecturer != null)
+                      Text(
+                        entry.lecturer!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                      ),
                   ],
                 ),
               ),
@@ -405,6 +524,37 @@ class _EntryTile extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Catatan dari AI, atau alasan pembacaan jatuh ke on-device.
+class _KartuCatatan extends StatelessWidget {
+  const _KartuCatatan({required this.teks});
+
+  final String teks;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      color: colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.auto_awesome_outlined, size: 18, color: colorScheme.onSurfaceVariant),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                teks,
+                style: TextStyle(fontSize: 12, height: 1.4, color: colorScheme.onSurfaceVariant),
+              ),
+            ),
+          ],
         ),
       ),
     );

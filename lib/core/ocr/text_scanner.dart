@@ -41,10 +41,9 @@ Future<ScanResult> scanTextFromPhoto({bool fromCamera = true}) async {
     );
   }
 
-  TextRecognizer? recognizer;
+  final XFile? photo;
   try {
-    final picker = ImagePicker();
-    final photo = await picker.pickImage(
+    photo = await ImagePicker().pickImage(
       source: fromCamera ? ImageSource.camera : ImageSource.gallery,
       // Struk itu tinggi dan sempit; menurunkan resolusi terlalu jauh membuat
       // angka kecil tidak terbaca. Batas ini kompromi antara ketelitian dan
@@ -52,14 +51,34 @@ Future<ScanResult> scanTextFromPhoto({bool fromCamera = true}) async {
       maxWidth: 1600,
       imageQuality: 90,
     );
+  } catch (e) {
+    return ScanResult(text: '', error: 'Gagal membuka foto: $e');
+  }
 
-    if (photo == null) {
-      return const ScanResult(text: '', error: 'Batal');
-    }
+  if (photo == null) {
+    return const ScanResult(text: '', error: 'Batal');
+  }
+  return scanTextFromFile(photo.path);
+}
 
+/// Baca teks dari foto yang sudah ada di perangkat.
+///
+/// Dipisah dari [scanTextFromPhoto] supaya pemanggil yang memilih fotonya
+/// sendiri — pembaca KRS yang mencoba AI dulu — bisa memakai foto yang sama
+/// sebagai cadangan tanpa meminta user memotret ulang.
+Future<ScanResult> scanTextFromFile(String path) async {
+  if (!textScanSupported) {
+    return const ScanResult(
+      text: '',
+      error: 'Pembacaan foto hanya tersedia di HP.',
+    );
+  }
+
+  TextRecognizer? recognizer;
+  try {
     recognizer = TextRecognizer(script: TextRecognitionScript.latin);
     final recognized = await recognizer.processImage(
-      InputImage.fromFilePath(photo.path),
+      InputImage.fromFilePath(path),
     );
 
     if (recognized.text.trim().isEmpty) {

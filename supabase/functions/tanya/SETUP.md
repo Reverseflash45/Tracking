@@ -1,98 +1,44 @@
-# Mengaktifkan "Tanya Data"
+# Fitur "Tanya data" (ketik bebas)
 
-Kodenya sudah lengkap, tapi fiturnya **belum jalan** sampai kamu menyelesaikan
-empat langkah di bawah. Semuanya harus kamu yang kerjakan — dua di antaranya
-butuh akunmu sendiri, dan satu butuh kartu kredit.
-
-Perkiraan waktu: 15–20 menit.
+Status sekarang (Oktober 2026): sudah di-deploy dan memakai **Gemini** (paket
+gratis Google AI Studio), lewat jalur AI bersama di
+[../_shared/ai.ts](../_shared/ai.ts) — sama dengan foto makanan dan baca KRS.
+Pertanyaan siap pakai di halaman Tanya tidak memakai fungsi ini sama sekali;
+jawabannya dihitung di HP.
 
 ---
 
-## Kenapa harus ada Edge Function
+## Kenapa harus lewat Edge Function
 
 API key yang ditaruh langsung di kode Flutter **ikut terbundel ke dalam APK**.
 APK itu arsip biasa; siapa pun yang mengunduhnya bisa membongkar dan membaca
-isinya dalam hitungan menit. Key yang bocor bisa dipakai orang lain, dan
-tagihannya atas namamu.
+isinya dalam hitungan menit, lalu menghabiskan kuota atau tagihanmu.
 
 Edge Function memindahkan key ke server Supabase. App cuma mengirim
 pertanyaan; key-nya tidak pernah menyentuh HP siapa pun.
 
 ```
-HP kamu  ──(pertanyaan + ringkasan data)──►  Edge Function  ──(+ API key)──►  Claude
+HP kamu  ──(pertanyaan + ringkasan data)──►  Edge Function  ──(+ API key)──►  Gemini / Claude
          ◄──────────(jawaban)──────────────                ◄────────────────
 ```
 
 ---
 
-## Langkah 1 — Dapatkan API key Anthropic
+## Penyedia AI
 
-1. Buka **https://console.anthropic.com**, daftar atau masuk.
-2. Masuk ke **Billing**, isi saldo. **Ini berbayar** — tidak ada tier gratis
-   untuk API. Isi 5 dolar dulu untuk mencoba; lihat bagian "Soal biaya" di
-   bawah untuk perkiraan berapa pertanyaan yang kamu dapat.
-3. Masuk ke **API Keys** → **Create Key**. Salin sekarang juga —
-   **key-nya cuma ditampilkan sekali**.
-
-Key-nya berbentuk `sk-ant-api03-...`.
-
-> ⚠️ Jangan tempel key ini ke chat, ke commit, ke `.env`, atau ke mana pun di
-> dalam folder proyek. Satu-satunya tempatnya di Langkah 3.
-
----
-
-## Langkah 2 — Pasang Supabase CLI
-
-**Windows (PowerShell):**
+Fungsi ini memakai Gemini kalau secret `GEMINI_API_KEY` ada, dan Claude kalau
+hanya `ANTHROPIC_API_KEY` yang diatur. Cara memasang key Gemini ada di
+[../foto-makanan/SETUP.md](../foto-makanan/SETUP.md); deploy ulang dengan:
 
 ```powershell
-winget install Supabase.CLI
+supabase functions deploy tanya --use-api
 ```
 
-Cek berhasil:
-
-```powershell
-supabase --version
-```
-
-Lalu masuk dan hubungkan ke proyekmu:
-
-```powershell
-supabase login
-supabase link --project-ref <PROJECT_REF>
-```
-
-`<PROJECT_REF>` itu potongan acak di URL dashboard Supabase-mu:
-`https://supabase.com/dashboard/project/`**`abcdefghijklmnop`** ← itu dia.
-
----
-
-## Langkah 3 — Simpan API key sebagai secret
-
-Jalankan dari folder proyek:
-
-```powershell
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-api03-kunci-aslimu-di-sini
-```
-
-Cek sudah masuk (nilainya tidak akan ditampilkan — memang begitu seharusnya):
-
-```powershell
-supabase secrets list
-```
-
-Bisa juga lewat dashboard: **Project Settings → Edge Functions → Secrets**.
-
----
-
-## Langkah 4 — Deploy fungsinya
-
-```powershell
-supabase functions deploy tanya
-```
-
-Kalau sukses, Supabase menampilkan URL fungsinya. Selesai — buka app,
-**Profil → Tanya Data**, lalu coba salah satu pertanyaan contoh.
+Untuk memakai Claude (berbayar): hapus secret Gemini
+(`supabase secrets unset GEMINI_API_KEY`), atur `ANTHROPIC_API_KEY` dari
+console.anthropic.com → API Keys, lalu deploy ulang. Dengan `claude-opus-5-5`
+pada effort `low`, kasarnya Rp 250–450 per pertanyaan. Langganan Claude Pro
+tidak bisa dipakai untuk API. Pasang spend limit di console (Billing → Limits).
 
 ---
 
@@ -100,61 +46,27 @@ Kalau sukses, Supabase menampilkan URL fungsinya. Selesai — buka app,
 
 | Yang muncul di app | Artinya |
 |---|---|
-| `Fungsi "tanya" belum ada di Supabase` | Langkah 4 belum jalan, atau salah project ref |
-| `ANTHROPIC_API_KEY belum diatur` | Langkah 3 belum jalan. Deploy ulang setelah menyimpan secret |
-| `API key ditolak` | Key salah salin, atau sudah kamu hapus di console |
-| `Terlalu banyak permintaan` | Kena rate limit. Tunggu semenit |
+| `Fungsi "tanya" belum ada di Supabase` | Belum di-deploy, atau salah project ref |
+| `Belum ada API key AI` | Secret belum diatur. Deploy ulang setelah menyimpannya |
+| `API key Gemini ditolak` | Key salah salin, atau sudah dihapus di AI Studio |
+| `Kuota gratis Gemini hari ini habis` | Coba lagi besok — tidak ada tagihan |
+| `Layanan AI sedang penuh` | Kedua model Gemini sedang sibuk. Coba sebentar lagi |
 | `Butuh login` | Sesi app-mu kedaluwarsa. Logout lalu login lagi |
 
-Lihat log lengkap kalau masih bingung:
-
-```powershell
-supabase functions logs tanya
-```
+Log lengkap: dashboard Supabase → Edge Functions → tanya → Logs.
 
 ---
 
-## Soal biaya
-
-Tiap pertanyaan mengirim ringkasan 30 hari terakhir (bukan data mentah — itu
-sengaja, supaya murah) plus jawabannya.
-
-Dengan `claude-opus-5-5` seperti di kode sekarang, kasarnya **Rp 250–450 per
-pertanyaan**. Saldo 5 dolar berarti sekitar **180–300 pertanyaan**. Angka pasnya
-tergantung seberapa banyak datamu — makin banyak yang tercatat, makin panjang
-ringkasannya, makin mahal.
-
-Kalau itu terlalu mahal untuk dipakai santai, ganti satu baris di
-[index.ts](index.ts):
-
-```ts
-model: "claude-sonnet-5-5",
-```
-
-Sonnet 5.5 kira-kira **separuh harganya** — sekitar Rp 120–220 per pertanyaan.
-Untuk tanya-jawab sederhana atas ringkasan yang angkanya sudah dihitung app,
-selisih kualitasnya kecil. Naikkan lagi ke Opus kalau jawabannya terasa dangkal.
-
-Jangan ganti ke `claude-haiku-4-5` tanpa mengubah kode lainnya: Haiku 4.5 tidak
-menerima `output_config.effort` maupun `fallbacks`, jadi permintaannya akan
-ditolak.
-
-Pengaman yang sudah terpasang di kode:
+## Pengaman yang sudah terpasang
 
 - Pertanyaan dibatasi 500 karakter, ringkasan 12.000 karakter.
-- `effort` disetel `low` — pertanyaan sederhana atas ringkasan yang sudah
-  dihitung app tidak butuh penalaran dalam.
+- Yang dikirim RINGKASAN 30 hari (total, rata-rata, lima tugas terdekat),
+  bukan data mentah — catatan, dokumen, dan transaksi satu per satu tidak ikut.
 
-Pasang **spend limit** di console Anthropic (Billing → Limits) supaya ada batas
-keras. Lakukan ini sebelum lupa.
+## Soal privasi
 
----
-
-## Yang perlu kamu tahu soal privasinya
-
-Ringkasan datamu — tugas, latihan, lari, makanan, keuangan — dikirim ke server
-Anthropic tiap kali kamu bertanya. Yang dikirim ringkasan, bukan data mentah,
-dan tidak ada nama atau alamat. Tapi tetap saja itu keluar dari HP-mu.
-
-Kalau kamu tidak nyaman dengan itu, jangan aktifkan fitur ini — sisa app-nya
-jalan normal tanpa fungsi ini.
+Di paket gratis, Google boleh memakai yang dikirim untuk memperbaiki
+produknya. Untuk ringkasan angka seperti ini risikonya kecil, tapi tetap saja
+datanya keluar dari HP-mu. Halaman Tanya menyebutkannya sebelum kamu bertanya.
+Kalau tidak nyaman, pakai pertanyaan siap pakai saja — itu tidak mengirim apa
+pun.

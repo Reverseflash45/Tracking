@@ -85,6 +85,67 @@ const int kUlangPengingatBerkala = 3;
 /// itu bukan pengingat, itu gangguan.
 const int kMinJarakUntukHMinus1 = 3;
 
+/// Rekap mingguan: Minggu jam 19.00, saat minggunya hampir selesai dan masih
+/// ada waktu untuk menyiapkan minggu depan.
+const int kJamRekap = 19 * 60;
+
+/// Payload notifikasi yang membuka sebuah halaman saat diketuk.
+const String kAwalanRute = 'rute:';
+const String kPayloadRekap = '$kAwalanRute/profile/wrapped';
+
+/// Angka minggu berjalan (Senin sampai sekarang) untuk notifikasi rekap.
+@immutable
+class RingkasanMinggu {
+  const RingkasanMinggu({
+    this.sesiLatihan = 0,
+    this.lari = 0,
+    this.rataTidurJam,
+    this.pengeluaran = 0,
+    this.tugasSelesai = 0,
+    this.berkalaTerlewat = 0,
+  });
+
+  final int sesiLatihan;
+  final int lari;
+
+  /// Null kalau tidak ada catatan tidur minggu ini.
+  final double? rataTidurJam;
+
+  final double pengeluaran;
+  final int tugasSelesai;
+
+  /// Rutinitas berkala yang sudah lewat jatuh tempo dan belum dikerjakan.
+  final int berkalaTerlewat;
+
+  bool get kosong =>
+      sesiLatihan == 0 &&
+      lari == 0 &&
+      rataTidurJam == null &&
+      pengeluaran == 0 &&
+      tugasSelesai == 0 &&
+      berkalaTerlewat == 0;
+}
+
+/// Isi notifikasi rekap: hanya angka yang ada, dipisah titik tengah.
+String teksRekap(RingkasanMinggu r) {
+  final bagian = <String>[
+    if (r.sesiLatihan > 0) '${r.sesiLatihan}x latihan',
+    if (r.lari > 0) '${r.lari}x lari',
+    if (r.rataTidurJam != null)
+      'tidur rata-rata ${r.rataTidurJam!.toStringAsFixed(1).replaceAll('.', ',')} jam',
+    if (r.tugasSelesai > 0) '${r.tugasSelesai} tugas selesai',
+    if (r.pengeluaran > 0) 'keluar ${_rupiah(r.pengeluaran)}',
+    if (r.berkalaTerlewat > 0) '${r.berkalaTerlewat} rutinitas terlewat',
+  ];
+  if (bagian.isEmpty) return 'Belum ada yang tercatat minggu ini. Ketuk untuk lihat rekapmu.';
+  final teks = bagian.join(' · ');
+  return '${teks[0].toUpperCase()}${teks.substring(1)}.';
+}
+
+/// Senin dari minggu yang memuat [date].
+DateTime awalMinggu(DateTime date) =>
+    DateTime(date.year, date.month, date.day).subtract(Duration(days: date.weekday - 1));
+
 enum ReminderKind {
   deadline('Deadline tugas', Icons.assignment_late_outlined),
   kelas('Jadwal kuliah', Icons.school_outlined),
@@ -93,7 +154,8 @@ enum ReminderKind {
   dokumen('Masa berlaku dokumen', Icons.badge_outlined),
   kendaraan('Servis & pajak kendaraan', Icons.two_wheeler),
   catatMakan('Catat makan', Icons.restaurant_outlined),
-  berkala('Rutinitas berkala', Icons.event_repeat_outlined);
+  berkala('Rutinitas berkala', Icons.event_repeat_outlined),
+  rekapMingguan('Rekap mingguan', Icons.auto_awesome_outlined);
 
   const ReminderKind(this.label, this.icon);
 
@@ -114,6 +176,7 @@ class NotificationSettings {
       ReminderKind.dokumen,
       ReminderKind.kendaraan,
       ReminderKind.berkala,
+      ReminderKind.rekapMingguan,
     },
     this.menitSebelumKelas = kMenitSebelumKelasDefault,
     this.tepatWaktu = false,
@@ -212,6 +275,7 @@ class ReminderInput {
     this.vehicles = const [],
     this.services = const [],
     this.berkala = const [],
+    this.mingguIni,
     this.streakHari = 0,
     this.bergerakHariIni = false,
     this.istirahatHariIni = false,
@@ -229,6 +293,9 @@ class ReminderInput {
   final List<ServiceLog> services;
 
   final List<RutinitasBerkala> berkala;
+
+  /// Angka minggu berjalan untuk rekap. Null kalau belum termuat.
+  final RingkasanMinggu? mingguIni;
 
   /// Panjang streak berjalan. 0 berarti tidak ada yang bisa hilang malam ini.
   final int streakHari;
@@ -294,9 +361,33 @@ List<PlannedReminder> planReminders({
     if (settings.nyala(ReminderKind.kendaraan)) ..._kendaraanReminders(data, settings, now),
     if (settings.nyala(ReminderKind.catatMakan)) ..._catatMakanReminders(data, now),
     if (settings.nyala(ReminderKind.berkala)) ..._berkalaReminders(data, settings, now),
+    if (settings.nyala(ReminderKind.rekapMingguan)) _rekapReminder(data, now),
   ]..sort((a, b) => a.waktu.compareTo(b.waktu));
 
   return hasil.length > kMaxReminders ? hasil.sublist(0, kMaxReminders) : hasil;
+}
+
+/// Satu notifikasi rekap di Minggu malam berikutnya.
+///
+/// Isinya dihitung saat penjadwalan, dan app menjadwalkan ulang tiap kali
+/// data berubah — jadi angkanya mencakup semua yang kamu catat sampai terakhir
+/// membuka app. Kalau Minggu berikutnya sudah masuk minggu baru (sekarang
+/// Minggu malam lewat jam 7), angka minggu ini tidak relevan dan isinya umum.
+PlannedReminder _rekapReminder(ReminderInput data, DateTime now) {
+  var minggu = _padaJam(_hari(now).add(Duration(days: 7 - now.weekday)), kJamRekap);
+  if (!minggu.isAfter(now)) minggu = minggu.add(const Duration(days: 7));
+
+  final ringkasan = data.mingguIni;
+  final mingguSama = awalMinggu(minggu) == awalMinggu(now);
+  return PlannedReminder(
+    kind: ReminderKind.rekapMingguan,
+    waktu: minggu,
+    judul: 'Rekap minggu ini',
+    isi: ringkasan != null && mingguSama
+        ? teksRekap(ringkasan)
+        : 'Ketuk untuk lihat rekap mingguanmu.',
+    payload: kPayloadRekap,
+  );
 }
 
 List<PlannedReminder> _deadlineReminders(

@@ -26,6 +26,15 @@ const Set<ReminderKind> kDefaultReminderKinds = {
   ReminderKind.dokumen,
   ReminderKind.kendaraan,
   ReminderKind.berkala,
+  ReminderKind.rekapMingguan,
+};
+
+/// Jenis yang ditambahkan setelah sebagian user sudah menyimpan pilihannya.
+/// Dinyalakan sekali untuk mereka — kalau tidak, fitur baru diam-diam mati
+/// hanya karena pilihan lama tersimpan sebelum fitur itu ada. Kalau sesudahnya
+/// dimatikan, tetap mati.
+const Map<ReminderKind, String> _jenisBaru = {
+  ReminderKind.rekapMingguan: 'jenis_rekap_mingguan_ditawarkan',
 };
 
 class NotificationSettingsController extends Notifier<NotificationSettings> {
@@ -41,7 +50,19 @@ class NotificationSettingsController extends Notifier<NotificationSettings> {
 
   Future<void> _restore() async {
     final prefs = await SharedPreferences.getInstance();
-    final tersimpan = prefs.getStringList(_jenisPrefsKey);
+    var tersimpan = prefs.getStringList(_jenisPrefsKey);
+    if (tersimpan != null) {
+      for (final e in _jenisBaru.entries) {
+        if (prefs.getBool(e.value) ?? false) continue;
+        tersimpan = {...tersimpan!, e.key.name}.toList();
+        await prefs.setStringList(_jenisPrefsKey, tersimpan);
+        await prefs.setBool(e.value, true);
+      }
+    } else {
+      for (final kunci in _jenisBaru.values) {
+        await prefs.setBool(kunci, true);
+      }
+    }
 
     state = NotificationSettings(
       aktif: prefs.getBool(_aktifPrefsKey) ?? false,

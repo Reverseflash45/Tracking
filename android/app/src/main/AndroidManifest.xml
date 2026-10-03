@@ -41,6 +41,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+
+    <!-- Kunci app dengan sidik jari / wajah / PIN layar HP (local_auth). -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+
+    <!-- Health Connect: hanya MEMBACA langkah, tidur, dan detak jantung dari
+         jam atau gelang pintar. Tidak ada yang ditulis balik ke sana. -->
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <uses-permission android:name="android.permission.health.READ_SLEEP"/>
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE"/>
     <application
         android:label="tracking"
         android:name="${applicationName}"
@@ -66,7 +76,25 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Health Connect membuka ini saat kamu mengetuk "kenapa app ini
+                 butuh izin" di layar izinnya. -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"/>
+            </intent-filter>
         </activity>
+
+        <!-- Android 14+: tautan "lihat pemakaian izin" di setelan Health
+             Connect diarahkan ke app ini. -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE"/>
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS"/>
+            </intent-filter>
+        </activity-alias>
         <!-- Receiver flutter_local_notifications: menampilkan notifikasi terjadwal,
              memasang ulang jadwal setelah boot, dan menangani aksi notifikasi. -->
         <receiver
@@ -99,6 +127,18 @@
                 android:resource="@xml/widget_rutinitas_info"/>
         </receiver>
 
+        <!-- Widget layar utama "Catat cepat": +air, +makan, +uang. -->
+        <receiver
+            android:name=".CatatCepatWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_catat_info"/>
+        </receiver>
+
         <!-- Tombol "Sudah" di widget: menjalankan Dart di latar belakang lewat
              home_widget. Tidak diekspor — PendingIntent-nya eksplisit dari app
              ini sendiri, jadi app lain tidak perlu bisa memanggilnya. -->
@@ -125,6 +165,11 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Memeriksa apakah Health Connect terpasang (Android 13 ke bawah). -->
+        <package android:name="com.google.android.apps.healthdata"/>
+        <intent>
+            <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"/>
         </intent>
     </queries>
 </manifest>

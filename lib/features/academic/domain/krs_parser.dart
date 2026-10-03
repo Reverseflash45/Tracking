@@ -28,6 +28,7 @@ class KrsEntry {
     this.lecturer,
     this.courseCode,
     this.classCode,
+    this.sks,
   });
 
   final String courseName;
@@ -49,6 +50,9 @@ class KrsEntry {
   final String? room;
   final String? lecturer;
 
+  /// Jumlah SKS. Hanya diisi pembaca AI; penebak OCR tidak mencarinya.
+  final int? sks;
+
   KrsEntry copyWith({
     String? courseName,
     int? dayOfWeek,
@@ -58,6 +62,7 @@ class KrsEntry {
     String? lecturer,
     String? courseCode,
     String? classCode,
+    int? sks,
   }) {
     return KrsEntry(
       courseName: courseName ?? this.courseName,
@@ -68,6 +73,7 @@ class KrsEntry {
       lecturer: lecturer ?? this.lecturer,
       courseCode: courseCode ?? this.courseCode,
       classCode: classCode ?? this.classCode,
+      sks: sks ?? this.sks,
     );
   }
 }

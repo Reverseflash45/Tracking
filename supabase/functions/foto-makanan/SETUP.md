@@ -16,11 +16,19 @@ Status sekarang (Oktober 2026): sudah di-deploy dan memakai Gemini.
    ```powershell
    supabase secrets set GEMINI_API_KEY=key-kamu
    supabase functions deploy foto-makanan --use-api
+   supabase functions deploy baca-krs --use-api
+   supabase functions deploy tanya --use-api
    ```
 
-Model yang dicoba berurutan: `gemini-3.8-flash` (lebih teliti, bisa sampai
-±20 detik), lalu `gemini-flash-lite-latest` kalau yang pertama sedang penuh.
-Daftarnya ada di `GEMINI_MODELS` di [index.ts](index.ts). Google sering
+Kode pemanggil AI-nya dipakai bersama dengan "baca-krs" dan "tanya", di
+[../_shared/ai.ts](../_shared/ai.ts). Karena itu, setelah mengubah file itu,
+deploy ulang ketiga fungsinya.
+
+Model yang dicoba berurutan: `gemini-flash-lite-latest`, lalu
+`gemini-3.8-flash` kalau yang pertama sedang penuh. Flash-Lite didahulukan
+karena pada uji Oktober 2026 hasilnya sama dengan Flash untuk foto nasi
+goreng, tapi waktunya 3–10 detik. Flash sering penuh (503) dan butuh 15–60
+detik. Daftarnya ada di `GEMINI_MODELS` di `_shared/ai.ts`. Google sering
 mengganti nama model; kalau muncul error 404 "no longer available", ganti ke
 model Flash terbaru dari halaman di atas.
 

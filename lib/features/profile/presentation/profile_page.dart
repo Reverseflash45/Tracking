@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../assistant/domain/preset_answers.dart' show questionCatalog;
+import '../../../core/security/app_lock.dart';
 import '../../../core/crash/crash_reporter.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notification_settings_controller.dart';
@@ -17,9 +18,7 @@ import '../../../core/update/update_dialog.dart';
 import '../../../core/widgets/daftar_bergaris.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../auth/presentation/auth_controller.dart';
-import '../data/export_repository.dart';
 import '../data/profile_repository.dart';
-import '../domain/export_file.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -30,33 +29,6 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _uploadingAvatar = false;
-  bool _exporting = false;
-
-  Future<void> _exportData() async {
-    setState(() => _exporting = true);
-    try {
-      final email = ref.read(currentUserProvider)?.email;
-      final result = await ref.read(exportRepositoryProvider).buildExport(email: email);
-      final fileName = exportFileName(DateTime.now());
-
-      await shareExport(json: result.json, fileName: fileName, subject: 'Cadangan data Tracking');
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('${result.totalRows} baris data disiapkan')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menyiapkan cadangan: $e')));
-      }
-    } finally {
-      if (mounted) setState(() => _exporting = false);
-    }
-  }
-
   Future<void> _changeAvatar() async {
     final userId = ref.read(currentUserProvider)?.id;
     if (userId == null) return;
@@ -252,6 +224,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const _NotificationSettingsCard(),
                 const SizedBox(height: AppSpacing.md),
+                if (kunciDidukung) ...[
+                  const SectionHeader(
+                    title: 'Keamanan',
+                    icon: Icons.lock_outline,
+                    color: AppColors.profile,
+                  ),
+                  const _KartuKunci(),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 // Watchlist, Kendaraan, dan Dokumen dulu ada di sini. Sekarang
                 // tinggal di tab Lainnya: Profil tempat orang mencari setelan
                 // dan akun, bukan tempat mencari fitur.
@@ -299,12 +280,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 DaftarBergaris(
                   children: [
                     _MenuTile(
-                      icon: Icons.download_outlined,
+                      icon: Icons.backup_outlined,
                       color: AppColors.finance,
-                      title: _exporting ? 'Menyiapkan...' : 'Ekspor data',
-                      subtitle: 'Simpan seluruh datamu sebagai satu berkas JSON',
-                      busy: _exporting,
-                      onTap: _exporting ? null : _exportData,
+                      title: 'Cadangan & pulihkan',
+                      subtitle: 'Otomatis tiap minggu, bisa disimpan ke Drive',
+                      onTap: () => context.push('/profile/cadangan'),
                     ),
                   ],
                 ),
@@ -331,6 +311,79 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Saklar kunci app dan jedanya.
+class _KartuKunci extends ConsumerStatefulWidget {
+  const _KartuKunci();
+
+  @override
+  ConsumerState<_KartuKunci> createState() => _KartuKunciState();
+}
+
+class _KartuKunciState extends ConsumerState<_KartuKunci> {
+  bool _sibuk = false;
+
+  Future<void> _ubah(bool aktif) async {
+    setState(() => _sibuk = true);
+    final galat = await ref.read(kunciProvider.notifier).setAktif(aktif);
+    if (!mounted) return;
+    setState(() => _sibuk = false);
+    if (galat != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(galat)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final kunci = ref.watch(kunciProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            value: kunci.aktif,
+            onChanged: _sibuk || !kunci.siap ? null : _ubah,
+            activeThumbColor: AppColors.profile,
+            secondary: const Icon(Icons.fingerprint, color: AppColors.profile),
+            title: const Text('Kunci app', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            subtitle: const Text(
+              'Buka dengan sidik jari, wajah, atau PIN layar HP',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+          if (kunci.aktif)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Kunci lagi setelah di latar',
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final jeda in kPilihanJeda)
+                        ChoiceChip(
+                          label: Text(labelJeda(jeda), style: const TextStyle(fontSize: 12)),
+                          selected: kunci.jeda == jeda,
+                          onSelected: (_) => ref.read(kunciProvider.notifier).setJeda(jeda),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -388,7 +441,6 @@ class _MenuTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.busy = false,
   });
 
   final IconData icon;
@@ -396,7 +448,6 @@ class _MenuTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
-  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -415,13 +466,7 @@ class _MenuTile extends StatelessWidget {
               height: 30,
               alignment: Alignment.center,
               decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
-              child: busy
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : Icon(icon, size: 18, color: Colors.white),
+              child: Icon(icon, size: 18, color: Colors.white),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -445,10 +490,8 @@ class _MenuTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (!busy) ...[
-              const SizedBox(width: AppSpacing.sm),
-              Icon(Icons.chevron_right, size: 20, color: colorScheme.onSurfaceVariant),
-            ],
+            const SizedBox(width: AppSpacing.sm),
+            Icon(Icons.chevron_right, size: 20, color: colorScheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -682,5 +725,6 @@ class _NotificationSettingsCard extends ConsumerWidget {
     ReminderKind.kendaraan => 'Pajak H-30, plat H-60, servis H-7',
     ReminderKind.catatMakan => 'Jam 20.30, kalau belum ada catatan makan',
     ReminderKind.berkala => 'H-1 dan hari-H, diulang sampai ditandai selesai',
+    ReminderKind.rekapMingguan => 'Minggu jam 19.00: latihan, tidur, dan pengeluaran',
   };
 }

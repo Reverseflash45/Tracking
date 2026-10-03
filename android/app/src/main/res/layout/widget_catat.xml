@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget "Catat cepat". Tombol air mencatat langsung di latar; makan dan
+     uang membuka form-nya di app, karena keduanya butuh angka yang diketik. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/akar_catat"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/air_hari_ini"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:paddingStart="3dp"
+        android:paddingBottom="8dp"
+        android:text="Catat cepat"
+        android:textColor="@color/widget_aksen"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tombol_air"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginHorizontal="3dp"
+            android:layout_weight="1"
+            android:background="@drawable/widget_tombol"
+            android:contentDescription="Catat minum 250 ml"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="+ Air 250 ml"
+            android:textColor="@color/widget_teks"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tombol_makan"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginHorizontal="3dp"
+            android:layout_weight="1"
+            android:background="@drawable/widget_tombol"
+            android:contentDescription="Catat makan"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="+ Makan"
+            android:textColor="@color/widget_teks"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tombol_uang"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginHorizontal="3dp"
+            android:layout_weight="1"
+            android:background="@drawable/widget_tombol"
+            android:contentDescription="Catat pengeluaran"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="+ Uang"
+            android:textColor="@color/widget_teks"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

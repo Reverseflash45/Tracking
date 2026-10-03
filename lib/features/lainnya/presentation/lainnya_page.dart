@@ -55,6 +55,13 @@ class LainnyaPage extends StatelessWidget {
       keterangan: 'Absen akun, ganti sprei — tiap beberapa hari',
     ),
     MenuItemData(
+      icon: Icons.monitor_heart_rounded,
+      label: 'Kesehatan',
+      rute: '/kesehatan',
+      warna: AppColors.workout,
+      keterangan: 'Langkah, tidur, dan detak dari jam tangan',
+    ),
+    MenuItemData(
       icon: Icons.sticky_note_2_rounded,
       label: 'Catatan',
       rute: '/notes',

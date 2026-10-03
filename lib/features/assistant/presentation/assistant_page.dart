@@ -238,6 +238,14 @@ class _Pembuka extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
+          'Yang dikirim ke AI (Gemini dari Google) hanya ringkasan 30 hari '
+          'terakhir: total, rata-rata, dan lima tugas terdekat. Catatan, '
+          'dokumen, dan transaksi satu per satu tidak ikut.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 11.5, height: 1.4, color: colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
           'Coba salah satu ini:',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),

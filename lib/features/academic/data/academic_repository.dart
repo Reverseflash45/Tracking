@@ -46,12 +46,13 @@ class AcademicRepository {
     required String name,
     String? lecturer,
     String? code,
+    int? sks,
   }) async {
     final trimmed = name.trim();
 
     final existing = await _client
         .from('courses')
-        .select('id, code')
+        .select('id, code, lecturer, sks')
         .eq('user_id', userId)
         .ilike('name', trimmed)
         .maybeSingle();
@@ -59,18 +60,29 @@ class AcademicRepository {
     if (existing != null) {
       final id = existing['id'] as String;
 
-      // Kode diisi hanya kalau sebelumnya kosong. Impor ulang KRS tidak boleh
-      // menimpa kode yang sudah kamu betulkan sendiri — OCR lebih sering salah
-      // daripada kamu.
-      if (code != null && (existing['code'] as String?) == null) {
-        await _client.from('courses').update({'code': code}).eq('id', id);
+      // Kolom diisi hanya kalau sebelumnya kosong. Impor ulang KRS tidak boleh
+      // menimpa isian yang sudah kamu betulkan sendiri — pembaca foto lebih
+      // sering salah daripada kamu.
+      final lengkapi = <String, dynamic>{
+        if (code != null && existing['code'] == null) 'code': code,
+        if (lecturer != null && existing['lecturer'] == null) 'lecturer': lecturer,
+        if (sks != null && existing['sks'] == null) 'sks': sks,
+      };
+      if (lengkapi.isNotEmpty) {
+        await _client.from('courses').update(lengkapi).eq('id', id);
       }
       return id;
     }
 
     final created = await _client
         .from('courses')
-        .insert({'user_id': userId, 'name': trimmed, 'lecturer': lecturer, 'code': code})
+        .insert({
+          'user_id': userId,
+          'name': trimmed,
+          'lecturer': lecturer,
+          'code': code,
+          'sks': ?sks,
+        })
         .select('id')
         .single();
 

@@ -11,6 +11,7 @@ import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notification_settings_controller.dart';
 import '../../academic/data/models/class_schedule.dart';
 import '../../academic/presentation/academic_providers.dart';
+import '../../nutrition/data/catat_cepat_widget.dart';
 import '../domain/berkala.dart';
 import '../domain/routine.dart';
 import 'berkala_repository.dart';
@@ -130,6 +131,8 @@ Future<void> daftarkanAksiWidget() async {
 /// tanpa app. Jalurnya sama dengan tombol di notifikasi.
 @pragma('vm:entry-point')
 Future<void> tanggapiWidget(Uri? uri) async {
+  // Satu callback untuk semua widget: home_widget hanya menyimpan satu.
+  if (uri?.host == kHostCatatAir) return catatAirDariWidget(uri!);
   if (uri == null || uri.host != _kHostSelesai) return;
   final payload = PayloadBerkala.decode(uri.queryParameters['p']);
   if (payload == null) return;

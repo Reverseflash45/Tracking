@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_rutinitas_deskripsi">Rutinitas berkala yang jatuh tempo dan kegiatan berikutnya hari ini</string>
+    <string name="widget_catat_deskripsi">Catat minum, makan, dan pengeluaran tanpa membuka app</string>
 </resources>

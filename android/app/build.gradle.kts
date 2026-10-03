@@ -40,7 +40,8 @@ android {
         applicationId = "com.rafifernandito.tracking"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Health Connect (paket health) butuh Android 8.0 / API 26.
+        minSdk = maxOf(flutter.minSdkVersion, 26)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -77,4 +78,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    // Tema AppCompat untuk LaunchTheme: dialog sidik jari local_auth crash di
+    // Android 8 kalau tema activity-nya bukan turunan AppCompat.
+    implementation("androidx.appcompat:appcompat:1.7.1")
 }

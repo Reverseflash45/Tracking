@@ -26,8 +26,10 @@ import '../../features/calendar/presentation/calendar_page.dart';
 import '../../features/document/presentation/document_page.dart';
 import '../../features/finance/presentation/finance_page.dart';
 import '../../features/finance/presentation/recurring_page.dart';
+import '../../features/finance/presentation/transaction_sheet.dart';
 import '../../features/goals/presentation/goals_page.dart';
 import '../../features/insight/presentation/insight_page.dart';
+import '../../features/health/presentation/kesehatan_page.dart';
 import '../../features/lainnya/presentation/lainnya_page.dart';
 import '../../features/live/presentation/live_workout_page.dart';
 import '../../features/routine/presentation/berkala_page.dart';
@@ -40,11 +42,13 @@ import '../../features/muscle/presentation/muscle_detail_page.dart';
 import '../../features/note/presentation/note_editor_page.dart';
 import '../../features/note/presentation/note_page.dart';
 import '../../features/nutrition/domain/food_log.dart' show Meal;
+import '../../features/nutrition/presentation/food_form_sheet.dart';
 import '../../features/nutrition/presentation/food_photo_page.dart';
 import '../../features/nutrition/presentation/nutrition_page.dart';
 import '../../features/program/presentation/bulk_program_page.dart';
 import '../../features/progress/presentation/progress_dashboard_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
+import '../../features/profile/presentation/cadangan_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
 import '../../features/search/presentation/search_page.dart';
 import '../../features/workout/presentation/workout_form_page.dart';
@@ -58,6 +62,7 @@ import '../../features/wishlist/presentation/wishlist_page.dart';
 import '../../features/wrapped/presentation/wrapped_page.dart';
 import '../supabase/supabase_client_provider.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/buka_saat_muncul.dart';
 import 'go_router_refresh_stream.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -251,7 +256,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ),
                 GoRoute(
                   path: 'nutrition',
-                  builder: (context, state) => const NutritionPage(),
+                  // ?catat=1 dari tombol "+ Makan" di widget layar utama.
+                  builder: (context, state) => BukaSaatMuncul(
+                    aktif: state.uri.queryParameters['catat'] == '1',
+                    buka: showFoodFormSheet,
+                    child: const NutritionPage(),
+                  ),
                   routes: [
                     GoRoute(
                       // ?meal=sarapan|makan_siang|... ikut dari form yang
@@ -310,7 +320,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             // ringkasannya tetap tampil di kartu Uang di Beranda.
             GoRoute(
               path: '/finance',
-              builder: (context, state) => const FinancePage(),
+              // ?catat=1 dari tombol "+ Uang" di widget layar utama.
+              builder: (context, state) => BukaSaatMuncul(
+                aktif: state.uri.queryParameters['catat'] == '1',
+                buka: showTransactionSheet,
+                child: const FinancePage(),
+              ),
               routes: [
                 GoRoute(
                   path: 'recurring',
@@ -372,6 +387,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ],
             ),
             GoRoute(
+              path: '/kesehatan',
+              builder: (context, state) => const KesehatanPage(),
+            ),
+            GoRoute(
               path: '/vehicle',
               builder: (context, state) => const VehiclePage(),
               routes: [
@@ -399,14 +418,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const WrappedPage(),
           ),
           GoRoute(
+            path: 'cadangan',
+            builder: (context, state) => const CadanganPage(),
+          ),
+          GoRoute(
             path: 'insight',
             builder: (context, state) => const InsightPage(),
           ),
           GoRoute(
             path: 'tanya',
-            // Jalur utama gratis: pertanyaan siap pakai yang jawabannya
-            // dihitung di HP. Ketik bebas jadi cabang opsional karena
-            // butuh Edge Function dan berbayar.
+            // Jalur utama: pertanyaan siap pakai yang jawabannya dihitung di
+            // HP, tanpa internet. Ketik bebas jadi cabang opsional karena
+            // ringkasan datanya dikirim ke AI lewat Edge Function.
             builder: (context, state) => const PresetAnswersPage(),
             routes: [
               GoRoute(

@@ -6,11 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/academic/data/recurring_task_generator.dart';
+import '../../features/health/data/health_connect.dart';
+import '../../features/nutrition/data/nutrition_repository.dart';
+import '../../features/profile/data/cadangan_lokal.dart';
+import '../../features/profile/data/export_repository.dart';
+import '../../features/sleep/data/sleep_repository.dart';
 import '../crash/crash_reporter.dart';
 import '../../features/routine/domain/berkala.dart';
 import '../notifications/notification_service.dart';
 import '../notifications/notification_settings_controller.dart';
 import '../notifications/reminder_sync.dart';
+import '../notifications/smart_reminders.dart' show kAwalanRute;
 import '../offline/pending_writes.dart';
 import '../supabase/supabase_client_provider.dart';
 import '../update/update_checker.dart';
@@ -151,7 +157,14 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
   /// "Sudah" sudah dicatat di antrean; di sini tinggal dikirim dan dimuat
   /// ulang.
   void _tanggapiNotifikasi(NotificationResponse respons) {
-    if (!mounted || PayloadBerkala.decode(respons.payload) == null) return;
+    if (!mounted) return;
+    // Notifikasi yang membawa rute (rekap mingguan) membuka halamannya.
+    final payload = respons.payload;
+    if (payload != null && payload.startsWith(kAwalanRute)) {
+      context.push(payload.substring(kAwalanRute.length));
+      return;
+    }
+    if (PayloadBerkala.decode(payload) == null) return;
     if (respons.actionId == kAksiSelesai) {
       _kerjaLatar();
     } else {
@@ -166,6 +179,35 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
     // Setelah antrean, bukan sebelum: tugas berulang dibuat lewat jaringan, dan
     // percuma mencobanya kalau tulisan yang tertunda saja belum bisa terkirim.
     await ref.read(recurringTaskGeneratorProvider).jalankan();
+    if (!mounted) return;
+    unawaited(_cadanganOtomatis());
+    unawaited(_imporTidur());
+  }
+
+  /// Tidur dari jam tangan lewat Health Connect, kalau pernah disambungkan.
+  Future<void> _imporTidur() async {
+    final userId = ref.read(currentUserProvider)?.id;
+    if (userId == null) return;
+    try {
+      final jumlah = await imporTidurHealthConnect(
+        hc: ref.read(healthConnectProvider),
+        repo: ref.read(sleepRepositoryProvider),
+        userId: userId,
+      );
+      if (jumlah > 0 && mounted) ref.invalidate(sleepLogsProvider);
+    } catch (e) {
+      debugPrint('Impor tidur Health Connect gagal: $e');
+    }
+  }
+
+  /// Seminggu sekali; biasanya langsung selesai tanpa melakukan apa-apa.
+  Future<void> _cadanganOtomatis() async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+    final hasil = await ref
+        .read(cadanganLokalProvider)
+        .jalankanKalauPerlu(ref.read(exportRepositoryProvider), email: user.email);
+    if (hasil != null && mounted) ref.invalidate(daftarCadanganProvider);
   }
 
   Future<void> _kirimAntrean() async {
@@ -176,6 +218,12 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
     final terakhir = ref.read(pendingWritesProvider).value?.length ?? 0;
     if (hasil.terkirim > 0 || hasil.tersisa != terakhir) {
       ref.invalidate(pendingWritesProvider);
+    }
+    // Minum dari tombol widget dan makan yang dicatat offline baru ada di
+    // server setelah terkirim; muat ulang supaya angkanya tidak tertinggal.
+    if (hasil.terkirim > 0) {
+      ref.invalidate(waterLogsProvider);
+      ref.invalidate(foodLogsProvider);
     }
   }
 

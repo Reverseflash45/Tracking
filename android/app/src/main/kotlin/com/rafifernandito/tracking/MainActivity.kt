@@ -1,5 +1,7 @@
 package com.rafifernandito.tracking
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// FragmentActivity, bukan FlutterActivity: dialog sidik jari (local_auth) dan
+// layar izin Health Connect (registerForActivityResult) sama-sama butuh itu.
+class MainActivity : FlutterFragmentActivity()
