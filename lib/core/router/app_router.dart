@@ -217,6 +217,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       prefillType: query['type'],
                       prefillSets: int.tryParse(query['sets'] ?? ''),
                       prefillReps: int.tryParse(query['reps'] ?? ''),
+                      // ?tanggal=2026-10-04: mencatat latihan yang terlupa.
+                      tanggalAwal: DateTime.tryParse(query['tanggal'] ?? ''),
                     );
                   },
                 ),

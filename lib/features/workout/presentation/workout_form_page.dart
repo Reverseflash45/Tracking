@@ -12,6 +12,7 @@ import '../../../core/widgets/section_header.dart';
 import '../data/models/exercise_entry.dart';
 import '../data/models/workout_session.dart';
 import '../data/models/workout_template.dart';
+import '../data/rest_day_repository.dart';
 import '../data/workout_repository.dart';
 import '../domain/progressive_overload.dart';
 import 'overload_suggestion_view.dart';
@@ -155,7 +156,12 @@ class WorkoutFormPage extends ConsumerStatefulWidget {
     this.prefillType,
     this.prefillSets,
     this.prefillReps,
+    this.tanggalAwal,
   });
+
+  /// Tanggal sesi baru, untuk mencatat latihan yang terlupa di hari yang sudah
+  /// lewat (dibuka dari strip "7 hari terakhir"). Null berarti hari ini.
+  final DateTime? tanggalAwal;
 
   /// Kalau diisi, form berjalan dalam mode edit.
   final String? sessionId;
@@ -182,7 +188,7 @@ class WorkoutFormPage extends ConsumerStatefulWidget {
 class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
   final _notesController = TextEditingController();
   final _restTimer = RestTimerController();
-  DateTime _sessionDate = DateTime.now();
+  late DateTime _sessionDate = widget.tanggalAwal ?? DateTime.now();
   final List<_ExerciseRowControllers> _rows = [_ExerciseRowControllers()];
   bool _saving = false;
   bool _prefilled = false;
@@ -442,6 +448,16 @@ class _WorkoutFormPageState extends ConsumerState<WorkoutFormPage> {
           notes: notes,
           exercises: exercises,
         );
+      }
+      // Kalau hari itu sempat ditandai istirahat otomatis (latihannya lupa
+      // dicatat), tandanya dibuang: yang benar-benar terjadi adalah latihan.
+      try {
+        await ref
+            .read(restDayRepositoryProvider)
+            .hapusIstirahatOtomatis(userId: userId, date: _sessionDate);
+        ref.invalidate(restDaysProvider);
+      } catch (_) {
+        // Tidak penting: streak sudah mengutamakan latihan di atas istirahat.
       }
       ref.invalidate(workoutSessionsProvider);
       if (mounted) Navigator.of(context).pop();

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/offline/local_cache.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
+import '../domain/istirahat_otomatis.dart';
 
 /// Riwayat dibatasi supaya query tidak membesar tanpa batas. Cukup panjang
 /// untuk menghitung streak terpanjang selama lebih dari setahun.
@@ -69,6 +70,34 @@ class RestDayRepository {
 
   Future<void> deleteRestDay(String id) {
     return _client.from('rest_days').delete().eq('id', id);
+  }
+
+  /// Tandai beberapa hari sekaligus sebagai istirahat otomatis.
+  ///
+  /// `ignoreDuplicates`: hari yang sudah kamu tandai sendiri (dengan catatanmu
+  /// sendiri) tidak ditimpa.
+  Future<void> addRestDaysOtomatis({required String userId, required List<DateTime> dates}) async {
+    if (dates.isEmpty) return;
+    await _client.from('rest_days').upsert(
+      [
+        for (final date in dates)
+          {'user_id': userId, 'rest_on': _dateKey(date), 'note': kCatatanIstirahatOtomatis},
+      ],
+      onConflict: 'user_id,rest_on',
+      ignoreDuplicates: true,
+    );
+  }
+
+  /// Hapus istirahat otomatis di [date] — dipanggil saat ternyata ada latihan
+  /// yang kamu catat belakangan untuk hari itu. Istirahat yang kamu tandai
+  /// sendiri dibiarkan.
+  Future<void> hapusIstirahatOtomatis({required String userId, required DateTime date}) {
+    return _client
+        .from('rest_days')
+        .delete()
+        .eq('user_id', userId)
+        .eq('rest_on', _dateKey(date))
+        .eq('note', kCatatanIstirahatOtomatis);
   }
 }
 

@@ -10,7 +10,11 @@ import '../../features/health/data/health_connect.dart';
 import '../../features/nutrition/data/nutrition_repository.dart';
 import '../../features/profile/data/cadangan_lokal.dart';
 import '../../features/profile/data/export_repository.dart';
+import '../../features/run/data/run_repository.dart';
 import '../../features/sleep/data/sleep_repository.dart';
+import '../../features/workout/data/istirahat_otomatis_service.dart';
+import '../../features/workout/data/rest_day_repository.dart';
+import '../../features/workout/data/workout_repository.dart';
 import '../crash/crash_reporter.dart';
 import '../../features/routine/domain/berkala.dart';
 import '../notifications/notification_service.dart';
@@ -182,6 +186,29 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
     if (!mounted) return;
     unawaited(_cadanganOtomatis());
     unawaited(_imporTidur());
+    unawaited(_istirahatOtomatis());
+  }
+
+  /// Hari kemarin (dan sebelumnya) yang lewat tanpa latihan jadi istirahat.
+  Future<void> _istirahatOtomatis() async {
+    final userId = ref.read(currentUserProvider)?.id;
+    if (userId == null) return;
+    try {
+      final sesi = await ref.read(workoutRepositoryProvider).fetchSessions(userId);
+      final lari = await ref.read(runRepositoryProvider).fetchRuns(userId);
+      final restRepo = ref.read(restDayRepositoryProvider);
+      final istirahat = await restRepo.fetchRestDays(userId);
+      final jumlah = await jalankanIstirahatOtomatis(
+        repo: restRepo,
+        userId: userId,
+        aktif: [for (final s in sesi) s.sessionDate, for (final r in lari) r.startedAt],
+        istirahat: [for (final d in istirahat) d.restOn],
+      );
+      if (jumlah > 0 && mounted) ref.invalidate(restDaysProvider);
+    } catch (e) {
+      // Biasanya offline; dicoba lagi saat app dibuka berikutnya.
+      debugPrint('Istirahat otomatis gagal: $e');
+    }
   }
 
   /// Tidur dari jam tangan lewat Health Connect, kalau pernah disambungkan.

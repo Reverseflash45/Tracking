@@ -11,6 +11,7 @@ import '../data/models/workout_session.dart';
 import '../data/rest_day_repository.dart';
 import 'rest_day_card.dart';
 import 'ringkasan_workout.dart';
+import 'tujuh_hari_card.dart';
 import 'workout_providers.dart';
 
 /// Halaman utama Workout: pintu masuk ke semua alat, bukan tempat menumpuk
@@ -68,6 +69,8 @@ class WorkoutHomePage extends ConsumerWidget {
                   const KartuStreak(),
                   const SizedBox(height: AppSpacing.md),
                   const RestDayCard(),
+                  const SizedBox(height: AppSpacing.md),
+                  const TujuhHariCard(),
                   const SizedBox(height: AppSpacing.md),
                   const KartuSesiTerakhir(),
                   const SizedBox(height: AppSpacing.md),
